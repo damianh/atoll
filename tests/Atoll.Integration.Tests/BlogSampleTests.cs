@@ -837,4 +837,187 @@ public sealed class BlogSampleTests
         var response = await client.GetAsync("/nonexistent");
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
+
+    [Fact]
+    public async Task MiddlewareShouldReturnHtmlContentType()
+    {
+        using var client = CreateBlogTestClient();
+        var response = await client.GetAsync("/");
+        response.Content.Headers.ContentType!.MediaType.ShouldBe("text/html");
+    }
+
+    [Fact]
+    public async Task MiddlewareShouldReturnDoctypeInResponse()
+    {
+        using var client = CreateBlogTestClient();
+        var response = await client.GetAsync("/");
+        var html = await response.Content.ReadAsStringAsync();
+        html.ShouldStartWith("<!DOCTYPE html>");
+    }
+
+    [Fact]
+    public async Task MiddlewareShouldReturn200ForAboutPage()
+    {
+        using var client = CreateBlogTestClient();
+        var response = await client.GetAsync("/about");
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.Content.Headers.ContentType!.MediaType.ShouldBe("text/html");
+    }
+
+    // ── Content collection → rendered page round-trip tests ──
+
+    [Fact]
+    public async Task ContentCollectionRoundTripShouldRenderPostWithMarkdownHeadings()
+    {
+        var query = CreateDefaultQuery();
+        var entry = query.GetEntry<BlogPostSchema>("blog", "getting-started")!;
+        var rendered = query.Render(entry);
+
+        // Verify the rendered content has proper heading HTML
+        rendered.Html.ShouldContain("<h1");
+        rendered.Html.ShouldContain("Getting Started");
+
+        // Now render the full page with this content
+        var props = new Dictionary<string, object?>
+        {
+            ["Slug"] = "getting-started",
+            ["Query"] = query,
+        };
+        var html = await RenderPageAsync<BlogPostPage>(props);
+
+        // Full round-trip: content file → frontmatter parse → markdown render → page component → layout
+        html.ShouldContain("<!DOCTYPE html>");
+        html.ShouldContain("<article");
+        html.ShouldContain("<h1");
+        html.ShouldContain("Getting Started with Atoll");
+        html.ShouldContain("<strong>Atoll</strong>");
+        html.ShouldContain("Jane Developer");
+        html.ShouldContain("January 15, 2026");
+        html.ShouldContain("<header"); // layout header
+        html.ShouldContain("<footer"); // layout footer
+    }
+
+    [Fact]
+    public async Task ContentCollectionRoundTripShouldRenderDifferentPosts()
+    {
+        var query = CreateDefaultQuery();
+        var slugs = new[] { "getting-started", "islands-architecture", "content-collections" };
+
+        foreach (var slug in slugs)
+        {
+            var props = new Dictionary<string, object?>
+            {
+                ["Slug"] = slug,
+                ["Query"] = query,
+            };
+            var html = await RenderPageAsync<BlogPostPage>(props);
+            html.ShouldContain("<!DOCTYPE html>", customMessage: $"Post {slug} missing DOCTYPE");
+            html.ShouldContain("<article", customMessage: $"Post {slug} missing article");
+        }
+    }
+
+    [Fact]
+    public async Task ContentCollectionRoundTripShouldFilterAndSortPosts()
+    {
+        var query = CreateDefaultQuery();
+        var props = new Dictionary<string, object?> { ["Query"] = query };
+        var html = await RenderPageAsync<BlogIndexPage>(props);
+
+        // Should have 3 published posts (excludes draft)
+        html.ShouldContain("Getting Started with Atoll");
+        html.ShouldContain("Understanding Islands Architecture");
+        html.ShouldContain("Working with Content Collections");
+        html.ShouldNotContain("Upcoming Features");
+
+        // Sorted newest first: Content Collections (Mar) > Islands (Feb) > Getting Started (Jan)
+        var ccPos = html.IndexOf("Content Collections", StringComparison.Ordinal);
+        var islandsPos = html.IndexOf("Islands Architecture", StringComparison.Ordinal);
+        var gsPos = html.IndexOf("Getting Started", StringComparison.Ordinal);
+        ccPos.ShouldBeLessThan(islandsPos);
+        islandsPos.ShouldBeLessThan(gsPos);
+    }
+
+    [Fact]
+    public async Task ContentCollectionRoundTripShouldGenerateTagPagesFromContent()
+    {
+        var query = CreateDefaultQuery();
+
+        // Verify static paths are generated from content
+        var tagPage = new TagPage { Query = query, Tag = "" };
+        var paths = await tagPage.GetStaticPathsAsync();
+        paths.Count.ShouldBeGreaterThan(0);
+
+        // Render a specific tag page
+        var props = new Dictionary<string, object?>
+        {
+            ["Tag"] = "atoll",
+            ["Query"] = query,
+        };
+        var html = await RenderPageAsync<TagPage>(props);
+
+        // All 3 published posts have the "atoll" tag
+        html.ShouldContain("Getting Started with Atoll");
+        html.ShouldContain("Understanding Islands Architecture");
+        html.ShouldContain("Working with Content Collections");
+    }
+
+    [Fact]
+    public void ContentCollectionShouldPreserveFrontmatterMetadata()
+    {
+        var query = CreateDefaultQuery();
+        var entries = query.GetCollection<BlogPostSchema>("blog",
+            entry => !entry.Data.Draft);
+
+        foreach (var entry in entries)
+        {
+            entry.Data.Title.ShouldNotBeNullOrEmpty(customMessage: $"Slug {entry.Slug} missing title");
+            entry.Data.Description.ShouldNotBeNullOrEmpty(customMessage: $"Slug {entry.Slug} missing description");
+            entry.Data.Author.ShouldNotBeNullOrEmpty(customMessage: $"Slug {entry.Slug} missing author");
+            entry.Data.PubDate.ShouldNotBe(default, customMessage: $"Slug {entry.Slug} missing pubDate");
+            entry.Data.GetTags().Length.ShouldBeGreaterThan(0, customMessage: $"Slug {entry.Slug} missing tags");
+        }
+    }
+
+    [Fact]
+    public void ContentCollectionShouldIdentifyDraftPosts()
+    {
+        var query = CreateDefaultQuery();
+        var allEntries = query.GetCollection<BlogPostSchema>("blog");
+
+        var drafts = allEntries.Where(e => e.Data.Draft).ToList();
+        var published = allEntries.Where(e => !e.Data.Draft).ToList();
+
+        drafts.Count.ShouldBe(1);
+        published.Count.ShouldBe(3);
+        drafts[0].Data.Title.ShouldContain("Draft");
+    }
+
+    [Fact]
+    public void ContentCollectionEntriesShouldHaveCorrectSlugs()
+    {
+        var query = CreateDefaultQuery();
+        var entries = query.GetCollection<BlogPostSchema>("blog");
+
+        var slugs = entries.Select(e => e.Slug).ToHashSet();
+        slugs.ShouldContain("getting-started");
+        slugs.ShouldContain("islands-architecture");
+        slugs.ShouldContain("content-collections");
+        slugs.ShouldContain("draft-upcoming");
+    }
+
+    [Fact]
+    public void ContentCollectionShouldRenderAllPostsToHtml()
+    {
+        var query = CreateDefaultQuery();
+        var entries = query.GetCollection<BlogPostSchema>("blog");
+
+        foreach (var entry in entries)
+        {
+            var rendered = query.Render(entry);
+            rendered.Html.ShouldNotBeNullOrEmpty(
+                customMessage: $"Post {entry.Slug} rendered to empty HTML");
+            rendered.Html.ShouldContain("<h1",
+                customMessage: $"Post {entry.Slug} missing heading in rendered HTML");
+        }
+    }
 }

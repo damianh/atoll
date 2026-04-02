@@ -938,7 +938,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `samples/Atoll.Samples.Portfolio/` (complete project)
   **Acceptance**: Demonstrates islands with different client directives
 
-- [ ] 66. **Write end-to-end integration tests**
+- [x] 66. **Write end-to-end integration tests**
   **What**: Full round-trip tests using the blog sample: build → validate output → serve → HTTP requests → verify HTML. Content collection → rendered page tests.
   **Files**:
     - `tests/Atoll.Integration.Tests/BlogSampleTests.cs`

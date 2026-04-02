@@ -205,3 +205,30 @@
 **Test results**: All 1,902 tests pass (824 core + 278 build + 229 routing + 205 integration + 182 content + 110 server + 74 middleware)
 
 **What's next**: Story 66 (end-to-end integration tests), Story 67 (final code quality pass), Story 68 (README getting-started guide)
+
+### 2026-04-02 — Story 66: Write end-to-end integration tests (Phase 11)
+
+**Completed by**: claude-opus-4.6
+**Commit**: (pending) (branch: astro-fork)
+
+**What was done**:
+- Created `tests/Atoll.Integration.Tests/SsgOutputTests.cs` with 30 new tests exercising the full SSG pipeline:
+  - Portfolio SSG output: all 4 static pages generated, HTML structure verified, hero section, projects, skills, form island
+  - Blog SSG output: static pages generated, welcome message, layout wrapping
+  - Combined SSG + asset pipeline: CSS/JS injection via post-processor, inline style removal
+  - Build manifest: generation, JSON round-trip, URL paths, component types, timing stats
+  - SSG configuration: sequential rendering, clean/preserve output directory, base path handling
+  - Base path post-processing: internal link adjustment, external link preservation
+  - Cross-site validation: both sample sites build successfully in sequence
+  - HTML validation: DOCTYPE, meta tags, valid structure on all pages
+- Added 14 new tests to `BlogSampleTests.cs`:
+  - Middleware tests: HTML content type, DOCTYPE in response, 200 for about page
+  - Content collection round-trip tests: markdown heading rendering, different post rendering, filtering/sorting, tag page generation from content, frontmatter metadata preservation, draft identification, slug correctness, all posts rendering to HTML
+
+**Key discovery**:
+- `PortfolioLayout` uses inline `<style>` blocks in HTML output, not `[Styles]` attribute — so CSS extraction via `CssProcessor` produces no content. Tests must use explicit CSS href for post-processor injection testing.
+
+**Build verification**: `dotnet build -c Release` — 0 warnings, 0 errors
+**Test results**: All 1,946 tests pass (824 core + 278 build + 249 integration + 229 routing + 182 content + 110 server + 74 middleware)
+
+**What's next**: Story 67 (final code quality pass), Story 68 (README getting-started guide)
