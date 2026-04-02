@@ -1,0 +1,32 @@
+## Progress Log
+
+### Session: 2026-04-02
+
+**Story 4: Define core rendering primitives** ✅ COMPLETED
+- Created IRenderDestination, RenderChunk, HtmlString, RenderFragment, StringRenderDestination, HtmlEncoder
+- 57 tests all passing
+- Fixed CS1591 build issue: Directory.Build.targets now clears both GenerateDocumentationFile AND DocumentationFile for test projects (the latter was the root cause — SDK sets it early from props, targets clearing only the flag wasn't enough)
+
+**Story 5: Implement interpolated template rendering with async buffering** ✅ COMPLETED
+- Created InterpolatedTemplate (Astro's RenderTemplateResult equivalent)
+  - Fast sync path: writes HTML parts and sync expressions directly to destination
+  - Buffered async path: when async expression hit, all remaining expressions Start() immediately in BufferedRenderers, then flush sequentially preserving order
+- Created BufferedRenderer: IRenderDestination that captures chunks, Start()/FlushAsync() pattern
+- Created StreamRenderDestination: PipeWriter-based destination for streaming SSR (Stream and PipeWriter overloads, configurable encoding)
+- 48 new tests (105 total), all passing
+- Release build: 0 warnings, 0 errors
+
+**Commits:**
+1. `146bb52` - Phase 0 scaffolding + Story 4 rendering primitives
+2. `aeb1eb0` - Story 5 interpolated template + async buffering
+
+**Next: Story 6 - Implement component model**
+- IAtollComponent, AtollComponent, ComponentDelegate, RenderContext, ParameterAttribute, ComponentRenderer
+- See plan items 6-7 in .weave/plans/astro-dotnet-fork.md
+
+**Key discoveries for next person:**
+- LSP in this workspace doesn't resolve test project references (Shouldly, Xunit show as missing) — ignore these, the build/test works fine
+- All concrete classes MUST be sealed
+- Use method overloads, not optional parameters
+- Types in *.Internal.* namespaces must be internal
+- PascalCase test method names (ShouldDoSomething pattern)
