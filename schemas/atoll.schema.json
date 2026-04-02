@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/damianh/atoll/main/schemas/atoll.schema.json",
+  "title": "Atoll Configuration",
+  "description": "Configuration file for Atoll, a .NET-native framework inspired by Astro. Place this file as 'atoll.json' in your project root.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference for IntelliSense support."
+    },
+    "site": {
+      "type": "string",
+      "description": "The site URL for generating canonical URLs and sitemap entries (e.g., 'https://example.com'). Defaults to empty string.",
+      "default": "",
+      "examples": [
+        "https://example.com",
+        "https://blog.example.com"
+      ]
+    },
+    "base": {
+      "type": "string",
+      "description": "The base path prefix for the site (e.g., '/docs'). All generated URLs are relative to this path. Must start with '/'.",
+      "default": "/",
+      "pattern": "^/",
+      "examples": [
+        "/",
+        "/docs",
+        "/blog"
+      ]
+    },
+    "outDir": {
+      "type": "string",
+      "description": "The output directory for the built site, relative to the project root.",
+      "default": "dist",
+      "examples": [
+        "dist",
+        "build",
+        "output"
+      ]
+    },
+    "srcDir": {
+      "type": "string",
+      "description": "The source directory containing page components, relative to the project root.",
+      "default": "src/pages",
+      "examples": [
+        "src/pages",
+        "pages"
+      ]
+    },
+    "publicDir": {
+      "type": "string",
+      "description": "The public directory containing static assets to copy as-is to the output directory root.",
+      "default": "public",
+      "examples": [
+        "public",
+        "static"
+      ]
+    },
+    "server": {
+      "type": "object",
+      "description": "Server-specific configuration for the 'atoll dev' command.",
+      "additionalProperties": false,
+      "properties": {
+        "host": {
+          "type": "string",
+          "description": "The hostname to bind to.",
+          "default": "localhost",
+          "examples": [
+            "localhost",
+            "0.0.0.0",
+            "127.0.0.1"
+          ]
+        },
+        "port": {
+          "type": "integer",
+          "description": "The port number to listen on.",
+          "default": 4321,
+          "minimum": 1,
+          "maximum": 65535,
+          "examples": [
+            4321,
+            3000,
+            8080
+          ]
+        }
+      }
+    },
+    "build": {
+      "type": "object",
+      "description": "Build-specific configuration for the 'atoll build' command.",
+      "additionalProperties": false,
+      "properties": {
+        "minify": {
+          "type": "boolean",
+          "description": "Whether to minify CSS and JS output.",
+          "default": true
+        },
+        "fingerprint": {
+          "type": "boolean",
+          "description": "Whether to fingerprint asset filenames for cache busting.",
+          "default": true
+        },
+        "clean": {
+          "type": "boolean",
+          "description": "Whether to clean the output directory before building.",
+          "default": true
+        },
+        "concurrency": {
+          "type": "integer",
+          "description": "The maximum number of pages to render in parallel. A value of -1 uses the system default.",
+          "default": -1,
+          "minimum": -1,
+          "examples": [
+            -1,
+            1,
+            4,
+            8
+          ]
+        }
+      }
+    }
+  }
+}
