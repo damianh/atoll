@@ -4,6 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.IO.Hashing" />
+    <PackageReference Include="NUglify" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Islands\Assets\atoll-island.js" LogicalName="Atoll.Core.Islands.Assets.atoll-island.js" />

@@ -245,3 +245,98 @@ Total: 903 tests (630 core + 229 routing + 44 server), all passing, 0 warnings, 
 - JS embedded resources use `LogicalName` in csproj for stable resource names
 
 **What's next**: Phase 4 (Content Collections) — Stories 27-33
+
+### Session: 2026-04-02 (continued — Phase 7)
+
+**Phase 7 COMPLETE — Atoll Middleware Pipeline**
+
+**Story 42: Atoll middleware types** ✅ COMPLETED
+- `MiddlewareNext` delegate — invokes next handler, returns `Task<AtollResponse>`
+- `MiddlewareHandler` delegate — `(MiddlewareContext, MiddlewareNext) → Task<AtollResponse>`
+- `MiddlewareContext` — request context with route pattern, parameters, request, locals, rewrite support
+  - `Rewrite(path)` / `HasRewrite` / `RewriteTarget` for rewrite requests
+  - `GetLocal<T>(key)` / `GetLocal<T>(key, default)` for typed locals access
+  - `GetParameter(name)` for route parameter access
+  - Multiple constructors (full, no-locals, request-only)
+
+**Story 43: Middleware sequencing** ✅ COMPLETED
+- `MiddlewareSequencer.Sequence(params MiddlewareHandler[])` — composes middleware chain
+  - Left-to-right execution, onion-model (before/terminal/after)
+  - Null handler filtering
+  - Empty sequence = pass-through
+  - `Sequence(IReadOnlyList<MiddlewareHandler>)` overload
+- `MiddlewareRunner` — orchestrates pipeline execution with terminal handler
+  - `RunAsync(context, terminalHandler)` — runs pipeline with explicit context
+  - `RunAsync(routeMatch, request, terminalHandler)` — creates context from route match
+  - Integrates with `RouteMatcher` for rewrite re-resolution
+
+**Story 44: Rewrite support** ✅ COMPLETED
+- `RewriteHandler` — dedicated rewrite processing component
+  - `CreateHandler()` — returns middleware that applies pending rewrites
+  - `TryResolve(path)` / `Resolve(path)` — route re-resolution
+  - Updates context route pattern and parameters on rewrite
+- `MiddlewareRunner` applies rewrites at terminal boundary
+  - Throws `InvalidOperationException` if rewrite target doesn't match any route
+  - Throws `InvalidOperationException` if no `RouteMatcher` provided
+
+**Story 45: Phase 7 tests** ✅ COMPLETED
+- `MiddlewareContextTests.cs`: 18 tests (construction, rewrite, locals, parameters, null validation)
+- `MiddlewareSequencerTests.cs`: 13 tests (basic, multi, short-circuit, modify, locals, nulls, list overload)
+- `MiddlewareRunnerTests.cs`: 16 tests (execution, route match, rewrite, null validation)
+- `RewriteHandlerTests.cs`: 12 tests (resolve, try-resolve, handler, dynamic params, catch-all)
+- `MiddlewareIntegrationTests.cs`: 15 tests (auth+logging, CORS, rate limiting, composition, error handling, conditionals)
+
+Total: 1,159 tests (630 core + 229 routing + 182 content + 44 server + 74 middleware), all passing, 0 warnings, 0 errors in Release mode
+
+**Commit**: `f82820d` — Phase 7 complete
+
+**Key discoveries for Phase 7:**
+- Middleware is a delegate `(MiddlewareContext, MiddlewareNext) → Task<AtollResponse>`, not a class — keeps it lightweight
+- `MiddlewareContext` uses `internal set` for `RoutePattern` and `Parameters` so rewrite logic can update them
+- Rewrite is applied at the terminal boundary (when `next()` is finally called for the last time)
+- `MiddlewareRunner` requires an explicit `RouteMatcher` to support rewrites
+- Nested `Sequence()` calls compose correctly (onion model chains)
+- The middleware pipeline is decoupled from ASP.NET Core — runs in Atoll's own pipeline
+
+**What's next**: Phase 5 (Blazor WASM Islands), Phase 6 (CSS Processing), or Phase 8 (SSG Build Pipeline)
+
+### Session: 2026-04-02 (continued — Phase 6)
+
+**Phase 6 IN PROGRESS — CSS Processing**
+
+**Story 37: Style scoping** ✅ COMPLETED
+- `ScopeHashGenerator` — XxHash64-based deterministic hash from component type full name
+- `StylesAttribute` — declares inline CSS on components, `AllowMultiple = true`, `Inherited = true`
+- `GlobalStyleAttribute` — marks CSS as unscoped
+- `StyleScoper` — applies `:where(.atoll-HASH)` wrapping, handles global selectors (`:root`, `html`, `body`), at-rules (`@keyframes` passthrough, `@media`/`@supports` nested scoping), comments, strings
+
+**Story 38: CSS aggregation and minification** ✅ COMPLETED
+- `CssAggregator` — collects CSS from component types (deduped by type) and raw identifiers
+- `CssEntry` record — represents a single CSS entry with ComponentType, Css, IsGlobal
+- `CssMinifier` — NUglify wrapper with `Minify()` and `MinifyWithDiagnostics()`, returns original on error
+- `CssInjector` — creates `HeadElement` for inline `<style>`, `<link>` stylesheet references, combined styles from aggregator, head manager integration
+
+**Story 40: CSS URL rewriting** ✅ COMPLETED
+- `CssUrlRewriter` — rewrites absolute-path `url(...)` references with base path prefix, preserves external/data/blob/protocol-relative URLs
+
+**Story 41: Phase 6 tests** ✅ COMPLETED
+- `ScopeHashGeneratorTests.cs` — 13 tests
+- `StyleScopingTests.cs` — 20 tests (scoping, global selectors, at-rules, attributes, extraction)
+- `CssAggregatorTests.cs` — 15 tests (type/identifier dedup, combined CSS, entries, clear)
+- `CssMinifierTests.cs` — 9 tests (minification, diagnostics, empty, null validation)
+- `CssInjectorTests.cs` — 17 tests (inline styles, stylesheet links, combined, head injection)
+- `CssUrlRewriterTests.cs` — 16 tests (rewriting, external URL preservation, base path normalization)
+- `Phase6IntegrationTests.cs` — 11 tests (end-to-end CSS pipeline integration)
+
+Total: 1,286 tests (757 core + 229 routing + 182 content + 44 server + 74 middleware), all passing, 0 warnings, 0 errors in Release mode
+
+**Key discoveries for Phase 6:**
+- NUglify optimizes color values (e.g., `blue` → `#00f`) — test assertions must account for this
+- StyleScoper preserves whitespace inside CSS declaration blocks — use `ShouldContain` rather than exact `ShouldBe` for CSS body content
+- `CssUrlRewriter.ShouldRewrite` is `internal` — cannot be tested directly from test projects
+- HeadElement has no constructor that takes content — use property setter `{ Content = css }`
+- HeadElement.Content is nullable (`string?`) — use `!` operator when asserting
+
+**Story 39: Tailwind CSS integration** — NOT YET DONE (deferred, goes in `Atoll.Build` project)
+
+**What's next**: Phase 8 (SSG Build Pipeline) or Phase 5 (Blazor WASM Islands)
