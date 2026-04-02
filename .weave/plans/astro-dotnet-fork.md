@@ -402,7 +402,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Core/Rendering/RenderChunk.cs`
   **Acceptance**: Can create `RenderFragment` from static HTML and render to a `StringRenderDestination`
 
-- [ ] 5. **Implement interpolated template rendering with async buffering**
+- [x] 5. **Implement interpolated template rendering with async buffering**
   **What**: Port Astro's `RenderTemplateResult` algorithm — interleaved static HTML + dynamic expressions, fast sync path, buffered async path for order preservation. Use `ValueTask` for hot-path efficiency.
   **Files**:
     - `src/Atoll.Core/Rendering/InterpolatedTemplate.cs` (htmlParts[] + expressions[] → streaming render)
