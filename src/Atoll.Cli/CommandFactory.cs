@@ -83,6 +83,30 @@ public static class CommandFactory
     }
 
     /// <summary>
+    /// Creates the <c>new</c> subcommand for scaffolding a new Atoll project.
+    /// </summary>
+    public static Command CreateNewCommand()
+    {
+        var nameArgument = new Argument<string>("name")
+        {
+            Description = "The name of the new project (also used as the directory name)",
+        };
+
+        var command = new Command("new", "Create a new Atoll project from a template");
+        command.Add(nameArgument);
+
+        command.SetAction(async (parseResult, cancellationToken) =>
+        {
+            var root = parseResult.GetValue<string>("--root")!;
+            var name = parseResult.GetRequiredValue(nameArgument);
+            var handler = new Commands.NewCommandHandler();
+            await handler.ExecuteAsync(name, root);
+        });
+
+        return command;
+    }
+
+    /// <summary>
     /// Builds the complete root command with all subcommands registered.
     /// </summary>
     public static RootCommand CreateRootCommand()
@@ -94,6 +118,7 @@ public static class CommandFactory
         rootCommand.Add(CreateBuildCommand());
         rootCommand.Add(CreateDevCommand());
         rootCommand.Add(CreatePreviewCommand());
+        rootCommand.Add(CreateNewCommand());
 
         return rootCommand;
     }

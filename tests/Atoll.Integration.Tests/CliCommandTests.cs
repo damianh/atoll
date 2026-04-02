@@ -18,10 +18,10 @@ public sealed class CliCommandTests
     }
 
     [Fact]
-    public void ShouldHaveThreeSubcommands()
+    public void ShouldHaveFourSubcommands()
     {
         var rootCommand = CommandFactory.CreateRootCommand();
-        rootCommand.Subcommands.Count.ShouldBe(3);
+        rootCommand.Subcommands.Count.ShouldBe(4);
     }
 
     [Fact]
@@ -43,6 +43,13 @@ public sealed class CliCommandTests
     {
         var rootCommand = CommandFactory.CreateRootCommand();
         rootCommand.Subcommands.ShouldContain(c => c.Name == "preview");
+    }
+
+    [Fact]
+    public void ShouldHaveNewSubcommand()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        rootCommand.Subcommands.ShouldContain(c => c.Name == "new");
     }
 
     // ── Root option ──
@@ -282,5 +289,77 @@ public sealed class CliCommandTests
     {
         var command = CommandFactory.CreatePreviewCommand();
         command.Description!.ShouldContain("preview", Case.Insensitive);
+    }
+
+    // ── New command ──
+
+    [Fact]
+    public void ShouldCreateNewCommandWithDescription()
+    {
+        var command = CommandFactory.CreateNewCommand();
+        command.Name.ShouldBe("new");
+        command.Description.ShouldNotBeNull();
+        command.Description!.ShouldContain("new", Case.Insensitive);
+    }
+
+    [Fact]
+    public void ShouldCreateNewCommandWithNameArgument()
+    {
+        var command = CommandFactory.CreateNewCommand();
+        command.Arguments.ShouldContain(a => a.Name == "name");
+    }
+
+    [Fact]
+    public void ShouldCreateNewCommandWithAction()
+    {
+        var command = CommandFactory.CreateNewCommand();
+        command.Action.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void ShouldParseNewCommand()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        var result = rootCommand.Parse("new my-project");
+
+        result.Errors.Count.ShouldBe(0);
+        result.CommandResult.Command.Name.ShouldBe("new");
+    }
+
+    [Fact]
+    public void ShouldParseNewCommandWithNameArgument()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        var result = rootCommand.Parse("new my-site");
+
+        result.Errors.Count.ShouldBe(0);
+        result.GetValue<string>("name").ShouldBe("my-site");
+    }
+
+    [Fact]
+    public void ShouldReportErrorForNewCommandWithoutName()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        var result = rootCommand.Parse("new");
+
+        result.Errors.Count.ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
+    public void ShouldParseNewCommandWithRootOption()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        var result = rootCommand.Parse("new my-project --root /projects");
+
+        result.Errors.Count.ShouldBe(0);
+        result.GetValue<string>("name").ShouldBe("my-project");
+        result.GetValue<string>("--root").ShouldBe("/projects");
+    }
+
+    [Fact]
+    public void ShouldNotHavePortOptionOnNewCommand()
+    {
+        var command = CommandFactory.CreateNewCommand();
+        command.Options.ShouldNotContain(o => o.Name == "--port");
     }
 }

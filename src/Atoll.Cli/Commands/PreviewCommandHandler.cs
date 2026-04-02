@@ -12,7 +12,7 @@ namespace Atoll.Cli.Commands;
 /// This allows verifying the production build locally before deployment.
 /// </para>
 /// </remarks>
-internal sealed class PreviewCommandHandler
+public sealed class PreviewCommandHandler
 {
     /// <summary>
     /// Executes the preview command.

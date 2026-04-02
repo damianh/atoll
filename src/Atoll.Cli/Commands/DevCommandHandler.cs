@@ -13,7 +13,7 @@ namespace Atoll.Cli.Commands;
 /// Atoll middleware pipeline.
 /// </para>
 /// </remarks>
-internal sealed class DevCommandHandler
+public sealed class DevCommandHandler
 {
     /// <summary>
     /// Executes the dev command.

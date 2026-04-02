@@ -8,7 +8,7 @@ namespace Atoll.Cli.Commands;
 /// Handles the <c>atoll build</c> command. Runs the full SSG pipeline:
 /// load config → discover routes → render pages → process assets → post-process HTML → write manifest.
 /// </summary>
-internal sealed class BuildCommandHandler
+public sealed class BuildCommandHandler
 {
     /// <summary>
     /// Executes the build command.
