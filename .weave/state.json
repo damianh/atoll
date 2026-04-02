@@ -1,0 +1,13 @@
+{
+  "active_plan": "D:\\repos\\damianh\\atoll-worktrees\\astro-fork\\.weave\\plans\\astro-dotnet-fork.md",
+  "started_at": "2026-04-02T10:42:47.966Z",
+  "session_ids": [
+    "ses_2b29f239bffeNgsolmAoGAZSVa"
+  ],
+  "plan_name": "astro-dotnet-fork",
+  "agent": "tapestry",
+  "start_sha": "8e51e5ddc84060bd211338128e99372d97d93b56",
+  "continuation_completed_snapshot": 0,
+  "stale_continuation_count": 3,
+  "paused": true
+}

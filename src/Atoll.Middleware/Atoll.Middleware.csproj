@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Atoll.Middleware</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Atoll.Core\Atoll.Core.csproj" />
+    <ProjectReference Include="..\Atoll.Routing\Atoll.Routing.csproj" />
+  </ItemGroup>
+</Project>

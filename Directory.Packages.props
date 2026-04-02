@@ -1,0 +1,25 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Markdown -->
+    <PackageVersion Include="Markdig" Version="0.38.0" />
+    <!-- HTML Parsing -->
+    <PackageVersion Include="AngleSharp" Version="1.3.0" />
+    <!-- YAML -->
+    <PackageVersion Include="YamlDotNet" Version="16.3.0" />
+    <!-- JS/CSS Minification -->
+    <PackageVersion Include="NUglify" Version="1.21.17" />
+    <!-- CLI -->
+    <PackageVersion Include="System.CommandLine" Version="2.0.0-beta5.25306.1" />
+    <!-- Hashing -->
+    <PackageVersion Include="System.IO.Hashing" Version="9.0.5" />
+    <!-- Testing -->
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.0" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.0" />
+    <PackageVersion Include="Shouldly" Version="4.3.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0" />
+  </ItemGroup>
+</Project>
