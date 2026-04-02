@@ -520,7 +520,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Core/Components/LayoutResolver.cs`
   **Acceptance**: Page with `[Layout(typeof(BaseLayout))]` renders inside layout; layout has `<slot />` for page content
 
-- [ ] 18. **Write tests for Phase 2**
+- [x] 18. **Write tests for Phase 2**
   **What**: Route discovery tests (file tree → route table), pattern matching tests, ASP.NET Core integration tests (HTTP request → HTML response)
   **Files**:
     - `tests/Atoll.Routing.Tests/RouteDiscoveryTests.cs`
@@ -536,7 +536,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
 **Complexity**: 8-10 days
 **Risk**: High — the hydration handshake is the most complex cross-boundary feature
 
-- [ ] 19. **Implement client directive system**
+- [x] 19. **Implement client directive system**
   **What**: `[ClientLoad]`, `[ClientIdle]`, `[ClientVisible]`, `[ClientMedia("(max-width: 768px)")]` attributes. These mark a component for client-side hydration. The directive determines WHEN hydration occurs.
   **Files**:
     - `src/Atoll.Core/Islands/ClientDirective.cs` (enum: Load, Idle, Visible, Media)
@@ -547,7 +547,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Core/Islands/DirectiveExtractor.cs` (reads attributes from component type)
   **Acceptance**: Component with `[ClientLoad]` is detected as requiring hydration
 
-- [ ] 20. **Implement prop serialization for islands**
+- [x] 20. **Implement prop serialization for islands**
   **What**: Type-tagged serialization format compatible with Astro's `[type, value]` tuples. Support: primitives, arrays, objects, DateTime, Uri, nested objects. Cycle detection.
   **Files**:
     - `src/Atoll.Core/Islands/PropSerializer.cs` (C# object → type-tagged JSON)
@@ -555,7 +555,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Core/Islands/CycleDetector.cs` (reference tracking during serialization)
   **Acceptance**: Round-trip test: serialize C# object → JSON → deserialize in test JS → matches original values
 
-- [ ] 21. **Implement `<atoll-island>` HTML generation (server-side)**
+- [x] 21. **Implement `<atoll-island>` HTML generation (server-side)**
   **What**: During SSR, island components render their static HTML wrapped in `<atoll-island>` custom element with metadata attributes: `component-url`, `client`, `props`, `ssr`, `opts`.
   **Files**:
     - `src/Atoll.Core/Islands/IslandRenderer.cs` (wraps component SSR output in island element)
@@ -563,34 +563,34 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Core/Islands/HydrationScriptGenerator.cs` (generates the one-time hydration bootstrap script)
   **Acceptance**: Island component renders `<atoll-island client="load" props="..." ssr>...SSR HTML...</atoll-island>`
 
-- [ ] 22. **Implement `atoll-island` client-side Web Component (JavaScript)**
+- [x] 22. **Implement `atoll-island` client-side Web Component (JavaScript)**
   **What**: Port Astro's `astro-island.ts` → `atoll-island.js`. Handles: `connectedCallback`, prop deserialization, slot collection, module loading, hydration handshake, top-down parent coordination, `atoll:hydrate` event.
   **Files**:
     - `src/Atoll.Core/Islands/Assets/atoll-island.js` (embedded resource)
     - `src/Atoll.Core/Islands/Assets/atoll-directives.js` (client:load, client:idle, client:visible, client:media implementations)
   **Acceptance**: Browser test: island with `client:load` hydrates correctly; island with `client:visible` only hydrates when scrolled into view
 
-- [ ] 23. **Implement vanilla JS island support**
+- [x] 23. **Implement vanilla JS island support**
   **What**: Allow islands that are plain HTML + vanilla JavaScript. Component provides SSR HTML + a JS module URL. The JS module exports an `init(element, props)` function called during hydration.
   **Files**:
     - `src/Atoll.Core/Islands/VanillaJsIsland.cs` (base class for vanilla JS islands)
     - `src/Atoll.Core/Islands/IClientComponent.cs` (interface: SSR render + client module URL)
   **Acceptance**: Counter component with `client:load` renders server HTML, then JS makes it interactive
 
-- [ ] 24. **Implement Web Component island support**
+- [x] 24. **Implement Web Component island support**
   **What**: Allow `<custom-element>` Web Components as islands. SSR renders the light DOM / shadow DOM content. Client-side, the custom element definition is loaded and upgraded.
   **Files**:
     - `src/Atoll.Core/Islands/WebComponentIsland.cs`
     - `src/Atoll.Core/Islands/WebComponentAdapter.cs` (bridges Atoll island protocol ↔ custom element lifecycle)
   **Acceptance**: Web Component island hydrates correctly; custom element upgrade occurs after `client:load`
 
-- [ ] 25. **Implement hydration script deduplication**
+- [x] 25. **Implement hydration script deduplication**
   **What**: Multiple islands of the same type should not duplicate the bootstrap script. Use render instructions to track which directive handlers have been emitted.
   **Files**:
     - `src/Atoll.Core/Islands/HydrationTracker.cs` (tracks emitted scripts per-page)
   **Acceptance**: Page with 5 `client:load` islands → only one copy of the load directive script
 
-- [ ] 26. **Write tests for Phase 3**
+- [x] 26. **Write tests for Phase 3**
   **What**: Prop serialization round-trip tests, island HTML generation tests, hydration script deduplication tests. Browser-based tests deferred to Phase 9.
   **Files**:
     - `tests/Atoll.Core.Tests/Islands/PropSerializerTests.cs`

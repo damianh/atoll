@@ -5,4 +5,8 @@
   <ItemGroup>
     <PackageReference Include="System.IO.Hashing" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Islands\Assets\atoll-island.js" LogicalName="Atoll.Core.Islands.Assets.atoll-island.js" />
+    <EmbeddedResource Include="Islands\Assets\atoll-directives.js" LogicalName="Atoll.Core.Islands.Assets.atoll-directives.js" />
+  </ItemGroup>
 </Project>

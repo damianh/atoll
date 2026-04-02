@@ -116,4 +116,132 @@ Total: 408 tests (328 Phase 1 + 80 Phase 2), all passing, 0 warnings, 0 errors i
 - 31 integration tests in `tests/Atoll.Core.Tests/Components/LayoutTests.cs`
 - Total: 521 tests (162 routing + 359 core), all passing, 0 warnings in Release mode
 
-**What's next**: Story 16 (ASP.NET Core hosting middleware), Story 18 (Phase 2 tests), or Phase 3 (Islands)
+**Story 16: ASP.NET Core hosting middleware** ✅ COMPLETED (commit 3d0277f)
+
+**Story 18: Phase 2 integration tests** ✅ COMPLETED (commit 033ffff)
+- `Phase2IntegrationTests.cs`: 67 tests covering cross-cutting routing/rendering scenarios
+  - RoutePattern computed properties (IsDynamic, HasCatchAll, segment counts, root, mixed segments, null args)
+  - RouteComparer null-argument validation and identity comparison
+  - RouteMatchResult / RouteSegment null-argument validation
+  - RouteConventions edge cases (null args, empty brackets, partial brackets, backslash normalization, non-.cs files, nested index, parse validation)
+  - RouteEntry prerender flag and null argument validation
+  - RouteMatcher edge cases (null routes, null path, empty table, sorted route priority, no match, empty dynamic segment, too few/many segments)
+  - Cross-cutting: static paths → route discovery → matching → page rendering (with and without props)
+  - Cross-cutting: mixed page + endpoint route table, dispatch, priority ordering
+  - Cross-cutting: layout wrapping + nested layouts + route params
+  - Cross-cutting: EndpointDispatcher with all CRUD methods through route matcher
+  - Cross-cutting: AtollResponse factory methods (JSON, Text, HTML, Empty, NotFound, Redirect)
+  - Cross-cutting: case-insensitive matching with page rendering
+  - Cross-cutting: EndpointContext locals with middleware data
+- `MiddlewareIntegrationTests.cs`: 44 tests covering ASP.NET Core middleware integration
+  - Page rendering (home, static, dynamic, catch-all, layout, nested layout, async, multiple dynamic segments)
+  - Endpoint dispatch (GET, POST, PUT, PATCH, HEAD, OPTIONS, DELETE, 405 for unsupported methods)
+  - Route matching / 404, pass-through to next middleware
+  - Base path (static pages, dynamic pages, endpoints, routes outside base path)
+  - Content-type handling (HTML, JSON, text, custom headers)
+  - Response types (redirect, empty, not found, HTML from endpoint)
+  - Edge cases (trailing slash, empty route table, concurrent requests, different slug values)
+  - Coexistence with ASP.NET Core endpoints
+  - AddAtoll configuration (route entries, SiteUrl)
+- Total: 632 tests (229 routing + 359 core + 44 server), all passing, 0 warnings, 0 errors in Release mode
+
+**Phase 2 is COMPLETE.** All stories (12-18) are done. Commits:
+1. `d27b944` - Stories 12-13: route discovery and pattern matching
+2. `af70934` - Story 14: IAtollPage, IStaticPathsProvider, StaticPath
+3. `23c015f` - Story 15: API endpoint support
+4. `29ac611` - Story 17: Layout system
+5. `3d0277f` - Story 16: ASP.NET Core hosting middleware
+6. `033ffff` - Story 18: Phase 2 integration tests
+
+**What's next**: Phase 3 (Islands architecture, client-side hydration)
+
+### Session: 2026-04-02 (continued — Phase 3)
+
+**Phase 3 IN PROGRESS — Islands Architecture (Vanilla JS + Web Components)**
+
+**Story 19: Client directive system** ✅ COMPLETED
+- `ClientDirectiveAttribute` (abstract base, `Inherited = false`), `ClientLoadAttribute`, `ClientIdleAttribute`, `ClientVisibleAttribute` (with `RootMargin`), `ClientMediaAttribute` (with required `mediaQuery`)
+- `DirectiveExtractor` (static: `GetDirective(Type)`, `HasDirective(Type)`)
+- `DirectiveInfo` record
+- Reused existing `ClientDirectiveType` enum from `Atoll.Core.Instructions` namespace (Phase 1, Story 8)
+- 37 tests in `DirectiveExtractorTests.cs`
+
+**Story 20: Prop serialization for islands** ✅ COMPLETED
+- `PropType` enum (matching Astro's PROP_TYPE: Value=0, JSON=1, RegExp=2, Date=3, Map=4, Set=5, BigInt=6, URL=7, Uint8Array=8, Uint16Array=9, Uint32Array=10, Infinity=11)
+- `PropSerializer` (static: `Serialize(props)`, `Serialize(props, displayName)` — produces type-tagged JSON matching Astro's `[type, value]` tuple format)
+- `CycleDetector` (internal: reference-tracking with `Enter`/`CycleGuard` pattern, uses `ReferenceEqualityComparer.Instance`)
+- 40 tests in `PropSerializerTests.cs`
+
+**Story 21: `<atoll-island>` HTML generation (server-side)** ✅ COMPLETED
+- `IslandMetadata` (ComponentUrl, DirectiveType, ComponentExport, DirectiveValue, DisplayName, BeforeHydrationUrl)
+- `IslandRenderer` (static: `RenderIslandAsync<T>`, `RenderIslandAsync(Type)`, `GenerateOpeningTag`, `ClosingTag`)
+- `HydrationScriptGenerator` (static: `GenerateBootstrapScript`, `GenerateDirectiveScript`, `BootstrapScriptKey`)
+- 42 tests in `IslandRendererTests.cs`
+
+**Story 22: Client-side JavaScript** ✅ COMPLETED
+- `atoll-island.js` — Web Component with prop deserialization, slot collection, parent coordination, hydration lifecycle
+- `atoll-directives.js` — Directive handlers (load via requestAnimationFrame, idle via requestIdleCallback, visible via IntersectionObserver, media via matchMedia)
+- Both files configured as embedded resources in `Atoll.Core.csproj`
+- `IslandScriptProvider` (static: `GetIslandScript()`, `GetDirectivesScript()`, `GetScript(resourceName)` with caching)
+- 25 tests in `IslandScriptProviderTests.cs`
+
+**Story 23: Vanilla JS island support** ✅ COMPLETED
+- `IClientComponent` interface (ClientModuleUrl, ClientExportName with default "default")
+- `VanillaJsIsland` abstract base class extending `AtollComponent` + `IClientComponent`
+  - `CreateMetadata()` — auto-generates IslandMetadata from directive + client module URL
+  - `RenderIslandAsync(dest, props, slots)` — renders wrapped in `<atoll-island>` element
+  - Supports all four directive types via attribute decoration
+- 27 tests in `VanillaJsIslandTests.cs`
+
+**Story 24: Web Component island support** ✅ COMPLETED
+- `WebComponentAdapter` (static: `IsValidCustomElementName`, `GenerateOpeningTag`, `GenerateClosingTag`)
+  - Custom element tag name validation (must contain hyphen, lowercase, no digit start)
+  - Props rendered as HTML attributes (string, numeric, boolean; complex objects skipped)
+- `WebComponentIsland` abstract base class extending `AtollComponent` + `IClientComponent`
+  - `TagName` abstract property for custom element name
+  - `RenderLightDomAsync(context)` for SSR light DOM content
+  - `RenderPropsAsAttributes` toggle (default true)
+  - `CreateMetadata()` uses TagName as DisplayName
+  - `RenderIslandAsync(dest, props, slots)` with all overloads
+- 49 tests in `WebComponentIslandTests.cs`
+
+**Story 25: Hydration script deduplication** ✅ COMPLETED
+- `HydrationTracker` tracks emitted scripts per-page
+  - `TryEmitBootstrap()` / `TryEmitDirective(type)` — returns false for duplicates
+  - `HasBootstrap` / `HasDirective(type)` — check tracking state
+  - `GetRequiredScripts(type, islandUrl, directiveUrl)` — atomic check-and-mark
+  - `GetRequiredInlineScripts(type)` — inline script variant
+  - `AddToProcessor(processor, type, islandUrl, directiveUrl)` — integration with InstructionProcessor
+  - `Reset()` — clear tracking state
+- 30 tests in `HydrationTrackerTests.cs`
+
+**Story 26: Phase 3 integration tests** ✅ COMPLETED
+- `Phase3IntegrationTests.cs`: 21 cross-cutting integration tests
+  - End-to-end: directive → prop serialization → island HTML generation
+  - WebComponentIsland with custom element tag inside island wrapper
+  - Directive extraction matching island metadata across all 4 types
+  - Script deduplication: 5 load islands → 2 scripts; mixed types → correct counts
+  - ScriptInstruction rendering as module scripts
+  - Prop serialization round-trip with JSON validation
+  - Nested island rendering (parent + child both wrapped)
+  - Mixed static + island components on same page
+  - Full page: multiple islands + script deduplication + SSR content
+  - IslandScriptProvider + HydrationScriptGenerator integration
+  - IClientComponent consistency across VanillaJsIsland and WebComponentIsland
+
+**Phase 3 is COMPLETE.** All stories (19-26) are done.
+
+Total: 903 tests (630 core + 229 routing + 44 server), all passing, 0 warnings, 0 errors in Release mode
+
+**Key discoveries for Phase 3:**
+- `ClientDirectiveAttribute` has `Inherited = false` — derived classes don't inherit directives from base
+- Reused `ClientDirectiveType` enum from Phase 1 (Story 8) rather than duplicating in Islands namespace
+- Astro's prop serialization uses `[type, value]` tuples — `PropSerializer` produces identical JSON format
+- `CycleDetector` uses `ReferenceEqualityComparer.Instance` for reference-identity tracking
+- `WebUtility.HtmlEncode` used for attribute escaping in `IslandRenderer`
+- `StringRenderDestination.GetOutput()` returns non-nullable `string` (prefer over `.ToString()` in tests)
+- `VanillaJsIsland` and `WebComponentIsland` are `abstract` (not sealed) — intentional for inheritance
+- `WebComponentIsland.RenderCoreAsync` is `sealed override` to enforce the custom element tag wrapping pattern
+- JS embedded resources use `LogicalName` in csproj for stable resource names
+
+**What's next**: Phase 4 (Content Collections) — Stories 27-33
