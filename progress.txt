@@ -251,3 +251,41 @@
 - **All tests**: 1,946 tests passing (824 core + 278 build + 249 integration + 229 routing + 182 content + 110 server + 74 middleware) ✓
 
 **What's next**: Story 68 (README with getting-started guide) — the final story
+
+### 2026-04-02 — Story 68: Update README with getting-started guide (Phase 11)
+
+**Completed by**: claude-opus-4.6
+**Commit**: (pending) (branch: astro-fork)
+
+**What was done**:
+- Created comprehensive `README.md` covering all aspects of the Atoll framework
+- **Sections included**:
+  - Why Atoll — philosophy and value proposition
+  - Comparison table: Astro vs Atoll (10 concepts mapped)
+  - Quickstart — 5-step guide from project creation to running
+  - Architecture overview — library breakdown and request flow diagram
+  - Rendering model — `WriteHtml`/`WriteText`/slots/fragments API
+  - Components — props, `[Parameter]`, child component rendering via `ComponentRenderer.ToFragment<T>`
+  - Pages — `IAtollPage`, `[Layout]`, dynamic routes, `IStaticPathsProvider`
+  - Islands (Partial Hydration) — all 4 client directives with examples (`[ClientLoad]`, `[ClientIdle]`, `[ClientVisible]`, `[ClientMedia]`)
+  - Content Collections — schema definition, Markdown files, `CollectionQuery`, rendering
+  - API Endpoints — `IAtollEndpoint`, HTTP method handlers, `AtollResponse` factory methods
+  - CSS Scoping — `[Styles]` attribute, automatic `:where(.atoll-HASH)` scoping, `[GlobalStyle]`
+  - Middleware — `MiddlewareHandler` delegates, sequencing, rewrite support
+  - Sample sites — Blog and Portfolio descriptions
+  - Project structure — recommended directory layout
+  - Building — commands for build, test, dev server
+
+**Build verification**: `dotnet build -c Release` → 0 warnings, 0 errors ✓
+
+**🎉 ALL 68 STORIES COMPLETE — Phase 11 (Sample Sites & Polish) is done!**
+
+**Final stats**:
+- 8 source projects: Core, Routing, Content, Middleware, Build, Server, Cli, Blazor
+- 2 sample sites: Blog, Portfolio
+- 7 test projects: 1,946 tests all passing
+- 0 warnings in Release build
+- All public types documented with XML docs
+- All concrete classes sealed
+- No optional/default parameters
+- Comprehensive README for new developers

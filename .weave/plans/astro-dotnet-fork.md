@@ -952,7 +952,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/**/*.cs` (code quality sweep across all source projects)
   **Acceptance**: `dotnet build -c Release` → zero warnings; all public types have XML docs
 
-- [ ] 68. **Update README with getting-started guide**
+- [x] 68. **Update README with getting-started guide**
   **What**: Project README with: what Atoll is, quickstart, architecture overview, comparison with Astro, how to create components/pages/islands/content.
   **Files**:
     - `README.md`
