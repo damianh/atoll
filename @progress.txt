@@ -457,3 +457,37 @@ Fixed broken build caused by System.CommandLine API mismatch (2.0.0-beta5 → 2.
 All passing, 0 warnings, 0 errors in Release mode.
 
 **What's next**: Stories 52-55 (atoll dev/build/preview/new commands) and Story 56 (library mode)
+
+**Stories 52-56: CLI commands and library mode** ✅ COMMITTED (`103e406`)
+
+- **Story 52** (`atoll dev`): Command wired via CommandFactory, DevCommandHandler serves as placeholder (full dev server with file watching is Phase 10)
+- **Story 53** (`atoll build`): BuildCommandHandler runs full SSG pipeline (config → routes → render → assets → post-process → manifest)
+- **Story 54** (`atoll preview`): PreviewCommandHandler serves as placeholder (full static serving is Phase 10)
+- **Story 55** (`atoll new`): NewCommandHandler scaffolds complete project with:
+  - `.csproj` (SDK Web project targeting net10.0 with Atoll.Server package)
+  - `atoll.json` (default configuration)
+  - `Program.cs` (entry point with AddAtoll/UseAtoll)
+  - `Pages/Index.cs` (sample home page component)
+  - `Layouts/MainLayout.cs` (HTML5 layout with slot)
+  - `.gitignore` (bin, obj, dist)
+  - Namespace sanitization (hyphens → underscores, leading digits → prepend underscore)
+  - XML escaping for csproj
+  - Non-empty directory check (refuses to overwrite)
+- **Story 56** (library mode): Already done in Phase 2 — AddAtoll/UseAtoll extension methods with assembly scanning, route entries, base path, RouteMatcher DI
+
+All command handlers made `public sealed` for testability without InternalsVisibleTo.
+
+**Story 58: Phase 9 tests** ✅ COMMITTED (`1d5d835`)
+
+- `tests/Atoll.Integration.Tests/CliCommandTests.cs` — 40 tests (command structure, new command parsing, option parsing, default values, error cases)
+- `tests/Atoll.Integration.Tests/NewCommandHandlerTests.cs` — 22 tests (directory creation, file content, namespace sanitization, error handling, XML escaping, complete scaffold verification)
+- `tests/Atoll.Integration.Tests/LibraryModeTests.cs` — 10 tests (coexistence with custom middleware, base path, empty route table, null guards, route entries)
+
+**Phase 9 COMPLETE** — All stories 52-58 done.
+
+**Test counts: 1,627 total** (824 core + 229 routing + 182 content + 44 server + 74 middleware + 202 build + 72 integration)
+All passing, 0 warnings, 0 errors in Release mode.
+
+**Phases completed: 0, 1, 2, 3, 4, 6, 7, 8, 9**
+
+**What's next**: Phase 10 (Developer Experience, Stories 59-63) or Phase 5 (Blazor WASM Islands, Stories 33-36) or Phase 11 (Polish/Samples/Documentation)
