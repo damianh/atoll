@@ -1,0 +1,59 @@
+## Progress Log
+
+### 2026-04-02 — Story 14: IAtollPage interface and page types
+
+**Completed by**: claude-opus-4.6
+**Commit**: af70934 (branch: astro-fork)
+
+**What was done**:
+- Created `IAtollPage` interface in `src/Atoll.Routing/IAtollPage.cs` — marker interface extending `IAtollComponent` for routable pages
+- Created `IStaticPathsProvider` interface in `src/Atoll.Routing/IStaticPathsProvider.cs` — provides `GetStaticPathsAsync()` for SSG dynamic route enumeration (Astro's `getStaticPaths()` equivalent)
+- Created `StaticPath` class in `src/Atoll.Routing/StaticPath.cs` — holds route parameters and optional pre-computed props for each static page instance
+- Created `tests/Atoll.Routing.Tests/PageTypeTests.cs` with 16 integration tests covering:
+  - IAtollPage as IAtollComponent (marker interface correctness)
+  - Page rendering via IAtollComponent interface
+  - Static paths provider returning paths with and without props
+  - Empty paths provider
+  - StaticPath construction with parameters, props, null values, multiple params
+  - Null argument validation for StaticPath
+  - Route discovery integration with IAtollPage types
+  - Route matching alignment with static paths (dynamic segments)
+  - Catch-all route with static paths
+- Added direct Atoll.Core project reference to Atoll.Routing.Tests.csproj
+- Updated plan checkmarks for stories 6-13 (previously completed but not marked)
+
+**Build verification**: `dotnet build -c Release` — 0 warnings, 0 errors
+**Test results**: All 424 tests pass (96 routing + 328 core)
+
+**What's next**: Story 15 (API endpoint support) or Story 17 (Layout system) — both in Phase 2
+
+### 2026-04-02 — Story 15: API endpoint support
+
+**Completed by**: claude-opus-4.6
+**Commit**: (pending) (branch: astro-fork)
+
+**What was done**:
+- Created `IAtollEndpoint` interface in `src/Atoll.Routing/IAtollEndpoint.cs` — uses C# default interface methods for GET/POST/PUT/DELETE/PATCH/HEAD/OPTIONS, each returning `Task<AtollResponse>?` (null = not implemented)
+- Created `EndpointRequest` in `src/Atoll.Routing/EndpointRequest.cs` — HTTP request abstraction (method, URL, headers, body stream) decoupled from ASP.NET Core
+- Created `EndpointContext` in `src/Atoll.Routing/EndpointContext.cs` — API context with route parameters, request, locals dictionary, typed accessors (`GetParameter`, `GetLocal<T>`)
+- Created `AtollResponse` in `src/Atoll.Routing/AtollResponse.cs` — HTTP response wrapper with factory methods: `Json<T>()`, `Text()`, `Html()`, `Redirect()`, `Empty()`, `MethodNotAllowed()`, `NotFound()`; JSON uses camelCase via `System.Text.Json`
+- Created `EndpointDispatcher` in `src/Atoll.Routing/EndpointDispatcher.cs` — static dispatcher that routes HTTP method to endpoint handler; uses `GetInterfaceMap` reflection to detect supported methods without invoking handlers; returns 405 with Allow header for unsupported methods
+- Updated `RouteDiscovery.cs` — added `IsRoutableType()` helper to scan for `IAtollEndpoint` types alongside `IAtollComponent`
+- Created `tests/Atoll.Routing.Tests/EndpointTests.cs` with 66 tests covering:
+  - EndpointRequest construction, defaults, null validation
+  - EndpointContext parameter/local access, typed locals, missing key behavior
+  - AtollResponse factory methods (JSON, text, HTML, redirect, empty, 405, 404)
+  - JSON camelCase serialization
+  - EndpointDispatcher routing all 7 HTTP methods to correct handlers
+  - 405 response with Allow header for unsupported methods
+  - GetSupportedMethods reflection for partial implementations
+  - Route discovery integration scanning IAtollEndpoint types
+  - End-to-end route match → dispatch → response flow
+  - Middleware locals access pattern
+
+**Key discovery**: Shouldly's `ShouldNotContain` for strings is case-insensitive by default — use `string.Contains(value, StringComparison.Ordinal)` for case-sensitive checks
+
+**Build verification**: `dotnet build -c Release` — 0 warnings, 0 errors
+**Test results**: All 490 tests pass (162 routing + 328 core)
+
+**What's next**: Story 16 (ASP.NET Core hosting middleware), Story 17 (Layout system), or Story 18 (Phase 2 tests)

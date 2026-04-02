@@ -488,7 +488,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Routing/Matching/RouteComparer.cs` (priority ordering)
   **Acceptance**: `/blog/hello-world` matches `blog/[slug]` with `slug=hello-world`; `/docs/a/b/c` matches `docs/[...rest]` with `rest=a/b/c`
 
-- [ ] 14. **Implement `IAtollPage` interface and page types**
+- [x] 14. **Implement `IAtollPage` interface and page types**
   **What**: Define page contract. Pages are components with additional routing metadata. Support `GetStaticPaths()` for SSG dynamic routes.
   **Files**:
     - `src/Atoll.Routing/IAtollPage.cs` (extends IAtollComponent with route metadata)

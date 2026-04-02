@@ -135,6 +135,17 @@ public sealed class RouteDiscovery
         return Path.GetRelativePath(fullPagesDir, fullFilePath).Replace('\\', '/');
     }
 
+    private static bool IsRoutableType(Type type)
+    {
+        if (type.IsAbstract || type.IsInterface)
+        {
+            return false;
+        }
+
+        return typeof(IAtollComponent).IsAssignableFrom(type)
+               || typeof(IAtollEndpoint).IsAssignableFrom(type);
+    }
+
     private static IReadOnlyDictionary<string, Type> BuildTypeMap(IEnumerable<Assembly> assemblies)
     {
         var typeMap = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
@@ -143,12 +154,7 @@ public sealed class RouteDiscovery
         {
             foreach (var type in assembly.GetExportedTypes())
             {
-                if (!typeof(IAtollComponent).IsAssignableFrom(type))
-                {
-                    continue;
-                }
-
-                if (type.IsAbstract || type.IsInterface)
+                if (!IsRoutableType(type))
                 {
                     continue;
                 }
