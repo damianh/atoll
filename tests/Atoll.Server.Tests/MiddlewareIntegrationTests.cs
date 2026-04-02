@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Net;
 using System.Text.Json;
 using Atoll.Core.Components;
@@ -744,5 +745,403 @@ public sealed class MiddlewareIntegrationTests
         var response = await client.GetAsync("/api/posts");
 
         response.Content.Headers.ContentType!.ToString().ShouldContain("application/json");
+    }
+
+    [Fact]
+    public async Task ShouldForwardCustomHeadersFromEndpoint()
+    {
+        using var client = CreateTestClient(("api/custom.cs", typeof(CustomHeaderEndpoint)));
+
+        var response = await client.GetAsync("/api/custom");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.Headers.TryGetValues("X-Custom-Header", out var values).ShouldBeTrue();
+        string.Join("", values!).ShouldBe("custom-value");
+    }
+
+    // ================================================================
+    // Async Page Through Middleware Tests
+    // ================================================================
+
+    [Fact]
+    public async Task ShouldRenderAsyncPageThroughMiddleware()
+    {
+        using var client = CreateTestClient(("async/[id].cs", typeof(AsyncDataPage)));
+
+        var response = await client.GetAsync("/async/42");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = await response.Content.ReadAsStringAsync();
+        body.ShouldContain("<p>Loaded item: 42</p>");
+    }
+
+    // ================================================================
+    // Nested Layout Through Middleware Tests
+    // ================================================================
+
+    [Fact]
+    public async Task ShouldRenderPageWithNestedLayoutsThroughMiddleware()
+    {
+        using var client = CreateTestClient(("nested.cs", typeof(NestedLayoutPage)));
+
+        var response = await client.GetAsync("/nested");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = await response.Content.ReadAsStringAsync();
+        body.ShouldContain("<!DOCTYPE html>");
+        body.ShouldContain("<header>Outer Header</header>");
+        body.ShouldContain("<aside>Inner Sidebar</aside>");
+        body.ShouldContain("<article>Nested Content</article>");
+        body.ShouldContain("</aside>"); // Inner layout close
+        body.ShouldContain("<footer>Outer Footer</footer>");
+    }
+
+    // ================================================================
+    // Catch-All With Empty Remainder Tests
+    // ================================================================
+
+    [Fact]
+    public async Task ShouldRenderCatchAllWithEmptyRemainder()
+    {
+        using var client = CreateTestClient(("docs/[...rest].cs", typeof(DocsPage)));
+
+        var response = await client.GetAsync("/docs");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = await response.Content.ReadAsStringAsync();
+        body.ShouldContain("<h1>Docs: </h1>");
+    }
+
+    [Fact]
+    public async Task ShouldRenderCatchAllWithMultiSegmentRemainder()
+    {
+        using var client = CreateTestClient(("docs/[...rest].cs", typeof(DocsPage)));
+
+        var response = await client.GetAsync("/docs/guides/advanced/topics");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = await response.Content.ReadAsStringAsync();
+        body.ShouldContain("<h1>Docs: guides/advanced/topics</h1>");
+    }
+
+    // ================================================================
+    // Additional Phase 2 test page/endpoint stubs
+    // ================================================================
+
+    private sealed class CustomHeaderEndpoint : IAtollEndpoint
+    {
+        public Task<AtollResponse> GetAsync(EndpointContext context)
+        {
+            var headers = new Dictionary<string, string>
+            {
+                ["Content-Type"] = "application/json; charset=utf-8",
+                ["X-Custom-Header"] = "custom-value"
+            };
+            var body = System.Text.Encoding.UTF8.GetBytes("{\"ok\":true}");
+            return Task.FromResult(new AtollResponse(200, new ReadOnlyDictionary<string, string>(headers), body));
+        }
+    }
+
+    private sealed class AsyncDataPage : AtollComponent, IAtollPage
+    {
+        [Parameter(Required = true)]
+        public string Id { get; set; } = "";
+
+        protected override async Task RenderCoreAsync(RenderContext context)
+        {
+            // Force async code path
+            await Task.Yield();
+            WriteHtml($"<html><body><p>Loaded item: {Id}</p></body></html>");
+        }
+    }
+
+    private sealed class OuterLayout : AtollComponent
+    {
+        protected override async Task RenderCoreAsync(RenderContext context)
+        {
+            WriteHtml("<html><body><header>Outer Header</header>");
+            await RenderSlotAsync();
+            WriteHtml("<footer>Outer Footer</footer></body></html>");
+        }
+    }
+
+    [Layout(typeof(OuterLayout))]
+    private sealed class InnerLayout : AtollComponent
+    {
+        protected override async Task RenderCoreAsync(RenderContext context)
+        {
+            WriteHtml("<aside>Inner Sidebar</aside><div>");
+            await RenderSlotAsync();
+            WriteHtml("</div>");
+        }
+    }
+
+    [Layout(typeof(InnerLayout))]
+    private sealed class NestedLayoutPage : AtollComponent, IAtollPage
+    {
+        protected override Task RenderCoreAsync(RenderContext context)
+        {
+            WriteHtml("<article>Nested Content</article>");
+            return Task.CompletedTask;
+        }
+    }
+
+    // ================================================================
+    // PUT/PATCH/HEAD/OPTIONS Through Middleware Tests
+    // ================================================================
+
+    [Fact]
+    public async Task ShouldDispatchPutToEndpoint()
+    {
+        using var client = CreateTestClient(("api/items.cs", typeof(CrudEndpoint)));
+
+        var response = await client.PutAsync("/api/items", null);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = await response.Content.ReadAsStringAsync();
+        body.ShouldBe("updated");
+    }
+
+    [Fact]
+    public async Task ShouldDispatchPatchToEndpoint()
+    {
+        using var client = CreateTestClient(("api/items.cs", typeof(CrudEndpoint)));
+
+        var request = new HttpRequestMessage(HttpMethod.Patch, "/api/items");
+        var response = await client.SendAsync(request);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = await response.Content.ReadAsStringAsync();
+        body.ShouldBe("patched");
+    }
+
+    [Fact]
+    public async Task ShouldDispatchHeadToEndpoint()
+    {
+        using var client = CreateTestClient(("api/health.cs", typeof(HeadOptionsEndpoint)));
+
+        var request = new HttpRequestMessage(HttpMethod.Head, "/api/health");
+        var response = await client.SendAsync(request);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task ShouldDispatchOptionsToEndpoint()
+    {
+        using var client = CreateTestClient(("api/health.cs", typeof(HeadOptionsEndpoint)));
+
+        var request = new HttpRequestMessage(HttpMethod.Options, "/api/health");
+        var response = await client.SendAsync(request);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+    }
+
+    // ================================================================
+    // Base Path With Dynamic Routes Tests
+    // ================================================================
+
+    [Fact]
+    public async Task ShouldRenderDynamicPageUnderBasePath()
+    {
+        using var client = CreateTestClientWithBasePath(
+            "/app",
+            ("blog/[slug].cs", typeof(BlogPostPage)));
+
+        var response = await client.GetAsync("/app/blog/my-post");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = await response.Content.ReadAsStringAsync();
+        body.ShouldContain("<h1>Post: my-post</h1>");
+    }
+
+    [Fact]
+    public async Task ShouldDispatchEndpointUnderBasePath()
+    {
+        using var client = CreateTestClientWithBasePath(
+            "/api/v2",
+            ("posts.cs", typeof(PostsEndpoint)));
+
+        var response = await client.GetAsync("/api/v2/posts");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.Content.Headers.ContentType!.MediaType.ShouldBe("application/json");
+        var body = await response.Content.ReadAsStringAsync();
+        var json = JsonDocument.Parse(body);
+        json.RootElement.GetArrayLength().ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task ShouldNotMatchDynamicRouteOutsideBasePath()
+    {
+        var builder = new HostBuilder()
+            .ConfigureWebHost(webHost =>
+            {
+                webHost.UseTestServer();
+                webHost.ConfigureServices(services =>
+                {
+                    services.AddAtoll(options =>
+                    {
+                        options.BasePath = "/app";
+                        options.RouteEntries.Add(("blog/[slug].cs", typeof(BlogPostPage)));
+                    });
+                    services.AddLogging();
+                });
+                webHost.Configure(app =>
+                {
+                    app.UseAtoll();
+                    app.Run(async ctx =>
+                    {
+                        ctx.Response.StatusCode = 418;
+                        await ctx.Response.WriteAsync("Not Atoll");
+                    });
+                });
+            });
+
+        var host = builder.Start();
+        using var client = host.GetTestClient();
+
+        // Request outside base path should fall through
+        var response = await client.GetAsync("/blog/my-post");
+
+        response.StatusCode.ShouldBe((HttpStatusCode)418);
+    }
+
+    // ================================================================
+    // Multiple Dynamic Segments Through Middleware Tests
+    // ================================================================
+
+    [Fact]
+    public async Task ShouldRenderPageWithMultipleDynamicSegments()
+    {
+        using var client = CreateTestClient(("blog/[year]/[slug].cs", typeof(YearSlugPage)));
+
+        var response = await client.GetAsync("/blog/2024/my-post");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = await response.Content.ReadAsStringAsync();
+        body.ShouldContain("Year: 2024");
+        body.ShouldContain("Post: my-post");
+    }
+
+    // ================================================================
+    // Endpoint Returning Different Response Types Through Middleware
+    // ================================================================
+
+    [Fact]
+    public async Task ShouldReturnHtmlResponseFromEndpoint()
+    {
+        using var client = CreateTestClient(("api/html.cs", typeof(HtmlEndpoint)));
+
+        var response = await client.GetAsync("/api/html");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.Content.Headers.ContentType!.MediaType.ShouldBe("text/html");
+        var body = await response.Content.ReadAsStringAsync();
+        body.ShouldBe("<h1>Hello HTML</h1>");
+    }
+
+    [Fact]
+    public async Task ShouldReturnEmptyResponseFromEndpoint()
+    {
+        using var client = CreateTestClient(("api/empty.cs", typeof(EmptyEndpoint)));
+
+        var response = await client.DeleteAsync("/api/empty");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task ShouldReturnNotFoundFromEndpoint()
+    {
+        using var client = CreateTestClient(("api/missing.cs", typeof(NotFoundEndpoint)));
+
+        var response = await client.GetAsync("/api/missing");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    // ================================================================
+    // Additional stubs for new tests
+    // ================================================================
+
+    private sealed class CrudEndpoint : IAtollEndpoint
+    {
+        public Task<AtollResponse> GetAsync(EndpointContext context)
+        {
+            return Task.FromResult(AtollResponse.Json(new[] { "item1" }));
+        }
+
+        public Task<AtollResponse> PostAsync(EndpointContext context)
+        {
+            return Task.FromResult(AtollResponse.Json(new { Id = 1 }, 201));
+        }
+
+        public Task<AtollResponse> PutAsync(EndpointContext context)
+        {
+            return Task.FromResult(AtollResponse.Text("updated"));
+        }
+
+        public Task<AtollResponse> DeleteAsync(EndpointContext context)
+        {
+            return Task.FromResult(AtollResponse.Empty(204));
+        }
+
+        public Task<AtollResponse> PatchAsync(EndpointContext context)
+        {
+            return Task.FromResult(AtollResponse.Text("patched"));
+        }
+    }
+
+    private sealed class HeadOptionsEndpoint : IAtollEndpoint
+    {
+        public Task<AtollResponse> HeadAsync(EndpointContext context)
+        {
+            return Task.FromResult(AtollResponse.Empty(200));
+        }
+
+        public Task<AtollResponse> OptionsAsync(EndpointContext context)
+        {
+            return Task.FromResult(AtollResponse.Empty(204));
+        }
+    }
+
+    private sealed class YearSlugPage : AtollComponent, IAtollPage
+    {
+        [Parameter(Required = true)]
+        public string Year { get; set; } = "";
+
+        [Parameter(Required = true)]
+        public string Slug { get; set; } = "";
+
+        protected override Task RenderCoreAsync(RenderContext context)
+        {
+            WriteHtml($"<html><body><p>Year: {Year}, Post: {Slug}</p></body></html>");
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class HtmlEndpoint : IAtollEndpoint
+    {
+        public Task<AtollResponse> GetAsync(EndpointContext context)
+        {
+            return Task.FromResult(AtollResponse.Html("<h1>Hello HTML</h1>"));
+        }
+    }
+
+    private sealed class EmptyEndpoint : IAtollEndpoint
+    {
+        public Task<AtollResponse> DeleteAsync(EndpointContext context)
+        {
+            return Task.FromResult(AtollResponse.Empty(204));
+        }
+    }
+
+    private sealed class NotFoundEndpoint : IAtollEndpoint
+    {
+        public Task<AtollResponse> GetAsync(EndpointContext context)
+        {
+            return Task.FromResult(AtollResponse.NotFound());
+        }
     }
 }
