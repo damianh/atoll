@@ -605,7 +605,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
 **Complexity**: 5-7 days
 **Risk**: Low-Medium — Markdig is well-documented; YAML parsing is straightforward
 
-- [ ] 27. **Implement content collection definition**
+- [x] 27. **Implement content collection definition**
   **What**: Collections are defined by directory convention (`src/content/{collection}/`) and a C# schema class. Schema class has properties with DataAnnotations for validation.
   **Files**:
     - `src/Atoll.Content/Collections/ContentCollection.cs` (collection definition: name, schema type, directory)
@@ -613,7 +613,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Content/Collections/ContentEntry.cs` (single entry: id, slug, body, data, collection)
   **Acceptance**: Can define a "blog" collection with a `BlogPost` schema class
 
-- [ ] 28. **Implement frontmatter parsing**
+- [x] 28. **Implement frontmatter parsing**
   **What**: Extract YAML frontmatter from Markdown files (between `---` delimiters). Parse YAML to dictionary, then bind to schema class. Validate using DataAnnotations.
   **Files**:
     - `src/Atoll.Content/Frontmatter/FrontmatterParser.cs` (extracts YAML + body from markdown)
@@ -621,14 +621,14 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Content/Frontmatter/FrontmatterValidator.cs` (DataAnnotations validation)
   **Acceptance**: Markdown with frontmatter → parsed schema object with validated properties
 
-- [ ] 29. **Implement Markdown rendering**
+- [x] 29. **Implement Markdown rendering**
   **What**: Markdig pipeline: CommonMark + extensions (tables, autolinks, task lists, syntax highlighting). Render Markdown body to HTML. Support custom Markdig extensions.
   **Files**:
     - `src/Atoll.Content/Markdown/MarkdownRenderer.cs` (configures Markdig pipeline, renders to HTML)
     - `src/Atoll.Content/Markdown/MarkdownOptions.cs` (extension toggles, syntax highlight theme)
   **Acceptance**: Markdown with tables, code blocks, and task lists renders to correct HTML
 
-- [ ] 30. **Implement collection query API**
+- [x] 30. **Implement collection query API**
   **What**: `GetCollection<T>("blog")` → all entries. `GetEntry<T>("blog", "my-post")` → single entry. `Render(entry)` → HTML + headings. Type-safe access to frontmatter data.
   **Files**:
     - `src/Atoll.Content/Collections/CollectionLoader.cs` (scans directory, loads entries)
@@ -636,13 +636,13 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Content/Collections/RenderedContent.cs` (HTML + headings + metadata)
   **Acceptance**: `GetCollection<BlogPost>("blog")` returns typed entries; `Render()` returns HTML
 
-- [ ] 31. **Implement content as Atoll component**
+- [x] 31. **Implement content as Atoll component**
   **What**: Rendered Markdown content can be used as a `RenderFragment` inside Atoll components. The content HTML is injected into a layout/page.
   **Files**:
     - `src/Atoll.Content/Collections/ContentComponent.cs` (wraps rendered content as IAtollComponent)
   **Acceptance**: Blog post page renders Markdown content inside a layout with header/footer
 
-- [ ] 32. **Write tests for Phase 4**
+- [x] 32. **Write tests for Phase 4**
   **What**: Frontmatter parsing, schema validation (valid + invalid), Markdown rendering, collection loading, query API
   **Files**:
     - `tests/Atoll.Content.Tests/Frontmatter/FrontmatterParserTests.cs`

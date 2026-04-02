@@ -135,3 +135,32 @@
 
 **Build verification**: `dotnet build -c Release` — 0 warnings, 0 errors
 **Test results**: All 549 tests pass (162 routing + 359 core + 28 server)
+
+### 2026-04-02 — Stories 27-32: Phase 4 content collections + comprehensive tests
+
+**Completed by**: claude-opus-4.6
+**Commit**: (pending) (branch: astro-fork)
+
+**What was done**:
+- Phase 4 source code (Stories 27-31) was previously implemented but never committed — all source and test files were untracked
+- Story 32: Added 70 new tests to achieve comprehensive branch coverage across all Phase 4 types
+- New tests cover:
+  - `FrontmatterParseResult` null checks and `HasFrontmatter` logic
+  - `FrontmatterParser` edge cases: short content, delimiter-only, non-newline after delimiter
+  - `FrontmatterBinder` untyped overload: null target type, whitespace yaml, invalid yaml
+  - `FrontmatterBindingException` both constructor overloads
+  - `FrontmatterValidationResult` null errors, ThrowIfInvalid when valid
+  - `FrontmatterValidationException` message+errors, null errors
+  - `MarkdownRenderer` all option toggles: footnotes, autolinks disabled, task lists disabled, emphasis extras disabled, auto identifiers, BuildPipeline null check
+  - `RenderedContent` null checks, empty state
+  - `ContentFile` properties and null validation
+  - `InMemoryFileProvider` all code paths: unknown dir, non-.md filtering, path normalization, trailing slash, case-insensitive slug, null arguments
+  - `CollectionLoader` constructor nulls, null args on methods, schema type mismatch, single entry load, sorted collection
+  - `CollectionQuery` constructor nulls, custom markdown options, null predicate
+  - `ContentComponent` `FromHtml(string, headings)` overload null checks and rendering
+  - `MarkdownHeading` and `MarkdownRenderResult` construction and null checks
+
+**Build verification**: `dotnet build -c Release` — 0 warnings, 0 errors
+**Test results**: All 1085 tests pass (229 routing + 630 core + 182 content + 44 server)
+
+**What's next**: Phase 5 (Blazor WASM Islands), Phase 6 (CSS Processing), Phase 7 (Middleware Pipeline), or Phase 8 (SSG Build Pipeline)
