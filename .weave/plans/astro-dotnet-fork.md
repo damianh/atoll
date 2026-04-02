@@ -945,7 +945,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `tests/Atoll.Integration.Tests/SsgOutputTests.cs`
   **Acceptance**: All tests pass; blog sample builds and serves correctly
 
-- [ ] 67. **Final code quality pass**
+- [x] 67. **Final code quality pass**
   **What**: Review all code for: naming consistency, XML doc comments on public API, sealed classes, no optional params, no warnings in Release build. Run analyzers.
   **Files**:
     - `Directory.Build.props` (analyzer configuration review)
