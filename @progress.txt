@@ -491,3 +491,78 @@ All passing, 0 warnings, 0 errors in Release mode.
 **Phases completed: 0, 1, 2, 3, 4, 6, 7, 8, 9**
 
 **What's next**: Phase 10 (Developer Experience, Stories 59-63) or Phase 5 (Blazor WASM Islands, Stories 33-36) or Phase 11 (Polish/Samples/Documentation)
+
+### Session: 2026-04-02 (continued — Phase 10)
+
+**Story 61: Build diagnostics** ✅ COMMITTED (`b1da350`)
+- `src/Atoll.Build/Diagnostics/BuildDiagnostic.cs` — DiagnosticSeverity enum + BuildDiagnostic model
+- `src/Atoll.Build/Diagnostics/BuildReporter.cs` — Diagnostic collector, SSG/asset result analyzer, summary formatter
+- 76 tests (7 + 69)
+
+**Story 62: atoll.json IntelliSense schema** ✅ COMMITTED (`ad1ffef`)
+- `schemas/atoll.schema.json` — JSON Schema 2020-12 with all config properties
+
+**Stories 60+63: Dev error overlay + Phase 10 tests** ✅ COMMITTED (`282466f`)
+- `src/Atoll.Server/DevServer/ErrorOverlay.cs` — Styled HTML error page with dark theme
+- `src/Atoll.Server/DevServer/SourceLocation` record
+- 28 tests
+
+**Story 59: Live reload via WebSocket** ✅ COMMITTED (`edabcb3`)
+- `src/Atoll.Server/DevServer/LiveReloadWebSocketHandler.cs` — Manages WebSocket connections with ConcurrentDictionary, broadcasts reload/css-reload JSON messages, IDisposable
+- `src/Atoll.Server/DevServer/LiveReloadMiddleware.cs` — ASP.NET Core middleware that:
+  - Handles WebSocket upgrade at `/__atoll-live-reload` path
+  - Injects JS snippet into HTML responses (before `</body>`)
+  - Script auto-reconnects, supports full reload and CSS-only reload
+  - Case-insensitive body tag detection
+  - `GetInjectedScript()` public for testability
+- 38 tests (16 handler via TestServer + 22 middleware integration)
+  - Handler tests: connection tracking, multiple connections, broadcast, dispose, sequences
+  - Middleware tests: script injection, HTML vs JSON, charset handling, body tag case, WebSocket upgrade, reload/css-reload messages
+
+**Phase 10 COMPLETE** — All stories 59-63 done.
+
+**Test counts: 1,769 total** (824 core + 229 routing + 182 content + 110 server + 74 middleware + 278 build + 72 integration)
+All passing, 0 warnings, 0 errors in Release mode.
+
+**Phases completed: 0, 1, 2, 3, 4, 6, 7, 8, 9, 10**
+
+**What's next**: Phase 11 (Polish, Samples, Documentation — Stories 64-68) or Phase 5 (Blazor WASM Islands, Stories 33-36)
+
+### Session: 2026-04-02 (continued — Phase 11: Polish, Samples, Documentation)
+
+**Story 64: Build blog sample site** ✅ COMPLETED
+- Created `samples/Atoll.Samples.Blog/` project with full blog sample demonstrating layouts, components, content collections, islands, and tag filtering
+- **Components created:**
+  - `BlogPostSchema.cs` — frontmatter data model (title, description, pubDate, author, tags, draft, GetTags helper)
+  - `Layouts/BlogLayout.cs` — HTML5 layout with nav, header, footer, CSS variables
+  - `Components/PostCard.cs` — blog post card with title, slug link, date, description, tag badges
+  - `Components/TagBadge.cs` — styled tag link component
+  - `Islands/ThemeToggle.cs` — `[ClientLoad]` VanillaJsIsland for theme switching
+  - `Islands/SearchBox.cs` — `[ClientLoad]` VanillaJsIsland for post search with configurable placeholder
+  - `Pages/IndexPage.cs` — home page with welcome message and CTA
+  - `Pages/AboutPage.cs` — about page with framework info
+  - `Pages/BlogIndexPage.cs` — blog listing with CollectionQuery, excludes drafts, sorts by date desc
+  - `Pages/BlogPostPage.cs` — individual post with Markdown rendering, IStaticPathsProvider
+  - `Pages/TagsIndexPage.cs` — all tags page with counts
+  - `Pages/TagPage.cs` — tag-filtered listing with IStaticPathsProvider
+- **Content:** 4 sample Markdown files in `Content/blog/` (3 published + 1 draft)
+- **Tests:** 51 integration tests in `tests/Atoll.Integration.Tests/BlogSampleTests.cs`
+  - Schema tests (tag parsing, empty/whitespace handling)
+  - Layout tests (HTML structure, nav links, footer)
+  - Component tests (PostCard, TagBadge rendering)
+  - Island tests (ThemeToggle, SearchBox rendering + directive + module URL)
+  - Page tests (Index, About, BlogIndex, BlogPost, TagsIndex, Tag — rendering, filtering, sorting, static paths, drafts, not-found)
+  - Content collection tests (load, filter, render Markdown, get by slug)
+  - Middleware tests (home page, about page, 404 route handling)
+- **Note:** Middleware tests for pages requiring CollectionQuery (BlogIndexPage, BlogPostPage, etc.) are not included because AtollRequestHandler only passes route parameters as props — DI prop injection is a future enhancement.
+
+**Test counts: 1,820 total** (824 core + 229 routing + 182 content + 110 server + 74 middleware + 278 build + 123 integration)
+All passing, 0 warnings, 0 errors in Release mode.
+
+**Key discoveries for Phase 11:**
+- `RenderContext.RenderAsync(RenderFragment)` is the correct way to render a fragment inside a ComponentDelegate — it delegates to `fragment.RenderAsync(_destination)` internally
+- `ClientDirectiveType` enum is in `Atoll.Core.Instructions` namespace, NOT `Atoll.Core.Islands`
+- `RenderPageAsync(ComponentDelegate)` wraps the delegate in a RenderContext; to render a RenderFragment inside it, use `ctx.RenderAsync(fragment)` not `fragment.RenderAsync(ctx)`
+- AtollRequestHandler.HandlePageAsync only builds props from route parameters — pages needing DI services (like CollectionQuery) must receive them via direct rendering, not through the middleware
+
+**What's next**: Story 65 (portfolio sample), Story 66 (E2E integration tests), Story 67 (code quality pass), Story 68 (README)

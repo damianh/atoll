@@ -9,6 +9,9 @@
     <Project Path="src/Atoll.Routing/Atoll.Routing.csproj" />
     <Project Path="src/Atoll.Server/Atoll.Server.csproj" />
   </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/Atoll.Samples.Blog/Atoll.Samples.Blog.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Atoll.Blazor.Tests/Atoll.Blazor.Tests.csproj" />
     <Project Path="tests/Atoll.Build.Tests/Atoll.Build.Tests.csproj" />

@@ -659,13 +659,13 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
 **Complexity**: 5-7 days
 **Risk**: High — Blazor WASM loading/initialization is complex; interop with non-Blazor page is tricky
 
-- [ ] 33. **Research Blazor WASM standalone component loading**
+- [x] 33. **Research Blazor WASM standalone component loading**
   **What**: Investigate how to load a Blazor WASM component into a non-Blazor page. Key questions: Can we initialize Blazor runtime per-island? Can we use `Blazor.rootComponents.add()`? What's the minimal WASM payload? Document findings.
   **Files**:
     - `.weave/research/blazor-wasm-islands.md` (findings document)
   **Acceptance**: Clear understanding of Blazor WASM initialization API and constraints
 
-- [ ] 34. **Implement Blazor island adapter**
+- [x] 34. **Implement Blazor island adapter**
   **What**: Bridge between Atoll island protocol and Blazor WASM. Server-side: render Blazor component to static HTML (prerendering). Client-side: boot Blazor runtime, attach to island element, hydrate component.
   **Files**:
     - `src/Atoll.Blazor/Islands/BlazorIslandAdapter.cs`
@@ -673,14 +673,14 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Blazor/Islands/BlazorHydrationScript.cs` (client-side Blazor bootstrap)
   **Acceptance**: Blazor Counter component renders as island; button click works after hydration
 
-- [ ] 35. **Implement Blazor WASM runtime management**
+- [x] 35. **Implement Blazor WASM runtime management**
   **What**: Manage Blazor WASM runtime lifecycle. Only load once per page even with multiple islands. Handle Blazor-specific assets (framework files, DLLs).
   **Files**:
     - `src/Atoll.Blazor/Runtime/BlazorRuntimeLoader.cs`
     - `src/Atoll.Blazor/Runtime/BlazorAssetManager.cs`
   **Acceptance**: Page with 3 Blazor islands loads Blazor runtime once; all islands hydrate correctly
 
-- [ ] 36. **Write tests for Phase 5**
+- [x] 36. **Write tests for Phase 5**
   **What**: Blazor island rendering tests (server-side prerender), adapter integration tests
   **Files**:
     - `tests/Atoll.Blazor.Tests/BlazorIslandAdapterTests.cs`
@@ -694,7 +694,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
 **Complexity**: 5-7 days
 **Risk**: Medium — CSS scoping hash generation must be deterministic; Tailwind CLI integration is OS-dependent
 
-- [ ] 37. **Implement style scoping**
+- [x] 37. **Implement style scoping**
   **What**: Hash-based CSS class scoping using `:where(.atoll-HASH)` strategy. Hash derived from component type full name (deterministic). Components declare styles via `[Styles]` attribute or `GetStyles()` method. AngleSharp for CSS parsing/transformation.
   **Files**:
     - `src/Atoll.Core/Css/StyleScoper.cs` (applies `:where(.atoll-HASH)` wrapping)
@@ -703,7 +703,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Core/Css/GlobalStyleAttribute.cs` (marks CSS as unscoped)
   **Acceptance**: Two components with same `.container` class → different scoped selectors; `[GlobalStyle]` CSS is unscoped
 
-- [ ] 38. **Implement CSS aggregation and minification**
+- [x] 38. **Implement CSS aggregation and minification**
   **What**: Collect all component CSS during rendering, deduplicate, minify with NUglify, inject into head. Support external CSS file references.
   **Files**:
     - `src/Atoll.Core/Css/CssAggregator.cs` (collects CSS from rendered component tree)
@@ -711,7 +711,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Core/Css/CssInjector.cs` (outputs `<style>` or `<link>` in head)
   **Acceptance**: Page with 10 components → single minified `<style>` block in head (or external CSS file)
 
-- [ ] 39. **Implement Tailwind CSS integration**
+- [x] 39. **Implement Tailwind CSS integration**
   **What**: Download Tailwind CSS standalone binary for current OS/arch. Run Tailwind CLI during build to scan component files for classes and generate utility CSS. Embed output in build artifacts.
   **Files**:
     - `src/Atoll.Build/Tools/TailwindRunner.cs` (manages Tailwind CLI binary)
@@ -719,13 +719,13 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Build/Tools/TailwindConfig.cs` (generates tailwind.config.js equivalent)
   **Acceptance**: Component using `class="flex items-center"` → Tailwind CSS output contains only used utilities
 
-- [ ] 40. **Implement CSS URL rewriting**
+- [x] 40. **Implement CSS URL rewriting**
   **What**: Rewrite relative URLs in CSS (`url(...)`) to account for base path configuration. Port Astro's `rewriteCssUrls` logic.
   **Files**:
     - `src/Atoll.Core/Css/CssUrlRewriter.cs`
   **Acceptance**: `url('/images/bg.png')` with base `/docs` → `url('/docs/images/bg.png')`
 
-- [ ] 41. **Write tests for Phase 6**
+- [x] 41. **Write tests for Phase 6**
   **What**: Style scoping tests, hash determinism, CSS minification, URL rewriting, Tailwind integration
   **Files**:
     - `tests/Atoll.Core.Tests/Css/StyleScopingTests.cs`
@@ -775,7 +775,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
 **Complexity**: 7-9 days
 **Risk**: Medium — must handle dynamic routes via GetStaticPaths, asset fingerprinting, output directory management
 
-- [ ] 46. **Implement SSG orchestrator**
+- [x] 46. **Implement SSG orchestrator**
   **What**: Discovers all routes (static + dynamic via `GetStaticPaths()`), renders each to HTML file, writes to output directory (`dist/`). Parallel rendering with configurable concurrency.
   **Files**:
     - `src/Atoll.Build/Ssg/StaticSiteGenerator.cs` (main orchestrator)
@@ -784,7 +784,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Build/Ssg/OutputWriter.cs` (writes HTML files to correct directory structure)
   **Acceptance**: `atoll build` generates `dist/index.html`, `dist/about/index.html`, `dist/blog/my-post/index.html`
 
-- [ ] 47. **Implement asset pipeline**
+- [x] 47. **Implement asset pipeline**
   **What**: Process CSS (scoping + Tailwind + minification), process JS (bundling via esbuild + minification), copy static assets. Content-hash fingerprinting for cache busting.
   **Files**:
     - `src/Atoll.Build/Pipeline/AssetPipeline.cs` (orchestrates CSS + JS + static processing)
@@ -794,26 +794,26 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Build/Pipeline/AssetFingerprinter.cs` (content hash → filename)
   **Acceptance**: Built output has fingerprinted CSS/JS files; HTML references use hashed URLs
 
-- [ ] 48. **Implement esbuild binary management**
+- [x] 48. **Implement esbuild binary management**
   **What**: Download esbuild standalone binary for current OS/arch. Run esbuild for JS bundling (island client scripts, component JS).
   **Files**:
     - `src/Atoll.Build/Tools/EsbuildRunner.cs`
   **Acceptance**: Island JS modules are bundled into single files with tree-shaking
 
-- [ ] 49. **Implement HTML post-processing**
+- [x] 49. **Implement HTML post-processing**
   **What**: After rendering, use AngleSharp to post-process HTML: inject asset references with fingerprinted URLs, ensure all relative URLs respect base path, compress HTML if configured.
   **Files**:
     - `src/Atoll.Build/Pipeline/HtmlPostProcessor.cs`
   **Acceptance**: All `<link>`, `<script>`, `<img>` references in output HTML point to correct fingerprinted assets
 
-- [ ] 50. **Implement build manifest**
+- [x] 50. **Implement build manifest**
   **What**: Generate build manifest (JSON) listing all pages, assets, routes. Useful for sitemaps, preloading, and debugging.
   **Files**:
     - `src/Atoll.Build/Ssg/BuildManifest.cs`
     - `src/Atoll.Build/Ssg/BuildManifestWriter.cs`
   **Acceptance**: `dist/.atoll/manifest.json` contains page list and asset map
 
-- [ ] 51. **Write tests for Phase 8**
+- [x] 51. **Write tests for Phase 8**
   **What**: SSG end-to-end test (sample pages → output files), asset pipeline tests, fingerprinting tests
   **Files**:
     - `tests/Atoll.Build.Tests/Ssg/StaticSiteGeneratorTests.cs`
@@ -828,7 +828,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
 **Complexity**: 4-5 days
 **Risk**: Low — System.CommandLine is well-documented
 
-- [ ] 52. **Implement `atoll dev` command**
+- [x] 52. **Implement `atoll dev` command**
   **What**: Starts ASP.NET Core dev server with file watching. On file change: re-discover routes, re-render affected pages, notify browser via WebSocket. Hot reload for CSS changes (no full page reload).
   **Files**:
     - `src/Atoll.Cli/Commands/DevCommand.cs`
@@ -836,33 +836,33 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Server/DevServer/DevServerOptions.cs`
   **Acceptance**: `atoll dev` starts server; editing a component triggers browser refresh
 
-- [ ] 53. **Implement `atoll build` command**
+- [x] 53. **Implement `atoll build` command**
   **What**: Runs SSG pipeline. Discovers routes, renders pages, processes assets, writes output.
   **Files**:
     - `src/Atoll.Cli/Commands/BuildCommand.cs`
   **Acceptance**: `atoll build` produces `dist/` with complete static site
 
-- [ ] 54. **Implement `atoll preview` command**
+- [x] 54. **Implement `atoll preview` command**
   **What**: Serves the built `dist/` directory as a static file server. Uses ASP.NET Core static file middleware.
   **Files**:
     - `src/Atoll.Cli/Commands/PreviewCommand.cs`
   **Acceptance**: `atoll preview` serves files from `dist/`; navigation works correctly
 
-- [ ] 55. **Implement `atoll new` command**
+- [x] 55. **Implement `atoll new` command**
   **What**: Scaffolds a new Atoll project from a template. Creates directory structure, sample page, layout, and config.
   **Files**:
     - `src/Atoll.Cli/Commands/NewCommand.cs`
     - `src/Atoll.Cli/Templates/` (embedded template files)
   **Acceptance**: `atoll new my-site` creates runnable project; `cd my-site && atoll dev` works
 
-- [ ] 56. **Implement library mode (embeddable middleware)**
+- [x] 56. **Implement library mode (embeddable middleware)**
   **What**: `AddAtoll()`/`UseAtoll()` extension methods allow embedding Atoll in an existing ASP.NET Core app. Coexists with existing controllers/endpoints. Configurable base path.
   **Files**:
     - `src/Atoll.Server/Hosting/AtollServiceCollectionExtensions.cs`
     - `src/Atoll.Server/Hosting/AtollApplicationBuilderExtensions.cs`
   **Acceptance**: Existing ASP.NET Core app adds `UseAtoll()` → Atoll pages work alongside existing API endpoints
 
-- [ ] 57. **Implement CLI entry point and shared configuration**
+- [x] 57. **Implement CLI entry point and shared configuration**
   **What**: Main CLI entry point using System.CommandLine. Shared `atoll.json` project configuration file.
   **Files**:
     - `src/Atoll.Cli/Program.cs`
@@ -870,7 +870,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Core/Configuration/AtollConfigLoader.cs` (reads atoll.json)
   **Acceptance**: `atoll --help` shows available commands; `atoll.json` configures site URL, output dir, etc.
 
-- [ ] 58. **Write tests for Phase 9**
+- [x] 58. **Write tests for Phase 9**
   **What**: CLI command parsing tests, library mode integration tests
   **Files**:
     - `tests/Atoll.Integration.Tests/CliCommandTests.cs`
@@ -884,7 +884,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
 **Complexity**: 5-7 days
 **Risk**: Medium — WebSocket-based HMR requires careful coordination
 
-- [ ] 59. **Implement live reload via WebSocket**
+- [x] 59. **Implement live reload via WebSocket**
   **What**: Dev server injects a small JS snippet into pages that opens a WebSocket. On file change, server sends `reload` message. Browser refreshes. CSS-only changes trigger style-only reload (no full page refresh).
   **Files**:
     - `src/Atoll.Server/DevServer/LiveReloadMiddleware.cs`
@@ -892,27 +892,27 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Server/DevServer/Assets/live-reload.js` (embedded resource)
   **Acceptance**: Edit component → browser auto-refreshes within 500ms
 
-- [ ] 60. **Implement error overlay**
+- [x] 60. **Implement error overlay**
   **What**: When a component throws during dev rendering, show a styled error page with: exception type, message, stack trace, source file path + line number. Replaces the white error screen.
   **Files**:
     - `src/Atoll.Server/DevServer/ErrorOverlay.cs` (renders error HTML)
     - `src/Atoll.Server/DevServer/Assets/error-overlay.css` (embedded resource)
   **Acceptance**: Throw in component → browser shows styled error with file path and line number
 
-- [ ] 61. **Implement build diagnostics**
+- [x] 61. **Implement build diagnostics**
   **What**: During `atoll build`, report: pages rendered, time per page, total assets, total output size, warnings (unused content, broken links). Colorized terminal output.
   **Files**:
     - `src/Atoll.Build/Diagnostics/BuildReporter.cs`
     - `src/Atoll.Build/Diagnostics/BuildDiagnostic.cs`
   **Acceptance**: `atoll build` output shows page count, asset sizes, timing, and any warnings
 
-- [ ] 62. **Implement `atoll.json` IntelliSense schema**
+- [x] 62. **Implement `atoll.json` IntelliSense schema**
   **What**: JSON Schema for `atoll.json` configuration file. Enables IntelliSense in VS Code and Visual Studio.
   **Files**:
     - `schemas/atoll.schema.json`
   **Acceptance**: Opening `atoll.json` in VS Code shows autocomplete for configuration properties
 
-- [ ] 63. **Write tests for Phase 10**
+- [x] 63. **Write tests for Phase 10**
   **What**: Error overlay rendering tests, build diagnostics tests
   **Files**:
     - `tests/Atoll.Server.Tests/DevServer/ErrorOverlayTests.cs`
