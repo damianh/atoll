@@ -926,13 +926,13 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
 **Complexity**: 5-7 days
 **Risk**: Low
 
-- [ ] 64. **Build blog sample site**
+- [x] 64. **Build blog sample site**
   **What**: Complete blog with: layout, header/footer components, blog post list, individual post pages (from content collections), tag filtering, islands (search, theme toggle), Tailwind CSS styling.
   **Files**:
     - `samples/Atoll.Samples.Blog/` (complete project)
   **Acceptance**: `cd samples/Atoll.Samples.Blog && atoll dev` → working blog; `atoll build` → static site
 
-- [ ] 65. **Build portfolio sample site**
+- [x] 65. **Build portfolio sample site**
   **What**: Portfolio with: hero section, project cards, contact form (island), image gallery (client:visible island), responsive layout with Tailwind.
   **Files**:
     - `samples/Atoll.Samples.Portfolio/` (complete project)

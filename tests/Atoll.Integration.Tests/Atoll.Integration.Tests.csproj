@@ -8,6 +8,7 @@
     <ProjectReference Include="..\..\src\Atoll.Build\Atoll.Build.csproj" />
     <ProjectReference Include="..\..\src\Atoll.Cli\Atoll.Cli.csproj" />
     <ProjectReference Include="..\..\samples\Atoll.Samples.Blog\Atoll.Samples.Blog.csproj" />
+    <ProjectReference Include="..\..\samples\Atoll.Samples.Portfolio\Atoll.Samples.Portfolio.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />

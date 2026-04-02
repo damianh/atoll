@@ -164,3 +164,44 @@
 **Test results**: All 1085 tests pass (229 routing + 630 core + 182 content + 44 server)
 
 **What's next**: Phase 5 (Blazor WASM Islands), Phase 6 (CSS Processing), Phase 7 (Middleware Pipeline), or Phase 8 (SSG Build Pipeline)
+
+### 2026-04-02 — Story 65: Build portfolio sample site (Phase 11)
+
+**Completed by**: claude-opus-4.6
+**Commit**: (pending) (branch: astro-fork)
+
+**What was done**:
+- Created complete portfolio sample site in `samples/Atoll.Samples.Portfolio/` demonstrating islands with different client directives
+- **Layouts**: `PortfolioLayout` — dark-themed responsive layout with sticky nav, footer, social links (GitHub, LinkedIn, Twitter)
+- **Components**:
+  - `HeroSection` — hero with name, tagline, intro paragraph, CTA buttons (View Work / Contact)
+  - `ProjectCard` — project card with title, description, tech stack tags, GitHub/demo links, image
+  - `SkillBadge` — skill badge with name and color-coded proficiency level (Expert/Advanced/Intermediate/Beginner)
+- **Islands** (three different client directives):
+  - `ContactForm` — `[ClientLoad]` island with full form validation (name, email, subject, message fields)
+  - `ImageGallery` — `[ClientVisible(RootMargin = "200px")]` island with responsive grid gallery and lightbox overlay
+  - `MobileNav` — `[ClientMedia("(max-width: 768px)")]` island with hamburger menu and slide-in navigation
+- **Pages**:
+  - `IndexPage` — home page with hero section + 3 featured project cards
+  - `ProjectsPage` — all 6 projects in responsive grid layout
+  - `AboutPage` — bio section, skills badges, image gallery island
+  - `ContactPage` — contact form island + alternate contact methods (email, location, social)
+- Created 82 integration tests in `tests/Atoll.Integration.Tests/PortfolioSampleTests.cs` covering:
+  - All component HTML output structure and content
+  - All island client directive attributes and interactive elements
+  - All page rendering with layout wrapping
+  - Responsive design elements (Tailwind classes)
+  - Cross-cutting concerns (accessibility attributes, semantic HTML)
+- Added Portfolio project reference to integration tests csproj
+- Added Portfolio project to solution file (Atoll.slnx)
+
+**Key discoveries**:
+- `VanillaJsIsland` base class requires `[ClientLoad]`, `[ClientIdle]`, `[ClientVisible]`, or `[ClientMedia]` attributes for island functionality
+- `ComponentRenderer.ToFragment<T>(props)` is the standard pattern for rendering child components within pages
+- Pages implement `IAtollPage` and use `[Layout(typeof(LayoutType))]` attribute for layout wrapping
+- Shouldly's `ShouldContain` for strings does NOT accept a plain string as a second positional parameter for custom messages — must use named parameter `customMessage:`
+
+**Build verification**: `dotnet build -c Release` — 0 warnings, 0 errors
+**Test results**: All 1,902 tests pass (824 core + 278 build + 229 routing + 205 integration + 182 content + 110 server + 74 middleware)
+
+**What's next**: Story 66 (end-to-end integration tests), Story 67 (final code quality pass), Story 68 (README getting-started guide)
