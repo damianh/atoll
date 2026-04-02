@@ -740,7 +740,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
 **Complexity**: 3-4 days
 **Risk**: Low — well-understood pattern; Astro's middleware is simpler than ASP.NET Core's
 
-- [ ] 42. **Implement Atoll middleware types**
+- [x] 42. **Implement Atoll middleware types**
   **What**: `AtollMiddleware` delegate type, `AtollMiddlewareContext` (extends RenderContext with `next()` support), `DefineMiddleware()` helper. This is Atoll's own middleware, not ASP.NET Core's — it runs within the Atoll pipeline after ASP.NET Core routing.
   **Files**:
     - `src/Atoll.Middleware/AtollMiddleware.cs` (delegate: (context, next) → Task)
@@ -748,20 +748,20 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Middleware/MiddlewareNext.cs` (delegate: returns Task<AtollResponse>)
   **Acceptance**: Middleware can short-circuit, pass-through, or modify response
 
-- [ ] 43. **Implement middleware sequencing**
+- [x] 43. **Implement middleware sequencing**
   **What**: `Sequence()` function that chains multiple middleware handlers. Support rewrite within chain (updates context URL/params). Port Astro's `sequence.ts` logic.
   **Files**:
     - `src/Atoll.Middleware/Pipeline/MiddlewareSequencer.cs`
     - `src/Atoll.Middleware/Pipeline/MiddlewareRunner.cs` (executes sequence against a request)
   **Acceptance**: `Sequence(logging, auth, cors)` executes in order; auth can short-circuit
 
-- [ ] 44. **Implement rewrite support**
+- [x] 44. **Implement rewrite support**
   **What**: Middleware can call `next(rewriteTo: "/new-path")`. The pipeline re-resolves the route and updates context (URL, params, route data). Validate SSR→prerendered rewrites.
   **Files**:
     - `src/Atoll.Middleware/Pipeline/RewriteHandler.cs`
   **Acceptance**: Middleware rewrite from `/old` to `/new` renders the `/new` page
 
-- [ ] 45. **Write tests for Phase 7**
+- [x] 45. **Write tests for Phase 7**
   **What**: Middleware execution order, short-circuit, pass-through, rewrite, sequence composition
   **Files**:
     - `tests/Atoll.Middleware.Tests/MiddlewareSequencerTests.cs`
