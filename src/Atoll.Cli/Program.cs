@@ -1,9 +1,14 @@
 namespace Atoll.Cli;
 
+/// <summary>
+/// Entry point for the Atoll CLI tool.
+/// </summary>
 internal sealed class Program
 {
-    static int Main(string[] args)
+    static async Task<int> Main(string[] args)
     {
-        return 0;
+        var rootCommand = CommandFactory.CreateRootCommand();
+        var parseResult = rootCommand.Parse(args);
+        return await parseResult.InvokeAsync();
     }
 }

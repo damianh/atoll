@@ -340,3 +340,120 @@ Total: 1,286 tests (757 core + 229 routing + 182 content + 44 server + 74 middle
 **Story 39: Tailwind CSS integration** — NOT YET DONE (deferred, goes in `Atoll.Build` project)
 
 **What's next**: Phase 8 (SSG Build Pipeline) or Phase 5 (Blazor WASM Islands)
+
+### Session: 2026-04-02 (continued — Phase 8: SSG Build Pipeline)
+
+**Phase 8 COMPLETE — Static Site Generation (Build Pipeline)**
+
+**Story 46: SSG orchestrator** ✅ COMMITTED (`ffe4ebc`)
+- `SsgOptions` — output dir, base URL, base path, max concurrency, clean output flag
+- `RouteEnumerator` — expands dynamic routes via `IStaticPathsProvider.GetStaticPathsAsync()`, resolves `[param]` and `[...rest]` segments, skips endpoints
+- `SsgRoute` — concrete route with URL path, component type, parameters, props
+- `OutputWriter` — writes HTML files with clean URL conventions (`/about` → `about/index.html`), supports raw file/binary writes, clean operation
+- `SsgPageResult` — per-page result (success or error)
+- `SsgResult` — aggregate with page results, timing, success/failure counts
+- `StaticSiteGenerator` — main orchestrator: enumerate → clean → render (parallel or sequential) → write
+  - Uses `Parallel.ForEachAsync` for concurrent rendering
+  - Renders through `PageRenderer` for DOCTYPE/head injection
+  - Wraps pages with layouts via `LayoutResolver.WrapWithLayouts`
+- 60 tests (RouteEnumerator 15, OutputWriter 15, StaticSiteGenerator 19, SsgTypes 11)
+
+**Story 47: Asset pipeline** ✅ COMMITTED (`f012c23`)
+- `AssetFingerprinter` — SHA-256 content-hash → truncated hex filename insertion (e.g., `styles.a1b2c3d4.css`)
+- `CssProcessor` — aggregation → URL rewriting → minification → fingerprinting, accepts types or pre-populated aggregator
+- `JsProcessor` — NUglify JS minification → fingerprinting (esbuild bundling deferred to Story 48)
+- `StaticAssetCopier` — copies `public/` to `dist/` preserving structure, sync and async methods
+- `AssetPipeline` — orchestrates CSS + JS processing + static asset copying + file writing
+- `AssetPipelineOptions` — output dir, base path, public dir, minify, fingerprint, subdirectory, filenames
+- 81 tests (Fingerprinter 19, CssProcessor 18, JsProcessor 17, StaticAssetCopier 15, AssetPipeline 15)
+
+**Story 49: HTML post-processing** ✅ COMMITTED (`665d17c`)
+- `HtmlPostProcessor` — AngleSharp-based DOM manipulation:
+  - Injects `<link rel="stylesheet">` for fingerprinted CSS
+  - Injects `<script>` (with defer/module options) for fingerprinted JS
+  - Adjusts base path on absolute URLs (`href`, `src`, `srcset`, `action`)
+  - Removes inline `<style>` elements when CSS extracted to external files
+  - Preserves DOCTYPE detection from original HTML
+- `HtmlPostProcessorOptions` — CSS href, JS href, defer, module, base path, remove inline styles
+- 24 tests
+
+**Story 50: Build manifest** ✅ COMMITTED (`bde5711`)
+- `BuildManifest` — data model with pages, assets, stats (JSON-serializable via System.Text.Json)
+- `ManifestPage` — URL path, output file, component type, parameters, render time
+- `ManifestAsset` — original name, output path, hash, MIME type, size
+- `ManifestStats` — total/success/failed pages, build time, asset count, static files copied
+- `BuildManifestWriter` — builds manifest from SSG + pipeline results, serializes to JSON, writes `.atoll/manifest.json`
+- 18 tests
+
+**Story 51: Phase 8 end-to-end tests** ✅ COMMITTED (`f289a46`)
+- `EndToEndBuildPipelineTests` — 19 integration tests covering the full SSG build pipeline:
+  - Single page → valid static site output
+  - Mixed static + dynamic routes with assets
+  - Asset pipeline produces fingerprinted CSS/JS files on disk
+  - HTML post-processing injects asset references and removes inline styles
+  - Build manifest tracks all pages, assets, and stats
+  - Full pipeline: render → assets → post-process → manifest → verify on disk
+  - Base path propagation across CSS rewriting and HTML adjustment
+  - Failed pages handled gracefully, successful pages still produce output
+  - Consistent fingerprints across multiple runs (deterministic)
+  - Clean output directory before build
+  - Layouts render correctly in SSG
+  - Dynamic route parameters preserved in manifest
+  - Empty build produces valid (empty) output
+  - JSON round-trip serialization of manifest
+  - Timing information captured across all pipeline stages
+  - Endpoint routes skipped during SSG
+  - Correct directory structure with `_astro/` asset subdirectory
+
+**Story 48: esbuild binary management** — DEFERRED (NUglify JS minification works for now)
+
+**Phase 8 totals:**
+- 202 build tests (60 SSG + 81 pipeline + 24 post-processor + 18 manifest + 19 E2E)
+- All 1,488 tests passing across entire solution
+- 0 warnings, 0 errors in Release mode
+
+**Key discoveries for Phase 8:**
+- `Parallel.ForEachAsync` works well for SSG parallel rendering with configurable `MaxDegreeOfParallelism`
+- `Path.GetRelativePath` throws on empty string paths — guard against empty `OutputPath` from failed SSG page results
+- AngleSharp `HtmlParser` can be stored as a `static readonly` field for reuse across `Process` calls
+- AngleSharp serialization via `HtmlMarkupFormatter` preserves HTML structure faithfully; DOCTYPE needs manual detection from original HTML
+- Shouldly 4.3.0 does NOT have `ShouldMatchRegex` — use manual assertions instead
+- No `InternalsVisibleTo` is used — internal methods tested through public API
+
+**What's next**: Phase 9 (CLI Tool + Library Mode, Stories 52-58) or Phase 5 (Blazor WASM Islands)
+
+### Session: 2026-04-02 (continued — Phase 9: CLI Tool + Library Mode)
+
+**Story 57: CLI entry point and shared configuration** ✅ COMPLETE
+
+Fixed broken build caused by System.CommandLine API mismatch (2.0.0-beta5 → 2.0.5).
+
+**System.CommandLine 2.0.5 API differences from beta:**
+- `Add()` instead of `AddCommand()`, `AddOption()`, `AddGlobalOption()`
+- `SetAction(Func<ParseResult, CancellationToken, Task>)` instead of `SetHandler()`
+- `Option.Recursive = true` instead of `AddGlobalOption()`
+- `ParseResult.GetValue<T>(option)` or `ParseResult.GetValue<T>(name)` for values
+- `ParseResult.InvokeAsync()` for invocation (not `command.InvokeAsync(args)`)
+- `Option<T>` constructor takes `(string name, string[] aliases)`, no default value in ctor
+- `Option<T>.DefaultValueFactory` property for defaults
+- `Option<T>.Name` includes the `--` prefix (e.g., `"--root"` not `"root"`)
+
+**Source files created/modified:**
+- `src/Atoll.Core/Configuration/AtollConfig.cs` — project config model (AtollConfig, AtollServerConfig, AtollBuildConfig)
+- `src/Atoll.Core/Configuration/AtollConfigLoader.cs` — loads/deserializes atoll.json, resolves paths, normalizes base path
+- `src/Atoll.Cli/CommandFactory.cs` — NEW, public static factory for CLI command tree (testable)
+- `src/Atoll.Cli/Program.cs` — simplified to use CommandFactory
+- `src/Atoll.Cli/Commands/BuildCommandHandler.cs` — full SSG build pipeline handler
+- `src/Atoll.Cli/Commands/DevCommandHandler.cs` — placeholder dev server
+- `src/Atoll.Cli/Commands/PreviewCommandHandler.cs` — placeholder preview server
+- `Directory.Packages.props` — System.CommandLine upgraded to 2.0.5
+
+**Test files created:**
+- `tests/Atoll.Core.Tests/Configuration/AtollConfigTests.cs` — 22 tests (defaults, setters for all config types)
+- `tests/Atoll.Core.Tests/Configuration/AtollConfigLoaderTests.cs` — 45 tests (deserialization, serialization, round-trip, file loading, path resolution, base path normalization, null guards, edge cases)
+- `tests/Atoll.Integration.Tests/CliCommandTests.cs` — 31 tests (command structure, option parsing, subcommand parsing, default values, error cases)
+
+**Test counts: 1,586 total** (824 core + 229 routing + 182 content + 44 server + 74 middleware + 202 build + 31 integration)
+All passing, 0 warnings, 0 errors in Release mode.
+
+**What's next**: Stories 52-55 (atoll dev/build/preview/new commands) and Story 56 (library mode)
