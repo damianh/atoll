@@ -97,3 +97,41 @@
 **Test results**: All 521 tests pass (162 routing + 359 core, 31 new layout tests)
 
 **What's next**: Story 16 (ASP.NET Core hosting middleware), Story 18 (Phase 2 tests), or Phase 3 (Islands)
+
+### 2026-04-02 — Story 16: ASP.NET Core hosting middleware
+
+**Completed by**: claude-opus-4.6
+**Commit**: (pending) (branch: astro-fork)
+
+**What was done**:
+- Created `AtollOptions` in `src/Atoll.Server/Hosting/AtollOptions.cs` — configuration class with `BasePath`, `SiteUrl`, `Assemblies` list, and `RouteEntries` list for explicit route registration
+- Created `AtollRequestHandler` in `src/Atoll.Server/Hosting/AtollRequestHandler.cs` — core dispatcher that extracts route path (respecting base path), matches via `RouteMatcher`, dispatches to page rendering (with `PageRenderer` + `LayoutResolver` layout wrapping + route params as props) or endpoint dispatching (via `EndpointDispatcher`), writes responses to `HttpResponse`
+- Created `AtollMiddleware` in `src/Atoll.Server/Hosting/AtollMiddleware.cs` — ASP.NET Core middleware that delegates to `AtollRequestHandler.TryHandleAsync()`, passes through to `_next` if no route matches
+- Created `AtollServiceCollectionExtensions` in `src/Atoll.Server/Hosting/AtollServiceCollectionExtensions.cs` — `AddAtoll(Action<AtollOptions>)` extension that builds route table from options (either explicit entries or assembly scanning) and registers `RouteMatcher`, `AtollOptions`, and `AtollRequestHandler` as singletons
+- Created `AtollApplicationBuilderExtensions` in `src/Atoll.Server/Hosting/AtollApplicationBuilderExtensions.cs` — `UseAtoll()` extension that adds `AtollMiddleware`
+- Updated `tests/Atoll.Server.Tests/Atoll.Server.Tests.csproj` — changed SDK to `Microsoft.NET.Sdk.Web` (with `OutputType=Library`), added project references to `Atoll.Core` and `Atoll.Routing`
+- Created `tests/Atoll.Server.Tests/MiddlewareIntegrationTests.cs` with 28 integration tests covering:
+  - Page rendering (basic, parameterized, catch-all, rest params)
+  - DOCTYPE auto-prepend on page responses
+  - Layout wrapping via `[Layout]` attribute (full chain: nav, slot, footer)
+  - Endpoint dispatching (GET → JSON, POST → 201 Created)
+  - 405 Method Not Allowed with Allow header for unsupported methods
+  - Route params passed to endpoints
+  - Text, redirect, and empty endpoint responses
+  - 404 fallthrough when no route matches
+  - Correct content types (text/html, application/json, text/plain)
+  - Base path stripping and non-matching base path rejection
+  - Middleware coexistence with ASP.NET Core MapGet endpoints
+  - Concurrent request handling (10 simultaneous requests)
+  - Route priority (static routes matched before dynamic)
+  - Multiple routes in a single app
+  - Custom content type on endpoint responses
+
+**Key discoveries**:
+- ASP.NET Core's `HttpResponseMessage` classifies the `Allow` header as a content header (`response.Content.Headers`), not a response header — important for testing 405 responses
+- `PageRenderer` does not have built-in layout awareness — layout wrapping must be done by the caller using `LayoutResolver.WrapWithLayouts()` before passing to `PageRenderer`
+- The request handler uses `ComponentDelegate` pattern to compose layout-wrapped rendering through `PageRenderer.RenderPageAsync(ComponentDelegate)`, getting both layout wrapping and DOCTYPE/head injection
+- Test SDK was changed to `Microsoft.NET.Sdk.Web` to enable `WebApplicationFactory`/`TestServer` support
+
+**Build verification**: `dotnet build -c Release` — 0 warnings, 0 errors
+**Test results**: All 549 tests pass (162 routing + 359 core + 28 server)

@@ -504,7 +504,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Routing/EndpointContext.cs` (API context — subset of RenderContext)
   **Acceptance**: `api/posts.cs` with GET method returns JSON response
 
-- [ ] 16. **Implement ASP.NET Core hosting middleware**
+- [x] 16. **Implement ASP.NET Core hosting middleware**
   **What**: `UseAtoll()` extension method. Registers route table, handles incoming requests, dispatches to page/endpoint components, streams SSR responses.
   **Files**:
     - `src/Atoll.Server/Hosting/AtollMiddleware.cs`
