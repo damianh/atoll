@@ -411,7 +411,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Core/Rendering/StreamRenderDestination.cs` (for streaming to `Stream` / `PipeWriter`)
   **Acceptance**: Integration test proves correct output order with mix of sync and async expressions
 
-- [ ] 6. **Implement component model**
+- [x] 6. **Implement component model**
   **What**: `IAtollComponent` interface, `AtollComponent` abstract base, `ComponentDelegate` functional type, `RenderContext` with props/slots/helpers
   **Files**:
     - `src/Atoll.Core/Components/IAtollComponent.cs`
@@ -422,14 +422,14 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Core/Components/ComponentRenderer.cs` (resolves + renders a component by type)
   **Acceptance**: Can render a `Card` component with title prop and default slot
 
-- [ ] 7. **Implement slot system**
+- [x] 7. **Implement slot system**
   **What**: Lazy function-based slots — `SlotCollection` holds named slots as `Func<IRenderDestination, ValueTask>`. Default slot. Named slots. `HasSlot()` check. Fallback content.
   **Files**:
     - `src/Atoll.Core/Slots/SlotCollection.cs`
     - `src/Atoll.Core/Slots/SlotBuilder.cs` (fluent API for defining slots when composing components)
   **Acceptance**: Component with named slots renders correctly; unused slots don't execute; HasSlot returns false for missing slots
 
-- [ ] 8. **Implement render instruction system**
+- [x] 8. **Implement render instruction system**
   **What**: `RenderInstruction` base type with subtypes: `HeadInstruction`, `MaybeHeadInstruction`, `DirectiveInstruction`, `ScriptInstruction`. Instructions bubble up through component tree and are deduplicated at page level.
   **Files**:
     - `src/Atoll.Core/Instructions/RenderInstruction.cs`
@@ -439,7 +439,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Core/Instructions/InstructionProcessor.cs` (collects + deduplicates)
   **Acceptance**: Nested components emit instructions; page-level processor deduplicates and injects once
 
-- [ ] 9. **Implement head management**
+- [x] 9. **Implement head management**
   **What**: Head content collection (styles, scripts, links), stable-props-key deduplication algorithm, single injection point. `RenderAllHeadContent()` equivalent.
   **Files**:
     - `src/Atoll.Core/Head/HeadManager.cs` (collects styles/scripts/links during rendering)
@@ -447,14 +447,14 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Core/Head/HeadDeduplicator.cs` (stable key generation, Set-based dedup)
   **Acceptance**: Two components referencing same stylesheet → only one `<link>` in output; props order doesn't matter
 
-- [ ] 10. **Implement page rendering orchestrator**
+- [x] 10. **Implement page rendering orchestrator**
   **What**: `PageRenderer` that takes a page component, renders it (with head injection, DOCTYPE auto-insertion), outputs to string or stream. Supports `renderToString` and `renderToStream`.
   **Files**:
     - `src/Atoll.Core/Rendering/PageRenderer.cs`
     - `src/Atoll.Core/Rendering/PageRenderResult.cs`
   **Acceptance**: Full page render produces `<!DOCTYPE html>...` with head content injected at correct location
 
-- [ ] 11. **Write tests for Phase 1**
+- [x] 11. **Write tests for Phase 1**
   **What**: Integration tests for template rendering (sync, async, mixed), component rendering, slots, head dedup, page orchestration
   **Files**:
     - `tests/Atoll.Core.Tests/Rendering/InterpolatedTemplateTests.cs`
@@ -472,7 +472,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
 **Complexity**: 6-8 days
 **Risk**: Medium — route pattern matching edge cases
 
-- [ ] 12. **Implement route discovery from file system**
+- [x] 12. **Implement route discovery from file system**
   **What**: Scan `src/pages/` directory, map files to URL patterns. Support: `index.cs` → `/`, `about.cs` → `/about`, `blog/[slug].cs` → `/blog/:slug`, `[...rest].cs` → catch-all. Convention: classes implementing `IAtollPage` in the pages directory.
   **Files**:
     - `src/Atoll.Routing/FileSystem/RouteDiscovery.cs`
@@ -480,7 +480,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Routing/RouteEntry.cs` (pattern, component type, prerender flag)
   **Acceptance**: Given a directory tree, produces correct route table with patterns
 
-- [ ] 13. **Implement route pattern matching**
+- [x] 13. **Implement route pattern matching**
   **What**: Match incoming URL path to route pattern. Extract params from dynamic segments. Support: static segments, `[param]` dynamic, `[...rest]` catch-all, route priority ordering (most specific first).
   **Files**:
     - `src/Atoll.Routing/Matching/RoutePattern.cs` (parsed pattern representation)
