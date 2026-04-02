@@ -102,3 +102,18 @@ Total: 408 tests (328 Phase 1 + 80 Phase 2), all passing, 0 warnings, 0 errors i
 - MaybeHeadInstruction was added in Story 8 — not in the file list but mentioned in the plan text
 - HtmlEncoder is `internal static` in Atoll.Core.Rendering namespace — accessible from other namespaces within the same assembly
 - Test files referencing types from Atoll.Core.Components must use `using Atoll.Core.Components;` — not `Components.ClassName` which resolves to the test namespace
+
+**Story 14: IAtollPage interface and page types** ✅ COMPLETED (commit af70934)
+**Story 15: API endpoint support** ✅ COMPLETED (commit 23c015f)
+
+**Story 17: Layout system** ✅ COMPLETED
+- `LayoutAttribute` in `src/Atoll.Core/Components/LayoutAttribute.cs` — `[Layout(typeof(BaseLayout))]` on page classes; validates layout type implements IAtollComponent; supports inheritance
+- `LayoutResolver` in `src/Atoll.Core/Components/LayoutResolver.cs` — static utility:
+  - `GetLayoutType(Type)` / `HasLayout(Type)` for layout detection
+  - `ResolveLayoutChain(Type)` — outermost-first chain with circular reference detection
+  - `WrapWithLayouts(Type, RenderFragment)` — wraps page content through all layout layers
+  - `WrapWithLayouts(Type, RenderFragment, props)` — same with props passed to innermost layout
+- 31 integration tests in `tests/Atoll.Core.Tests/Components/LayoutTests.cs`
+- Total: 521 tests (162 routing + 359 core), all passing, 0 warnings in Release mode
+
+**What's next**: Story 16 (ASP.NET Core hosting middleware), Story 18 (Phase 2 tests), or Phase 3 (Islands)

@@ -496,7 +496,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Routing/StaticPath.cs` (params + props for a single static path)
   **Acceptance**: Page with `[slug]` implements `GetStaticPaths` returning list of slugs
 
-- [ ] 15. **Implement API endpoint support**
+- [x] 15. **Implement API endpoint support**
   **What**: Classes implementing `IAtollEndpoint` in `src/pages/` with `GET`, `POST`, etc. methods. Return `AtollResponse` (wraps HttpResponse semantics without tight coupling to ASP.NET Core).
   **Files**:
     - `src/Atoll.Routing/IAtollEndpoint.cs`
@@ -513,7 +513,7 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `src/Atoll.Server/Hosting/AtollRequestHandler.cs` (routes request → page → response)
   **Acceptance**: ASP.NET Core app with `UseAtoll()` serves pages from `src/pages/`
 
-- [ ] 17. **Implement layout system**
+- [x] 17. **Implement layout system**
   **What**: Components that wrap page content. Convention: `Layout` property on page, or `[Layout(typeof(BaseLayout))]` attribute. Layouts receive page content as default slot.
   **Files**:
     - `src/Atoll.Core/Components/LayoutAttribute.cs`

@@ -57,3 +57,43 @@
 **Test results**: All 490 tests pass (162 routing + 328 core)
 
 **What's next**: Story 16 (ASP.NET Core hosting middleware), Story 17 (Layout system), or Story 18 (Phase 2 tests)
+
+### 2026-04-02 — Story 17: Implement layout system
+
+**Completed by**: claude-opus-4.6
+**Commit**: (pending) (branch: astro-fork)
+
+**What was done**:
+- Created `LayoutAttribute` in `src/Atoll.Core/Components/LayoutAttribute.cs` — `[Layout(typeof(BaseLayout))]` attribute for page types; validates that the layout type implements `IAtollComponent`; supports inheritance (`Inherited = true`) so derived pages inherit their base class's layout
+- Created `LayoutResolver` in `src/Atoll.Core/Components/LayoutResolver.cs` — static utility class providing:
+  - `GetLayoutType(Type)` — reads `[Layout]` attribute to get layout type
+  - `HasLayout(Type)` — checks if a type has a layout attribute
+  - `ResolveLayoutChain(Type)` — resolves full layout chain (outermost-first) with circular reference detection
+  - `WrapWithLayouts(Type, RenderFragment)` — wraps page content with all layout layers (innermost first, then outer)
+  - `WrapWithLayouts(Type, RenderFragment, props)` — same but passes props to the innermost layout
+- Created `tests/Atoll.Core.Tests/Components/LayoutTests.cs` with 31 integration tests covering:
+  - LayoutAttribute construction, validation (null type, non-IAtollComponent type)
+  - GetLayoutType for types with and without layout
+  - HasLayout for types with and without layout
+  - ResolveLayoutChain: empty, single, nested (2-level), three-level, circular reference detection
+  - WrapWithLayouts: no layout passthrough, single layout wrapping, nested 2-level chaining, 3-level chaining
+  - Props passing to innermost layout
+  - Null argument validation for all public methods
+  - Integration with PageRenderer (end-to-end layout + DOCTYPE + head injection)
+  - Layout with named slots and fallback content
+  - Layout with async page content
+  - HasSlot verification (default slot present, no extra slots)
+  - Empty page content in layout
+  - Layout attribute inheritance from base class
+  - Layout attribute override in derived class
+
+**Design decisions**:
+- LayoutResolver is a static class (not instance-based) — layouts are resolved purely from type metadata at render time
+- Layout chain is outermost-first but built inside-out: innermost layout wraps page content, then each outer layout wraps the result
+- Circular layout references are detected by tracking visited types in a HashSet
+- Props overload passes props only to the innermost layout; outer layouts get empty props
+
+**Build verification**: `dotnet build -c Release` — 0 warnings, 0 errors
+**Test results**: All 521 tests pass (162 routing + 359 core, 31 new layout tests)
+
+**What's next**: Story 16 (ASP.NET Core hosting middleware), Story 18 (Phase 2 tests), or Phase 3 (Islands)
