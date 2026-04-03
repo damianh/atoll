@@ -1,20 +1,17 @@
-using System.Reflection;
-using System.Runtime.Loader;
-using Atoll.Build.Content.Collections;
 using Atoll.Configuration;
-using Atoll.Middleware.Server.Hosting;
-using Atoll.Routing;
-using Atoll.Routing.FileSystem;
+using Atoll.Middleware.Server.DevServer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Atoll.Cli.Commands;
 
 /// <summary>
 /// Handles the <c>atoll dev</c> command. Starts the ASP.NET Core development server
-/// with Atoll middleware for live rendering of pages and endpoints.
+/// with Atoll middleware for live rendering of pages and endpoints, and watches for
+/// file changes to hot-reload routes and content without restarting the listener.
+/// Browser clients are notified via WebSocket after each successful reload.
 /// </summary>
 public sealed class DevCommandHandler
 {
@@ -28,222 +25,136 @@ public sealed class DevCommandHandler
         var config = await AtollConfigLoader.LoadAsync(projectRoot);
         var effectivePort = port > 0 ? port : config.Server.Port;
 
-        // Build the user project first
         var csprojPath = FindProjectFile(projectRoot);
-        Assembly? userAssembly = null;
 
-        if (csprojPath is not null)
-        {
-            Console.WriteLine($"  Building {Path.GetFileName(csprojPath)}...");
-            var buildSuccess = await BuildProjectAsync(csprojPath);
-            if (buildSuccess)
-            {
-                var assemblyPath = FindOutputAssembly(csprojPath);
-                if (assemblyPath is not null)
-                {
-                    userAssembly = LoadAssembly(assemblyPath);
-                }
-            }
-            else
-            {
-                Console.WriteLine("  Warning: Build failed — starting dev server with no routes.");
-            }
-        }
+        // Create the live-reload handler unconditionally — the middleware injects
+        // the reconnecting WebSocket script into every HTML response so the browser
+        // is ready to receive notifications as soon as the server starts.
+        using var liveReloadHandler = new LiveReloadWebSocketHandler();
 
-        // Discover content configuration for service props
-        var serviceProps = BuildServiceProps(userAssembly, projectRoot);
-
-        // Start the dev server
+        // Build the web application host so we can obtain a logger factory.
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseUrls($"http://{config.Server.Host}:{effectivePort}");
 
-        builder.Services.AddAtoll(options =>
-        {
-            if (userAssembly is not null)
-            {
-                options.Assemblies.Add(userAssembly);
-            }
+        // Suppress Kestrel and ASP.NET Core request-logging noise in the console.
+        builder.Logging.SetMinimumLevel(LogLevel.Warning);
 
-            foreach (var kvp in serviceProps)
-            {
-                options.ServiceProps[kvp.Key] = kvp.Value;
-            }
-        });
+        // Register the live-reload handler so LiveReloadMiddleware can resolve it.
+        builder.Services.AddSingleton(liveReloadHandler);
 
         var app = builder.Build();
-        app.UseAtoll();
+        var loggerFactory = app.Services.GetRequiredService<ILoggerFactory>();
 
-        Console.WriteLine($"Atoll — dev server starting on http://{config.Server.Host}:{effectivePort}");
-        Console.WriteLine("  Press Ctrl+C to stop.");
+        // ── Live-reload WebSocket endpoint + HTML script injection ────────────
+        // Must be registered before the DevAtollRequestHandler lambda so that:
+        //   (a) WebSocket upgrades at /__atoll-live-reload are intercepted first
+        //   (b) HTML responses produced by the handler are wrapped and injected
+        app.UseWebSockets();
+        app.UseMiddleware<LiveReloadMiddleware>();
 
-        await app.RunAsync();
-    }
+        // ── Build initial state ───────────────────────────────────────────────
 
-    /// <summary>
-    /// Builds service props by discovering content configuration from the loaded assembly.
-    /// </summary>
-    private static Dictionary<string, object?> BuildServiceProps(
-        Assembly? assembly,
-        string projectRoot)
-    {
-        var props = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
-
-        if (assembly is null)
+        if (csprojPath is not null)
         {
-            return props;
-        }
-
-        var collectionQuery = CreateCollectionQueryFromAssembly(assembly, projectRoot);
-        if (collectionQuery is not null)
-        {
-            props["Query"] = collectionQuery;
-            Console.WriteLine("  Content: collection configuration discovered");
-        }
-
-        return props;
-    }
-
-    /// <summary>
-    /// Scans the assembly for an <see cref="IContentConfiguration"/> implementation
-    /// and creates a <see cref="CollectionQuery"/> from it.
-    /// </summary>
-    private static CollectionQuery? CreateCollectionQueryFromAssembly(
-        Assembly assembly,
-        string projectRoot)
-    {
-        Type? configType = null;
-
-        foreach (var type in assembly.GetExportedTypes())
-        {
-            if (type.IsAbstract || type.IsInterface)
+            var reloaderLogger = loggerFactory.CreateLogger<Dev.DevServerReloader>();
+            var reloader = new Dev.DevServerReloader(projectRoot, csprojPath, reloaderLogger);
+            var (initialState, initialBuildError) = await reloader.BuildInitialStateAsync();
+            if (initialBuildError is not null)
             {
-                continue;
+                Console.WriteLine($"  Initial build had errors:\n{initialBuildError}");
             }
 
-            if (!typeof(IContentConfiguration).IsAssignableFrom(type))
+            // ── Wire file-watching + hot-reload ───────────────────────────────
+
+            var handlerLogger = loggerFactory.CreateLogger<Dev.DevAtollRequestHandler>();
+            var handler = new Dev.DevAtollRequestHandler(initialState, handlerLogger);
+
+            // Register handler so the middleware lambda can capture it.
+            app.Use(async (context, next) =>
             {
-                continue;
-            }
+                if (!await handler.TryHandleAsync(context))
+                {
+                    await next(context);
+                }
+            });
 
-            configType = type;
-            break;
+            Console.WriteLine($"Atoll — dev server starting on http://{config.Server.Host}:{effectivePort}");
+            Console.WriteLine("  Press Ctrl+C to stop.");
+            Console.WriteLine("  Watching for file changes (.cs, .md, atoll.json)");
+
+            var semaphore = new SemaphoreSlim(1, 1);
+
+            using var watcher = new Dev.DevFileWatcher(projectRoot);
+            watcher.OnChange += async kind =>
+            {
+                // Serialize reload operations — prevent concurrent rebuilds from racing.
+                await semaphore.WaitAsync();
+                try
+                {
+                    var (newState, buildError) = await reloader.ReloadAsync(handler.CurrentState, kind);
+                    handler.UpdateState(newState);
+
+                    if (buildError is not null)
+                    {
+                        // Surface build errors in the browser via an error overlay.
+                        Console.WriteLine($"  Build errors:\n{buildError}");
+                        await liveReloadHandler.NotifyBuildErrorAsync(buildError);
+                        Console.WriteLine("  Build error notification sent to browser.");
+                    }
+                    else
+                    {
+                        // Notify all connected browser clients to refresh. Both code
+                        // changes and content-only changes require a full page reload
+                        // because the rendered HTML has changed.
+                        await liveReloadHandler.NotifyReloadAsync();
+                        Console.WriteLine("  Browser reload notification sent.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"  Warning: Reload failed — {ex.Message}");
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            };
+
+            watcher.Start();
+
+            await app.RunAsync();
         }
-
-        if (configType is null)
+        else
         {
-            return null;
+            // No project file — serve an empty response (still starts the listener).
+            // Live-reload middleware is still active so the browser script connects
+            // and will be notified if the server is restarted with a project present.
+            var emptyState = Dev.DevServerState.Empty;
+            var handlerLogger = loggerFactory.CreateLogger<Dev.DevAtollRequestHandler>();
+            var handler = new Dev.DevAtollRequestHandler(emptyState, handlerLogger);
+
+            app.Use(async (context, next) =>
+            {
+                if (!await handler.TryHandleAsync(context))
+                {
+                    await next(context);
+                }
+            });
+
+            Console.WriteLine($"Atoll — dev server starting on http://{config.Server.Host}:{effectivePort}");
+            Console.WriteLine("  Warning: No .csproj found — starting with no routes.");
+            Console.WriteLine("  Press Ctrl+C to stop.");
+
+            await app.RunAsync();
         }
-
-        var configInstance = (IContentConfiguration)Activator.CreateInstance(configType)!;
-        var collectionConfig = configInstance.Configure();
-
-        // Resolve the base directory relative to the project root
-        var resolvedBaseDir = Path.IsPathRooted(collectionConfig.BaseDirectory)
-            ? collectionConfig.BaseDirectory
-            : Path.GetFullPath(Path.Combine(projectRoot, collectionConfig.BaseDirectory));
-
-        // Create a new config with the resolved absolute path
-        var resolvedConfig = new CollectionConfig(resolvedBaseDir);
-        foreach (var kvp in collectionConfig.Collections)
-        {
-            resolvedConfig.AddCollection(kvp.Value);
-        }
-
-        var fileProvider = new PhysicalFileProvider();
-        var loader = new CollectionLoader(resolvedConfig, fileProvider);
-        return new CollectionQuery(loader);
     }
 
     /// <summary>
-    /// Finds the .csproj file in the project root directory.
+    /// Finds the <c>.csproj</c> file in the project root directory.
     /// </summary>
     private static string? FindProjectFile(string projectRoot)
     {
         var csprojFiles = Directory.GetFiles(projectRoot, "*.csproj", SearchOption.TopDirectoryOnly);
         return csprojFiles.Length > 0 ? csprojFiles[0] : null;
-    }
-
-    /// <summary>
-    /// Builds the project using <c>dotnet build</c>.
-    /// </summary>
-    private static async Task<bool> BuildProjectAsync(string csprojPath)
-    {
-        var psi = new System.Diagnostics.ProcessStartInfo
-        {
-            FileName = "dotnet",
-            Arguments = $"build \"{csprojPath}\" -c Release --nologo -v q",
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-        };
-
-        using var process = System.Diagnostics.Process.Start(psi);
-        if (process is null)
-        {
-            return false;
-        }
-
-        await process.WaitForExitAsync();
-        return process.ExitCode == 0;
-    }
-
-    /// <summary>
-    /// Finds the output assembly DLL for the project.
-    /// </summary>
-    private static string? FindOutputAssembly(string csprojPath)
-    {
-        var projectDir = Path.GetDirectoryName(csprojPath)!;
-        var projectName = Path.GetFileNameWithoutExtension(csprojPath);
-
-        var candidates = new[]
-        {
-            Path.Combine(projectDir, "bin", "Release"),
-            Path.Combine(projectDir, "bin", "Debug"),
-        };
-
-        foreach (var binDir in candidates)
-        {
-            if (!Directory.Exists(binDir))
-            {
-                continue;
-            }
-
-            var tfmDirs = Directory.GetDirectories(binDir);
-            foreach (var tfmDir in tfmDirs)
-            {
-                var dllPath = Path.Combine(tfmDir, projectName + ".dll");
-                if (File.Exists(dllPath))
-                {
-                    return dllPath;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    /// Loads an assembly from the specified path using an isolated load context.
-    /// </summary>
-    private static Assembly? LoadAssembly(string assemblyPath)
-    {
-        try
-        {
-            var loadContext = new AssemblyLoadContext("AtollDev", isCollectible: false);
-            loadContext.Resolving += (context, assemblyName) =>
-            {
-                var dir = Path.GetDirectoryName(assemblyPath)!;
-                var candidate = Path.Combine(dir, assemblyName.Name + ".dll");
-                return File.Exists(candidate) ? context.LoadFromAssemblyPath(candidate) : null;
-            };
-
-            return loadContext.LoadFromAssemblyPath(Path.GetFullPath(assemblyPath));
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"  Warning: Failed to load assembly: {ex.Message}");
-            return null;
-        }
     }
 }

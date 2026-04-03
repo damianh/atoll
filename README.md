@@ -42,8 +42,8 @@ Add the Atoll project references (or NuGet packages when published):
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="path/to/Atoll.Server/Atoll.Server.csproj" />
-    <ProjectReference Include="path/to/Atoll.Content/Atoll.Content.csproj" />
+    <ProjectReference Include="path/to/Atoll/Atoll.csproj" />
+    <ProjectReference Include="path/to/Atoll.Middleware/Atoll.Middleware.csproj" />
   </ItemGroup>
 </Project>
 ```
@@ -111,7 +111,7 @@ public sealed class IndexPage : AtollComponent, IAtollPage
 ### 4. Host with ASP.NET Core
 
 ```csharp
-using Atoll.Server.Hosting;
+using Atoll.Middleware.Server.Hosting;
 using Atoll.Routing;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -147,13 +147,10 @@ var result = await generator.GenerateAsync(routes, assemblies);
 Atoll is organized into focused libraries:
 
 ```
-Atoll                Components, rendering, islands, CSS scoping, slots, head management
-Atoll.Routing       Route patterns, matching, discovery, pages, API endpoints
-Atoll.Content       Markdown rendering, YAML frontmatter, content collections
-Atoll.Middleware     Request middleware pipeline with rewrite support
-Atoll.Build         Static site generation, asset pipeline, HTML post-processing
-Atoll.Server        ASP.NET Core hosting integration, dev server, live reload
-Atoll.Cli           CLI commands (build, dev, new, preview)
+Atoll                Components, rendering, routing, islands, CSS scoping, slots,
+                     head management, content collections, Markdown, SSG, asset pipeline
+Atoll.Middleware     ASP.NET Core hosting integration, request middleware, dev server, live reload
+Atoll.Cli            CLI commands (build, dev, new, preview)
 ```
 
 ### Request flow

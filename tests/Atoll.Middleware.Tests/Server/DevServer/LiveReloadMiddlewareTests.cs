@@ -198,6 +198,24 @@ public sealed class LiveReloadMiddlewareTests : IDisposable
     }
 
     [Fact]
+    public void GetInjectedScriptShouldHandleBuildErrorMessage()
+    {
+        var script = LiveReloadMiddleware.GetInjectedScript();
+
+        script.ShouldContain("'build-error'");
+        script.ShouldContain("atoll-build-error-overlay");
+    }
+
+    [Fact]
+    public void GetInjectedScriptShouldContainOverlayCloseButton()
+    {
+        var script = LiveReloadMiddleware.GetInjectedScript();
+
+        script.ShouldContain("closeBtn");
+        script.ShouldContain("overlay.remove()");
+    }
+
+    [Fact]
     public void GetInjectedScriptShouldSupportBothProtocols()
     {
         var script = LiveReloadMiddleware.GetInjectedScript();

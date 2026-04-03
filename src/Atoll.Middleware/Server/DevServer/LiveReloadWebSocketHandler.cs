@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 
 namespace Atoll.Middleware.Server.DevServer;
 
@@ -13,7 +14,8 @@ namespace Atoll.Middleware.Server.DevServer;
 /// The handler maintains a thread-safe collection of active WebSocket connections.
 /// When <see cref="NotifyReloadAsync"/> or <see cref="NotifyCssReloadAsync"/> is called,
 /// a JSON message is sent to all connected clients, instructing them to either
-/// perform a full page reload or just re-fetch CSS.
+/// perform a full page reload or just re-fetch CSS. When <see cref="NotifyBuildErrorAsync"/>
+/// is called, a build-error message is broadcast so browsers display an error overlay.
 /// </para>
 /// </remarks>
 public sealed class LiveReloadWebSocketHandler : IDisposable
@@ -106,6 +108,22 @@ public sealed class LiveReloadWebSocketHandler : IDisposable
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         await BroadcastAsync("{\"type\":\"css-reload\"}");
+    }
+
+    /// <summary>
+    /// Sends a build error message to all connected clients so they can display
+    /// an in-browser error overlay. The errors string contains the raw
+    /// <c>dotnet build</c> output. Auto-dismissed when a subsequent
+    /// <see cref="NotifyReloadAsync"/> message is received.
+    /// </summary>
+    /// <param name="errors">The build error output text.</param>
+    /// <returns>A task that completes when all messages have been sent.</returns>
+    public async Task NotifyBuildErrorAsync(string errors)
+    {
+        ArgumentNullException.ThrowIfNull(errors);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        var json = JsonSerializer.Serialize(new { type = "build-error", errors });
+        await BroadcastAsync(json);
     }
 
     /// <summary>

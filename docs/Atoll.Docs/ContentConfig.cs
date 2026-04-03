@@ -1,4 +1,4 @@
-using Atoll.Content.Collections;
+using Atoll.Build.Content.Collections;
 
 namespace Atoll.Docs;
 

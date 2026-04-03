@@ -1,4 +1,5 @@
 using System.Net.WebSockets;
+using System.Text.Json;
 using Atoll.Middleware.Server.DevServer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -271,6 +272,80 @@ public sealed class LiveReloadWebSocketHandlerTests : IDisposable
 
         handler.Dispose();
         handler.Dispose(); // Should not throw
+    }
+
+    // ── NotifyBuildErrorAsync ────────────────────────────────────────
+
+    [Fact]
+    public async Task NotifyBuildErrorAsyncShouldSendBuildErrorMessage()
+    {
+        using var host = CreateHost();
+        host.Start();
+
+        var ws = await host.GetTestServer().CreateWebSocketClient().ConnectAsync(
+            new Uri("ws://localhost" + LiveReloadMiddleware.WebSocketPath),
+            CancellationToken.None);
+
+        await Task.Delay(50);
+
+        await _handler.NotifyBuildErrorAsync("error CS1002: ; expected");
+
+        var message = await ReceiveMessageAsync(ws);
+        using var doc = JsonDocument.Parse(message);
+        doc.RootElement.GetProperty("type").GetString().ShouldBe("build-error");
+        doc.RootElement.GetProperty("errors").GetString().ShouldNotBeNull().ShouldContain("error CS1002");
+
+        await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "done", CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task NotifyBuildErrorAsyncShouldThrowWhenDisposed()
+    {
+        var handler = new LiveReloadWebSocketHandler();
+        handler.Dispose();
+
+        await Should.ThrowAsync<ObjectDisposedException>(
+            () => handler.NotifyBuildErrorAsync("error"));
+    }
+
+    [Fact]
+    public async Task NotifyBuildErrorAsyncShouldThrowOnNullErrors()
+    {
+        await Should.ThrowAsync<ArgumentNullException>(
+            () => _handler.NotifyBuildErrorAsync(null!));
+    }
+
+    [Fact]
+    public async Task NotifyBuildErrorAsyncShouldBroadcastToAllConnections()
+    {
+        using var host = CreateHost();
+        host.Start();
+
+        var server = host.GetTestServer();
+        var ws1 = await server.CreateWebSocketClient().ConnectAsync(
+            new Uri("ws://localhost" + LiveReloadMiddleware.WebSocketPath),
+            CancellationToken.None);
+        var ws2 = await server.CreateWebSocketClient().ConnectAsync(
+            new Uri("ws://localhost" + LiveReloadMiddleware.WebSocketPath),
+            CancellationToken.None);
+
+        await Task.Delay(50);
+        _handler.ConnectionCount.ShouldBe(2);
+
+        await _handler.NotifyBuildErrorAsync("error CS0246: type not found");
+
+        var msg1 = await ReceiveMessageAsync(ws1);
+        var msg2 = await ReceiveMessageAsync(ws2);
+
+        using var doc1 = JsonDocument.Parse(msg1);
+        using var doc2 = JsonDocument.Parse(msg2);
+        doc1.RootElement.GetProperty("type").GetString().ShouldBe("build-error");
+        doc2.RootElement.GetProperty("type").GetString().ShouldBe("build-error");
+        doc1.RootElement.GetProperty("errors").GetString().ShouldNotBeNull().ShouldContain("CS0246");
+        doc2.RootElement.GetProperty("errors").GetString().ShouldNotBeNull().ShouldContain("CS0246");
+
+        await ws1.CloseAsync(WebSocketCloseStatus.NormalClosure, "done", CancellationToken.None);
+        await ws2.CloseAsync(WebSocketCloseStatus.NormalClosure, "done", CancellationToken.None);
     }
 
     // ── Helpers ─────────────────────────────────────────────────────

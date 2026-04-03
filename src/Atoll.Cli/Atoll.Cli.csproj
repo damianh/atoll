@@ -6,4 +6,9 @@
     <ProjectReference Include="..\Atoll.Middleware\Atoll.Middleware.csproj" />
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Atoll.Integration.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
 </Project>

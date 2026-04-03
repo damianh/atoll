@@ -1,5 +1,5 @@
+using Atoll.Build.Content.Collections;
 using Atoll.Components;
-using Atoll.Content.Collections;
 using Atoll.Rendering;
 using Atoll.Routing;
 using Atoll.Docs.Layouts;

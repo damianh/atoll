@@ -173,10 +173,7 @@ public sealed class LiveReloadMiddleware
     /// <summary>
     /// Returns the JavaScript snippet that establishes the WebSocket connection
     /// for live reload. The script automatically reconnects on disconnect and
-    /// handles both full page reloads and CSS-only reloads.
-    /// </summary>
-    /// <summary>
-    /// Gets the JavaScript snippet that is injected into HTML pages.
+    /// handles full page reloads, CSS-only reloads, and build error overlays.
     /// Exposed for testing.
     /// </summary>
     public static string GetInjectedScript()
@@ -202,6 +199,39 @@ public sealed class LiveReloadMiddleware
                         link.setAttribute('href', href.split('?')[0] + separator + '_r=' + Date.now());
                       }
                     });
+                  } else if(data.type === 'build-error'){
+                    var existing = document.getElementById('atoll-build-error-overlay');
+                    if(existing) existing.remove();
+                    var overlay = document.createElement('div');
+                    overlay.id = 'atoll-build-error-overlay';
+                    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;background:#1a1a2e;color:#eee;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;overflow:auto;';
+                    var header = document.createElement('div');
+                    header.style.cssText = 'background:#e94560;padding:1.5rem 2rem;display:flex;align-items:center;justify-content:space-between;';
+                    var title = document.createElement('div');
+                    title.style.cssText = 'display:flex;align-items:center;gap:1rem;';
+                    var badge = document.createElement('span');
+                    badge.textContent = 'BUILD ERROR';
+                    badge.style.cssText = 'background:#fff;color:#e94560;font-weight:700;font-size:0.75rem;padding:0.25rem 0.75rem;border-radius:4px;letter-spacing:0.05em;';
+                    var h1 = document.createElement('h1');
+                    h1.textContent = 'Build failed';
+                    h1.style.cssText = 'font-size:1.25rem;font-weight:600;color:#fff;margin:0;';
+                    title.appendChild(badge);
+                    title.appendChild(h1);
+                    var closeBtn = document.createElement('button');
+                    closeBtn.textContent = '\u00D7';
+                    closeBtn.style.cssText = 'background:none;border:none;color:#fff;font-size:2rem;cursor:pointer;padding:0 0.5rem;line-height:1;';
+                    closeBtn.onclick = function(){ overlay.remove(); };
+                    header.appendChild(title);
+                    header.appendChild(closeBtn);
+                    overlay.appendChild(header);
+                    var content = document.createElement('div');
+                    content.style.cssText = 'padding:2rem;';
+                    var pre = document.createElement('pre');
+                    pre.textContent = data.errors;
+                    pre.style.cssText = 'background:#0d1b2a;border-radius:8px;padding:1.25rem;font-family:"Cascadia Code","Fira Code","JetBrains Mono",monospace;font-size:0.85rem;line-height:1.7;overflow-x:auto;color:#8899aa;white-space:pre-wrap;word-break:break-word;margin:0;';
+                    content.appendChild(pre);
+                    overlay.appendChild(content);
+                    document.body.appendChild(overlay);
                   }
                 };
                 ws.onclose = function(){

@@ -1,0 +1,404 @@
+using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.Loader;
+using Atoll.Build.Content.Collections;
+using Atoll.Configuration;
+using Atoll.Middleware.Server.Hosting;
+using Atoll.Routing;
+using Atoll.Routing.FileSystem;
+using Atoll.Routing.Matching;
+using Microsoft.Extensions.Logging;
+
+namespace Atoll.Cli.Commands.Dev;
+
+/// <summary>
+/// Orchestrates the build → load → discover → state-swap cycle for
+/// <c>atoll dev</c> hot-reload. Builds an initial <see cref="DevServerState"/>
+/// and can produce updated states on code or content changes.
+/// </summary>
+internal sealed class DevServerReloader
+{
+    private readonly string _projectRoot;
+    private readonly string _csprojPath;
+    private readonly ILogger<DevServerReloader> _logger;
+    private int _alcCounter;
+
+    /// <summary>
+    /// Initializes a new <see cref="DevServerReloader"/>.
+    /// </summary>
+    /// <param name="projectRoot">The project root directory (contains <c>atoll.json</c>).</param>
+    /// <param name="csprojPath">Absolute path to the <c>.csproj</c> file.</param>
+    /// <param name="logger">The logger instance.</param>
+    public DevServerReloader(
+        string projectRoot,
+        string csprojPath,
+        ILogger<DevServerReloader> logger)
+    {
+        ArgumentNullException.ThrowIfNull(projectRoot);
+        ArgumentNullException.ThrowIfNull(csprojPath);
+        ArgumentNullException.ThrowIfNull(logger);
+        _projectRoot = projectRoot;
+        _csprojPath = csprojPath;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Builds the initial <see cref="DevServerState"/> by compiling the project,
+    /// loading the assembly, discovering routes, and building the content query.
+    /// Returns the state and any build error output (null on success).
+    /// </summary>
+    public async Task<(DevServerState State, string? BuildError)> BuildInitialStateAsync()
+    {
+        return await BuildStateAsync(currentLoadContext: null, currentAssembly: null, currentState: null);
+    }
+
+    /// <summary>
+    /// Produces a new <see cref="DevServerState"/> in response to a detected file change.
+    /// Returns the state and any build error output (null on success).
+    /// </summary>
+    /// <param name="current">The current state (used for content-only reloads and as fallback on failure).</param>
+    /// <param name="changeKind">The kind of change that was detected.</param>
+    public async Task<(DevServerState State, string? BuildError)> ReloadAsync(DevServerState current, FileChangeKind changeKind)
+    {
+        ArgumentNullException.ThrowIfNull(current);
+
+        if (changeKind == FileChangeKind.ContentOnly)
+        {
+            return (await ReloadContentOnlyAsync(current), null);
+        }
+
+        return await BuildStateAsync(current.LoadContext, current.UserAssembly, current);
+    }
+
+    // ── Private: full code-change rebuild ──────────────────────────────────────
+
+    private async Task<(DevServerState State, string? BuildError)> BuildStateAsync(
+        AssemblyLoadContext? currentLoadContext,
+        Assembly? currentAssembly,
+        DevServerState? currentState)
+    {
+        var sw = Stopwatch.StartNew();
+        Console.WriteLine($"  Building {Path.GetFileName(_csprojPath)}...");
+
+        // Re-read atoll.json on every code-change build so that configuration
+        // changes (e.g. Src directory, SiteUrl) are picked up without a restart.
+        var config = await AtollConfigLoader.LoadAsync(_projectRoot);
+        var pagesDirectory = AtollConfigLoader.ResolveSrcDirectory(config, _projectRoot);
+
+        var buildResult = await BuildProjectAsync(_csprojPath);
+        if (!buildResult.Success)
+        {
+            Console.WriteLine("  Warning: Build failed — keeping current state.");
+            // Preserve the current working state so the browser keeps showing content.
+            var fallbackState = currentState ?? BuildEmptyState();
+            return (fallbackState, buildResult.ErrorOutput);
+        }
+
+        var assemblyPath = FindOutputAssembly(_csprojPath);
+        if (assemblyPath is null)
+        {
+            Console.WriteLine("  Warning: Could not locate compiled assembly.");
+            return (currentState ?? BuildEmptyState(), "Could not locate compiled assembly after successful build.");
+        }
+
+        var counter = System.Threading.Interlocked.Increment(ref _alcCounter);
+        var (loadContext, assembly) = LoadAssembly(assemblyPath, $"AtollDev-{counter}");
+        if (assembly is null)
+        {
+            return (currentState ?? BuildEmptyState(), "Failed to load compiled assembly.");
+        }
+
+        var routes = DiscoverRoutes(assembly, pagesDirectory);
+        var collectionQuery = CreateCollectionQueryFromAssembly(assembly, _projectRoot);
+        var options = BuildOptions(collectionQuery);
+
+        Console.WriteLine($"  Routes: {routes.Count} discovered");
+        Console.WriteLine($"  Reload complete ({sw.ElapsedMilliseconds}ms)");
+
+        return (new DevServerState(new RouteMatcher(routes), options, loadContext, assembly), null);
+    }
+
+    // ── Private: content-only reload ───────────────────────────────────────────
+
+    private Task<DevServerState> ReloadContentOnlyAsync(DevServerState current)
+    {
+        Console.WriteLine("  Reloading content...");
+        var sw = Stopwatch.StartNew();
+
+        // Reuse the existing assembly and ALC — only rebuild CollectionQuery.
+        var collectionQuery = current.UserAssembly is not null
+            ? CreateCollectionQueryFromAssembly(current.UserAssembly, _projectRoot)
+            : null;
+
+        var options = BuildOptions(collectionQuery);
+
+        // Preserve existing routes — code hasn't changed.
+        Console.WriteLine($"  Reload complete ({sw.ElapsedMilliseconds}ms)");
+        return Task.FromResult(
+            new DevServerState(current.RouteMatcher, options, current.LoadContext, current.UserAssembly));
+    }
+
+    // ── Private: shared helpers ─────────────────────────────────────────────────
+
+    private static DevServerState BuildEmptyState()
+    {
+        var options = new AtollOptions();
+        return new DevServerState(new RouteMatcher([]), options, null, null);
+    }
+
+    private static AtollOptions BuildOptions(CollectionQuery? collectionQuery)
+    {
+        var options = new AtollOptions();
+        if (collectionQuery is not null)
+        {
+            options.ServiceProps["Query"] = collectionQuery;
+        }
+        return options;
+    }
+
+    private IReadOnlyList<RouteEntry> DiscoverRoutes(Assembly assembly, string pagesDirectory)
+    {
+        var discovery = new RouteDiscovery(pagesDirectory);
+        var routes = discovery.DiscoverRoutes(new[] { assembly });
+
+        if (routes.Count == 0)
+        {
+            routes = DiscoverRoutesFromTypes(assembly);
+        }
+
+        return routes;
+    }
+
+    private static IReadOnlyList<RouteEntry> DiscoverRoutesFromTypes(Assembly assembly)
+    {
+        var entries = new List<RouteEntry>();
+
+        foreach (var type in assembly.GetExportedTypes())
+        {
+            if (type.IsAbstract || type.IsInterface)
+            {
+                continue;
+            }
+
+            if (!typeof(IAtollPage).IsAssignableFrom(type))
+            {
+                continue;
+            }
+
+            var routeAttr = type.GetCustomAttribute<PageRouteAttribute>();
+            if (routeAttr is not null)
+            {
+                var pattern = routeAttr.Pattern.StartsWith('/')
+                    ? routeAttr.Pattern
+                    : "/" + routeAttr.Pattern;
+                entries.Add(new RouteEntry(pattern, type, pattern));
+                continue;
+            }
+
+            var filePath = InferFilePathFromType(type);
+            var inferred = RouteDiscovery.DiscoverRoutesFromEntries(new[] { (filePath, type) });
+            entries.AddRange(inferred);
+        }
+
+        return entries;
+    }
+
+    private static string InferFilePathFromType(Type type)
+    {
+        var name = type.Name;
+
+        if (name.EndsWith("Page", StringComparison.Ordinal))
+        {
+            name = name[..^4];
+        }
+
+        if (name.Equals("Index", StringComparison.OrdinalIgnoreCase))
+        {
+            return "index.cs";
+        }
+
+        if (name.EndsWith("Index", StringComparison.Ordinal))
+        {
+            return ToKebabCase(name[..^5]) + "/index.cs";
+        }
+
+        if (typeof(IStaticPathsProvider).IsAssignableFrom(type))
+        {
+            return ToKebabCase(name) + "/[slug].cs";
+        }
+
+        return ToKebabCase(name) + ".cs";
+    }
+
+    private static string ToKebabCase(string pascalCase)
+    {
+        if (pascalCase.Length == 0)
+        {
+            return pascalCase;
+        }
+
+        var chars = new List<char>(pascalCase.Length + 4);
+        for (var i = 0; i < pascalCase.Length; i++)
+        {
+            var c = pascalCase[i];
+            if (char.IsUpper(c) && i > 0)
+            {
+                chars.Add('-');
+            }
+            chars.Add(char.ToLowerInvariant(c));
+        }
+
+        return new string(chars.ToArray());
+    }
+
+    private static CollectionQuery? CreateCollectionQueryFromAssembly(
+        Assembly assembly,
+        string projectRoot)
+    {
+        Type? configType = null;
+
+        foreach (var type in assembly.GetExportedTypes())
+        {
+            if (type.IsAbstract || type.IsInterface)
+            {
+                continue;
+            }
+
+            if (!typeof(IContentConfiguration).IsAssignableFrom(type))
+            {
+                continue;
+            }
+
+            configType = type;
+            break;
+        }
+
+        if (configType is null)
+        {
+            return null;
+        }
+
+        var configInstance = (IContentConfiguration)Activator.CreateInstance(configType)!;
+        var collectionConfig = configInstance.Configure();
+
+        var resolvedBaseDir = Path.IsPathRooted(collectionConfig.BaseDirectory)
+            ? collectionConfig.BaseDirectory
+            : Path.GetFullPath(Path.Combine(projectRoot, collectionConfig.BaseDirectory));
+
+        var resolvedConfig = new CollectionConfig(resolvedBaseDir);
+        foreach (var kvp in collectionConfig.Collections)
+        {
+            resolvedConfig.AddCollection(kvp.Value);
+        }
+
+        var fileProvider = new PhysicalFileProvider();
+        var loader = new CollectionLoader(resolvedConfig, fileProvider);
+        return new CollectionQuery(loader);
+    }
+
+    private static async Task<BuildResult> BuildProjectAsync(string csprojPath)
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = "dotnet",
+            Arguments = $"build \"{csprojPath}\" -c Release --nologo -v q",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+
+        using var process = Process.Start(psi);
+        if (process is null)
+        {
+            return new BuildResult(false, "Failed to start dotnet build process.");
+        }
+
+        // Read stdout and stderr concurrently before WaitForExitAsync to avoid
+        // deadlocks when the process fills its output buffer.
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
+        await process.WaitForExitAsync();
+        var stdout = await stdoutTask;
+        var stderr = await stderrTask;
+
+        if (process.ExitCode == 0)
+        {
+            return new BuildResult(true, null);
+        }
+
+        var errorOutput = string.Join(Environment.NewLine, stdout, stderr).Trim();
+        return new BuildResult(false, errorOutput.Length > 0 ? errorOutput : null);
+    }
+
+    private static string? FindOutputAssembly(string csprojPath)
+    {
+        var projectDir = Path.GetDirectoryName(csprojPath)!;
+        var projectName = Path.GetFileNameWithoutExtension(csprojPath);
+
+        var candidates = new[]
+        {
+            Path.Combine(projectDir, "bin", "Release"),
+            Path.Combine(projectDir, "bin", "Debug"),
+        };
+
+        foreach (var binDir in candidates)
+        {
+            if (!Directory.Exists(binDir))
+            {
+                continue;
+            }
+
+            var tfmDirs = Directory.GetDirectories(binDir);
+            foreach (var tfmDir in tfmDirs)
+            {
+                var dllPath = Path.Combine(tfmDir, projectName + ".dll");
+                if (File.Exists(dllPath))
+                {
+                    return dllPath;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Loads an assembly using a new collectible <see cref="AssemblyLoadContext"/>.
+    /// Collectible contexts allow the old assembly to be garbage-collected after
+    /// hot-reload. Returns <c>(null, null)</c> on failure.
+    /// </summary>
+    private (AssemblyLoadContext? Context, Assembly? Assembly) LoadAssembly(
+        string assemblyPath,
+        string contextName)
+    {
+        try
+        {
+            // isCollectible: true — allows this ALC to be unloaded after hot-reload,
+            // preventing memory leaks from accumulated assembly loads.
+            var loadContext = new AssemblyLoadContext(contextName, isCollectible: true);
+            loadContext.Resolving += (context, assemblyName) =>
+            {
+                var dir = Path.GetDirectoryName(assemblyPath)!;
+                var candidate = Path.Combine(dir, assemblyName.Name + ".dll");
+                return File.Exists(candidate) ? context.LoadFromAssemblyPath(candidate) : null;
+            };
+
+            var assembly = loadContext.LoadFromAssemblyPath(Path.GetFullPath(assemblyPath));
+            return (loadContext, assembly);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to load assembly '{Path}'", assemblyPath);
+            Console.WriteLine($"  Warning: Failed to load assembly: {ex.Message}");
+            return (null, null);
+        }
+    }
+}
+
+/// <summary>
+/// Represents the result of a <c>dotnet build</c> invocation.
+/// </summary>
+/// <param name="Success">Whether the build succeeded.</param>
+/// <param name="ErrorOutput">The combined stdout and stderr output on failure; <c>null</c> on success.</param>
+internal sealed record BuildResult(bool Success, string? ErrorOutput);

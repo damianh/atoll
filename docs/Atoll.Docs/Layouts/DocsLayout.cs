@@ -1,5 +1,5 @@
+using Atoll.Build.Content.Collections;
 using Atoll.Components;
-using Atoll.Content.Collections;
 using Atoll.Docs.Components;
 
 namespace Atoll.Docs.Layouts;

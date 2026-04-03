@@ -35,7 +35,7 @@ public sealed class BlogPostSchema
 Implement `IContentConfiguration` to register your collections:
 
 ```csharp
-using Atoll.Content.Collections;
+using Atoll.Build.Content.Collections;
 
 public sealed class ContentConfig : IContentConfiguration
 {
