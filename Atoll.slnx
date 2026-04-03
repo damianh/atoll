@@ -1,22 +1,16 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/Atoll.Blazor/Atoll.Blazor.csproj" />
-    <Project Path="src/Atoll.Build/Atoll.Build.csproj" />
     <Project Path="src/Atoll.Cli/Atoll.Cli.csproj" />
     <Project Path="src/Atoll.Core/Atoll.Core.csproj" />
     <Project Path="src/Atoll.Middleware/Atoll.Middleware.csproj" />
-    <Project Path="src/Atoll.Routing/Atoll.Routing.csproj" />
   </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/Atoll.Samples.Blog/Atoll.Samples.Blog.csproj" />
     <Project Path="samples/Atoll.Samples.Portfolio/Atoll.Samples.Portfolio.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/Atoll.Blazor.Tests/Atoll.Blazor.Tests.csproj" />
-    <Project Path="tests/Atoll.Build.Tests/Atoll.Build.Tests.csproj" />
     <Project Path="tests/Atoll.Core.Tests/Atoll.Core.Tests.csproj" />
     <Project Path="tests/Atoll.Integration.Tests/Atoll.Integration.Tests.csproj" />
     <Project Path="tests/Atoll.Middleware.Tests/Atoll.Middleware.Tests.csproj" />
-    <Project Path="tests/Atoll.Routing.Tests/Atoll.Routing.Tests.csproj" />
   </Folder>
 </Solution>

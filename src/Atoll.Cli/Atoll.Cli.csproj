@@ -1,11 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <RootNamespace>Atoll.Cli</RootNamespace>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Atoll.Middleware\Atoll.Middleware.csproj" />
-    <ProjectReference Include="..\Atoll.Build\Atoll.Build.csproj" />
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
 </Project>

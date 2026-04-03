@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <RootNamespace>Atoll.Core</RootNamespace>
-  </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="System.IO.Hashing" />
+    <PackageReference Include="AngleSharp" />
     <PackageReference Include="NUglify" />
+    <PackageReference Include="Markdig" />
+    <PackageReference Include="System.IO.Hashing" />
+    <PackageReference Include="YamlDotNet" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Islands\Assets\atoll-island.js" LogicalName="Atoll.Core.Islands.Assets.atoll-island.js" />
