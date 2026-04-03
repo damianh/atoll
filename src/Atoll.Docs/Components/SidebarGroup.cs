@@ -31,9 +31,11 @@ public sealed class SidebarGroup : AtollComponent
         {
             if (child.IsGroup)
             {
+                WriteHtml("<li class=\"sidebar-group-item\">");
                 var groupFragment = ComponentRenderer.ToFragment<SidebarGroup>(
                     new Dictionary<string, object?> { ["Group"] = child });
                 await RenderAsync(groupFragment);
+                WriteHtml("</li>");
             }
             else
             {

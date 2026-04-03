@@ -15,10 +15,20 @@ async function loadIndex() {
     return index;
 }
 
-function highlight(text, query) {
-    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const re = new RegExp(`(${escaped})`, 'gi');
-    return text.replace(re, '<mark>$1</mark>');
+function escapeHtml(text) {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+/** Highlights query matches in already-HTML-encoded text by inserting <mark> tags. */
+function highlight(encodedText, query) {
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp(`(${escapeHtml(escapedQuery)})`, 'gi');
+    return encodedText.replace(re, '<mark>$1</mark>');
 }
 
 function search(entries, query) {
@@ -47,10 +57,13 @@ function renderResults(container, results, query) {
         li.setAttribute('role', 'option');
         li.setAttribute('tabindex', '-1');
         li.dataset.href = r.href;
+        const encodedHref = escapeHtml(r.href);
+        const encodedTitle = highlight(escapeHtml(r.title), query);
+        const encodedDesc = r.description ? highlight(escapeHtml(r.description), query) : '';
         li.innerHTML = `
-            <a href="${r.href}" class="search-result-link">
-                <span class="search-result-title">${highlight(r.title, query)}</span>
-                ${r.description ? `<span class="search-result-desc">${highlight(r.description, query)}</span>` : ''}
+            <a href="${encodedHref}" class="search-result-link">
+                <span class="search-result-title">${encodedTitle}</span>
+                ${encodedDesc ? `<span class="search-result-desc">${encodedDesc}</span>` : ''}
             </a>`;
         list.appendChild(li);
     });
