@@ -1,0 +1,63 @@
+using Atoll.Components;
+using Atoll.Content.Collections;
+using Atoll.Rendering;
+using Atoll.Routing;
+using Atoll.Docs.Layouts;
+
+namespace Atoll.Docs.Pages;
+
+/// <summary>
+/// The individual documentation page. Renders a Markdown doc entry identified
+/// by the URL slug and wraps it in a prose layout with the sidebar.
+/// Route: /docs/[slug]
+/// </summary>
+[Layout(typeof(DocsLayout))]
+[PageRoute("/docs/[slug]")]
+public sealed class DocsPage : AtollComponent, IAtollPage, IStaticPathsProvider
+{
+    /// <summary>
+    /// Gets or sets the doc slug from the URL parameter.
+    /// </summary>
+    [Parameter(Required = true)]
+    public string Slug { get; set; } = "";
+
+    /// <summary>
+    /// Gets or sets the collection query used to load documentation entries.
+    /// </summary>
+    [Parameter(Required = true)]
+    public CollectionQuery Query { get; set; } = null!;
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<StaticPath>> GetStaticPathsAsync()
+    {
+        var docs = Query.GetCollection<DocSchema>("docs");
+
+        var paths = docs
+            .Select(entry => new StaticPath(
+                new Dictionary<string, string> { ["slug"] = entry.Slug }))
+            .ToList();
+
+        return Task.FromResult<IReadOnlyList<StaticPath>>(paths);
+    }
+
+    /// <inheritdoc />
+    protected override async Task RenderCoreAsync(RenderContext context)
+    {
+        var entry = Query.GetEntry<DocSchema>("docs", Slug);
+
+        if (entry is null)
+        {
+            WriteHtml("<h1>Page Not Found</h1><p>The requested documentation page could not be found.</p>");
+            return;
+        }
+
+        var rendered = Query.Render(entry);
+
+        WriteHtml("<article>");
+        WriteHtml("<div class=\"prose\">");
+        var contentComponent = ContentComponent.FromRenderedContent(rendered);
+        await RenderAsync(contentComponent.ToRenderFragment());
+        WriteHtml("</div>");
+        WriteHtml("</article>");
+    }
+}

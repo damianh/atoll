@@ -205,8 +205,9 @@ public sealed class StaticSiteGenerator
                 await ComponentRenderer.RenderComponentAsync(component, destination, props);
             });
 
-            // Wrap with layouts (if any are declared via [Layout] attribute)
-            var wrappedFragment = LayoutResolver.WrapWithLayouts(componentType, pageFragment);
+            // Wrap with layouts (if any are declared via [Layout] attribute).
+            // Pass props so layouts can receive service props (e.g., CollectionQuery).
+            var wrappedFragment = LayoutResolver.WrapWithLayouts(componentType, pageFragment, props);
 
             // Render the (possibly layout-wrapped) fragment to the context's destination
             await context.RenderAsync(wrappedFragment);

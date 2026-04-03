@@ -8,6 +8,9 @@
     <Project Path="samples/Atoll.Samples.Blog/Atoll.Samples.Blog.csproj" />
     <Project Path="samples/Atoll.Samples.Portfolio/Atoll.Samples.Portfolio.csproj" />
   </Folder>
+  <Folder Name="/docs/">
+    <Project Path="docs/Atoll.Docs/Atoll.Docs.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Atoll.Tests/Atoll.Tests.csproj" />
     <Project Path="tests/Atoll.Integration.Tests/Atoll.Integration.Tests.csproj" />
