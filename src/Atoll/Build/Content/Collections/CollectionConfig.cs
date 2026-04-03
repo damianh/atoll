@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
 
-namespace Atoll.Content.Collections;
+namespace Atoll.Build.Content.Collections;
 
 /// <summary>
 /// Configuration for content collections, specifying the base content directory

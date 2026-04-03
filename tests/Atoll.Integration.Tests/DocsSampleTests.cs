@@ -1,6 +1,6 @@
+using Atoll.Build.Content.Collections;
 using Atoll.Build.Ssg;
 using Atoll.Components;
-using Atoll.Content.Collections;
 using Atoll.Docs;
 using Atoll.Docs.Pages;
 using Atoll.Rendering;

@@ -1,8 +1,8 @@
-using Atoll.Content.Markdown;
+using Atoll.Build.Content.Markdown;
 using Atoll.Components;
 using Atoll.Rendering;
 
-namespace Atoll.Content.Collections;
+namespace Atoll.Build.Content.Collections;
 
 /// <summary>
 /// An <see cref="IAtollComponent"/> that renders pre-rendered Markdown content (HTML) into the

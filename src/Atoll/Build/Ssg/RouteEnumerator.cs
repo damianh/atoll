@@ -1,4 +1,5 @@
 using System.Reflection;
+using Atoll.Build.Content.Collections;
 using Atoll.Components;
 using Atoll.Routing;
 
@@ -104,7 +105,7 @@ public sealed class SsgRoute
 /// produce an error since the SSG engine cannot determine what paths to generate.
 /// </para>
 /// <para>
-/// Service props (e.g., <see cref="Atoll.Content.Collections.CollectionQuery"/>)
+/// Service props (e.g., <see cref="CollectionQuery"/>)
 /// can be provided to inject dependencies into page components before
 /// <see cref="IStaticPathsProvider.GetStaticPathsAsync"/> is called.
 /// </para>

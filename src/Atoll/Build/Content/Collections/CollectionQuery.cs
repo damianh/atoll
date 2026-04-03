@@ -1,6 +1,6 @@
-using Atoll.Content.Markdown;
+using Atoll.Build.Content.Markdown;
 
-namespace Atoll.Content.Collections;
+namespace Atoll.Build.Content.Collections;
 
 /// <summary>
 /// Provides the query API for content collections: loading, filtering, and rendering entries.

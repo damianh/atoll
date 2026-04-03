@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.Loader;
+using Atoll.Build.Content.Collections;
 using Atoll.Build.Pipeline;
 using Atoll.Build.Ssg;
-using Atoll.Content.Collections;
 using Atoll.Configuration;
 using Atoll.Routing;
 using Atoll.Routing.FileSystem;

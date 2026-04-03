@@ -1,4 +1,4 @@
-namespace Atoll.Content.Collections;
+namespace Atoll.Build.Content.Collections;
 
 /// <summary>
 /// Represents a single entry in a content collection, combining frontmatter data

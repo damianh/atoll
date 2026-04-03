@@ -1,4 +1,4 @@
-namespace Atoll.Content.Collections;
+namespace Atoll.Build.Content.Collections;
 
 /// <summary>
 /// Defines a content collection by name and schema type. This is the Atoll equivalent

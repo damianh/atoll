@@ -3,7 +3,7 @@ using Markdig.Renderers.Html;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 
-namespace Atoll.Content.Markdown;
+namespace Atoll.Build.Content.Markdown;
 
 /// <summary>
 /// Represents a heading extracted from Markdown content, including its depth,

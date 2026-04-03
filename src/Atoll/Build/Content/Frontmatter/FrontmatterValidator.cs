@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Atoll.Content.Frontmatter;
+namespace Atoll.Build.Content.Frontmatter;
 
 /// <summary>
 /// Validates frontmatter data objects using <see cref="System.ComponentModel.DataAnnotations"/>

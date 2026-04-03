@@ -1,4 +1,4 @@
-using Atoll.Content.Collections;
+using Atoll.Build.Content.Collections;
 using Atoll.Components;
 using Atoll.Routing;
 using Atoll.Samples.Blog.Components;

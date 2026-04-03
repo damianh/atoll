@@ -1,4 +1,4 @@
-namespace Atoll.Content.Frontmatter;
+namespace Atoll.Build.Content.Frontmatter;
 
 /// <summary>
 /// The result of parsing a Markdown file with frontmatter.

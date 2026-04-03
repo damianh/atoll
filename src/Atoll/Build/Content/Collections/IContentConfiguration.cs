@@ -1,4 +1,4 @@
-namespace Atoll.Content.Collections;
+namespace Atoll.Build.Content.Collections;
 
 /// <summary>
 /// Defines the content collection configuration for a project.

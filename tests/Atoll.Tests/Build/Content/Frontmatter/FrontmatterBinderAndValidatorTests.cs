@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using Atoll.Content.Frontmatter;
+using Atoll.Build.Content.Frontmatter;
 using Shouldly;
 using Xunit;
 

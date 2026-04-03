@@ -1,4 +1,4 @@
-namespace Atoll.Content.Markdown;
+namespace Atoll.Build.Content.Markdown;
 
 /// <summary>
 /// Configuration options for the Markdig Markdown rendering pipeline.

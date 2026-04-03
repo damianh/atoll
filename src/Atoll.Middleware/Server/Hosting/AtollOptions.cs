@@ -1,4 +1,5 @@
 using System.Reflection;
+using Atoll.Build.Content.Collections;
 
 namespace Atoll.Middleware.Server.Hosting;
 
@@ -47,7 +48,7 @@ public sealed class AtollOptions
     /// <summary>
     /// Gets the service props dictionary. Service props are automatically merged into
     /// the props for every page render, providing shared dependencies like
-    /// <see cref="Atoll.Content.Collections.CollectionQuery"/>.
+    /// <see cref="CollectionQuery"/>.
     /// </summary>
     /// <remarks>
     /// Keys are matched case-insensitively to <c>[Parameter]</c>-marked properties

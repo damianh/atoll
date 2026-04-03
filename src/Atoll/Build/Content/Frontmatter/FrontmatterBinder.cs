@@ -1,7 +1,7 @@
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-namespace Atoll.Content.Frontmatter;
+namespace Atoll.Build.Content.Frontmatter;
 
 /// <summary>
 /// Binds raw YAML frontmatter strings to strongly-typed C# schema objects

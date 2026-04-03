@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using Atoll.Content.Collections;
-using Atoll.Content.Frontmatter;
+using Atoll.Build.Content.Collections;
+using Atoll.Build.Content.Frontmatter;
 using Shouldly;
 using Xunit;
 

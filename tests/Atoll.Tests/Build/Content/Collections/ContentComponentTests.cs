@@ -1,5 +1,5 @@
-using Atoll.Content.Collections;
-using Atoll.Content.Markdown;
+using Atoll.Build.Content.Collections;
+using Atoll.Build.Content.Markdown;
 using Atoll.Components;
 using Atoll.Rendering;
 using Atoll.Slots;

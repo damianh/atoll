@@ -1,6 +1,6 @@
-using Atoll.Content.Frontmatter;
+using Atoll.Build.Content.Frontmatter;
 
-namespace Atoll.Content.Collections;
+namespace Atoll.Build.Content.Collections;
 
 /// <summary>
 /// Loads content entries from the filesystem for a given collection.

@@ -1,6 +1,6 @@
-using Atoll.Content.Markdown;
+using Atoll.Build.Content.Markdown;
 
-namespace Atoll.Content.Collections;
+namespace Atoll.Build.Content.Collections;
 
 /// <summary>
 /// The result of rendering a content entry's Markdown body to HTML.
