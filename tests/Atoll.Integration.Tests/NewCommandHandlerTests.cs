@@ -80,7 +80,7 @@ public sealed class NewCommandHandlerTests : IDisposable
 
         var content = await File.ReadAllTextAsync(Path.Combine(_tempDir, "my-site", "my-site.csproj"));
         content.ShouldContain("net10.0");
-        content.ShouldContain("Atoll.Server");
+        content.ShouldContain("Atoll.Middleware");
         content.ShouldContain("Microsoft.NET.Sdk.Web");
         content.ShouldContain("my-site");
     }

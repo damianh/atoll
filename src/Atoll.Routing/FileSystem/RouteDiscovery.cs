@@ -39,7 +39,8 @@ public sealed class RouteDiscovery
 
     /// <summary>
     /// Discovers routes by scanning the pages directory for <c>.cs</c> files and resolving
-    /// their types from the provided assemblies.
+    /// their types from the provided assemblies. If no file-based routes are found,
+    /// falls back to scanning for types with <see cref="PageRouteAttribute"/>.
     /// </summary>
     /// <param name="assemblies">
     /// The assemblies to search for component types. Each type must implement
@@ -49,8 +50,53 @@ public sealed class RouteDiscovery
     public IReadOnlyList<RouteEntry> DiscoverRoutes(IEnumerable<Assembly> assemblies)
     {
         ArgumentNullException.ThrowIfNull(assemblies);
-        var typeMap = BuildTypeMap(assemblies);
-        return DiscoverRoutesCore(typeMap);
+        var assemblyList = assemblies.ToList();
+        var typeMap = BuildTypeMap(assemblyList);
+        var routes = DiscoverRoutesCore(typeMap);
+
+        if (routes.Count > 0)
+        {
+            return routes;
+        }
+
+        // Fall back to attribute-based route discovery
+        return DiscoverRoutesFromAttributes(assemblyList);
+    }
+
+    /// <summary>
+    /// Discovers routes from assemblies by scanning for types annotated with
+    /// <see cref="PageRouteAttribute"/>.
+    /// </summary>
+    /// <param name="assemblies">The assemblies to scan.</param>
+    /// <returns>A list of discovered <see cref="RouteEntry"/> values.</returns>
+    public static IReadOnlyList<RouteEntry> DiscoverRoutesFromAttributes(IEnumerable<Assembly> assemblies)
+    {
+        ArgumentNullException.ThrowIfNull(assemblies);
+        var routes = new List<RouteEntry>();
+
+        foreach (var assembly in assemblies)
+        {
+            foreach (var type in assembly.GetExportedTypes())
+            {
+                if (!IsRoutableType(type))
+                {
+                    continue;
+                }
+
+                var routeAttr = type.GetCustomAttribute<PageRouteAttribute>();
+                if (routeAttr is null)
+                {
+                    continue;
+                }
+
+                var pattern = routeAttr.Pattern.StartsWith('/')
+                    ? routeAttr.Pattern
+                    : "/" + routeAttr.Pattern;
+                routes.Add(new RouteEntry(pattern, type, pattern));
+            }
+        }
+
+        return routes;
     }
 
     /// <summary>

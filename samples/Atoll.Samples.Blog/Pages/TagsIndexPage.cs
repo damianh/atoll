@@ -10,6 +10,7 @@ namespace Atoll.Samples.Blog.Pages;
 /// The tags index page. Displays all unique tags across all blog posts.
 /// </summary>
 [Layout(typeof(BlogLayout))]
+[PageRoute("/tags")]
 public sealed class TagsIndexPage : AtollComponent, IAtollPage
 {
     /// <summary>

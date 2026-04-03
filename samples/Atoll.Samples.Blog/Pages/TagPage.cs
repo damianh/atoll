@@ -11,6 +11,7 @@ namespace Atoll.Samples.Blog.Pages;
 /// Route: /tags/[tag]
 /// </summary>
 [Layout(typeof(BlogLayout))]
+[PageRoute("/tags/[tag]")]
 public sealed class TagPage : AtollComponent, IAtollPage, IStaticPathsProvider
 {
     /// <summary>

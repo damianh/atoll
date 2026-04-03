@@ -1,3 +1,4 @@
+using System.Reflection;
 using Atoll.Core.Components;
 using Atoll.Routing;
 
@@ -102,9 +103,40 @@ public sealed class SsgRoute
 /// Dynamic routes that do NOT implement <see cref="IStaticPathsProvider"/> will
 /// produce an error since the SSG engine cannot determine what paths to generate.
 /// </para>
+/// <para>
+/// Service props (e.g., <see cref="Atoll.Content.Collections.CollectionQuery"/>)
+/// can be provided to inject dependencies into page components before
+/// <see cref="IStaticPathsProvider.GetStaticPathsAsync"/> is called.
+/// </para>
 /// </remarks>
 public sealed class RouteEnumerator
 {
+    private readonly IReadOnlyDictionary<string, object?> _serviceProps;
+
+    /// <summary>
+    /// Initializes a new <see cref="RouteEnumerator"/> with no service props.
+    /// </summary>
+    public RouteEnumerator()
+        : this(EmptyProps)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new <see cref="RouteEnumerator"/> with the specified service props.
+    /// Service props are bound to <see cref="ParameterAttribute"/>-marked properties
+    /// on page components before <see cref="IStaticPathsProvider.GetStaticPathsAsync"/>
+    /// is called during dynamic route expansion.
+    /// </summary>
+    /// <param name="serviceProps">
+    /// A dictionary of service props to inject into page components.
+    /// Keys are matched to <see cref="ParameterAttribute"/>-marked property names (case-insensitive).
+    /// </param>
+    public RouteEnumerator(IReadOnlyDictionary<string, object?> serviceProps)
+    {
+        ArgumentNullException.ThrowIfNull(serviceProps);
+        _serviceProps = serviceProps;
+    }
+
     /// <summary>
     /// Enumerates all concrete SSG routes from the specified route entries.
     /// </summary>
@@ -143,7 +175,7 @@ public sealed class RouteEnumerator
         return result;
     }
 
-    private static async Task<IReadOnlyList<SsgRoute>> ExpandDynamicRouteAsync(RouteEntry route)
+    private async Task<IReadOnlyList<SsgRoute>> ExpandDynamicRouteAsync(RouteEntry route)
     {
         if (!typeof(IStaticPathsProvider).IsAssignableFrom(route.ComponentType))
         {
@@ -154,6 +186,7 @@ public sealed class RouteEnumerator
         }
 
         var instance = (IStaticPathsProvider)Activator.CreateInstance(route.ComponentType)!;
+        BindServiceProps(instance, route.ComponentType);
         var staticPaths = await instance.GetStaticPathsAsync();
 
         var result = new List<SsgRoute>(staticPaths.Count);
@@ -169,6 +202,64 @@ public sealed class RouteEnumerator
 
         return result;
     }
+
+    /// <summary>
+    /// Binds service props to <see cref="ParameterAttribute"/>-marked properties
+    /// on the page instance. Only properties that have a matching key in the
+    /// service props dictionary are set.
+    /// </summary>
+    private void BindServiceProps(object instance, Type componentType)
+    {
+        if (_serviceProps.Count == 0)
+        {
+            return;
+        }
+
+        var properties = componentType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        foreach (var property in properties)
+        {
+            var paramAttr = property.GetCustomAttribute<ParameterAttribute>();
+            if (paramAttr is null || !property.CanWrite)
+            {
+                continue;
+            }
+
+            if (FindPropValue(_serviceProps, property.Name, out var found) is { } value && found)
+            {
+                if (property.PropertyType.IsAssignableFrom(value.GetType()))
+                {
+                    property.SetValue(instance, value);
+                }
+            }
+        }
+    }
+
+    private static object? FindPropValue(
+        IReadOnlyDictionary<string, object?> props,
+        string propertyName,
+        out bool found)
+    {
+        if (props.TryGetValue(propertyName, out var value))
+        {
+            found = true;
+            return value;
+        }
+
+        foreach (var kvp in props)
+        {
+            if (string.Equals(kvp.Key, propertyName, StringComparison.OrdinalIgnoreCase))
+            {
+                found = true;
+                return kvp.Value;
+            }
+        }
+
+        found = false;
+        return null;
+    }
+
+    private static readonly IReadOnlyDictionary<string, object?> EmptyProps =
+        new Dictionary<string, object?>();
 
     /// <summary>
     /// Resolves a dynamic route pattern to a concrete URL by substituting parameters.

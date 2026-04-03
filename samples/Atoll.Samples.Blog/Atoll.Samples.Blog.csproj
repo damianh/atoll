@@ -4,7 +4,6 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Atoll.Server\Atoll.Server.csproj" />
-    <ProjectReference Include="..\..\src\Atoll.Content\Atoll.Content.csproj" />
+    <ProjectReference Include="..\..\src\Atoll.Middleware\Atoll.Middleware.csproj" />
   </ItemGroup>
 </Project>

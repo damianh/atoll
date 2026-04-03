@@ -12,6 +12,7 @@ namespace Atoll.Samples.Blog.Pages;
 /// Uses a <see cref="CollectionQuery"/> to load content from the blog collection.
 /// </summary>
 [Layout(typeof(BlogLayout))]
+[PageRoute("/blog")]
 public sealed class BlogIndexPage : AtollComponent, IAtollPage
 {
     /// <summary>

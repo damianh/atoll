@@ -8,6 +8,7 @@ namespace Atoll.Samples.Blog.Pages;
 /// The blog home page. Displays a welcome message and links to recent posts.
 /// </summary>
 [Layout(typeof(BlogLayout))]
+[PageRoute("/")]
 public sealed class IndexPage : AtollComponent, IAtollPage
 {
     /// <inheritdoc />

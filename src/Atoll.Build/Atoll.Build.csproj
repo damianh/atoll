@@ -5,8 +5,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Atoll.Core\Atoll.Core.csproj" />
     <ProjectReference Include="..\Atoll.Routing\Atoll.Routing.csproj" />
-    <ProjectReference Include="..\Atoll.Content\Atoll.Content.csproj" />
     <PackageReference Include="NUglify" />
     <PackageReference Include="AngleSharp" />
+    <PackageReference Include="Markdig" />
+    <PackageReference Include="YamlDotNet" />
   </ItemGroup>
 </Project>

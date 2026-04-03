@@ -28,6 +28,7 @@ public sealed class StaticSiteGenerator
     private readonly SsgOptions _options;
     private readonly RouteEnumerator _routeEnumerator;
     private readonly OutputWriter _outputWriter;
+    private readonly IReadOnlyDictionary<string, object?> _serviceProps;
 
     /// <summary>
     /// Initializes a new <see cref="StaticSiteGenerator"/> with the specified options.
@@ -39,6 +40,27 @@ public sealed class StaticSiteGenerator
         _options = options;
         _routeEnumerator = new RouteEnumerator();
         _outputWriter = new OutputWriter(options.OutputDirectory);
+        _serviceProps = EmptyServiceProps;
+    }
+
+    /// <summary>
+    /// Initializes a new <see cref="StaticSiteGenerator"/> with the specified options
+    /// and service props for dependency injection into page components.
+    /// </summary>
+    /// <param name="options">The SSG configuration options.</param>
+    /// <param name="serviceProps">
+    /// Service props to inject into <see cref="IStaticPathsProvider"/> page components
+    /// during dynamic route expansion (e.g., CollectionQuery).
+    /// These props are also merged into the rendering props for each page.
+    /// </param>
+    public StaticSiteGenerator(SsgOptions options, IReadOnlyDictionary<string, object?> serviceProps)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(serviceProps);
+        _options = options;
+        _routeEnumerator = new RouteEnumerator(serviceProps);
+        _outputWriter = new OutputWriter(options.OutputDirectory);
+        _serviceProps = serviceProps;
     }
 
     /// <summary>
@@ -56,6 +78,7 @@ public sealed class StaticSiteGenerator
         _options = options;
         _routeEnumerator = routeEnumerator;
         _outputWriter = outputWriter;
+        _serviceProps = EmptyServiceProps;
     }
 
     /// <summary>
@@ -166,7 +189,7 @@ public sealed class StaticSiteGenerator
     /// <summary>
     /// Renders a page component to HTML, including layout wrapping and DOCTYPE injection.
     /// </summary>
-    private static async Task<string> RenderPageToHtmlAsync(SsgRoute route)
+    private async Task<string> RenderPageToHtmlAsync(SsgRoute route)
     {
         var componentType = route.ComponentType;
         var props = BuildProps(route);
@@ -197,13 +220,21 @@ public sealed class StaticSiteGenerator
     }
 
     /// <summary>
-    /// Builds a combined props dictionary from route parameters and static path props.
+    /// Builds a combined props dictionary from service props, route parameters,
+    /// and static path props. Service props are added first, then route parameters,
+    /// then static path props (later entries override earlier ones).
     /// </summary>
-    private static IReadOnlyDictionary<string, object?> BuildProps(SsgRoute route)
+    private IReadOnlyDictionary<string, object?> BuildProps(SsgRoute route)
     {
         var props = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
 
-        // Add route parameters first
+        // Service props first (lowest priority — overridden by route-specific props)
+        foreach (var kvp in _serviceProps)
+        {
+            props[kvp.Key] = kvp.Value;
+        }
+
+        // Add route parameters
         foreach (var kvp in route.Parameters)
         {
             props[kvp.Key] = kvp.Value;
@@ -217,4 +248,7 @@ public sealed class StaticSiteGenerator
 
         return new ReadOnlyDictionary<string, object?>(props);
     }
+
+    private static readonly IReadOnlyDictionary<string, object?> EmptyServiceProps =
+        new Dictionary<string, object?>();
 }

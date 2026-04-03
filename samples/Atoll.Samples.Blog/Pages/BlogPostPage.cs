@@ -13,6 +13,7 @@ namespace Atoll.Samples.Blog.Pages;
 /// Route: /blog/[slug]
 /// </summary>
 [Layout(typeof(BlogLayout))]
+[PageRoute("/blog/[slug]")]
 public sealed class BlogPostPage : AtollComponent, IAtollPage, IStaticPathsProvider
 {
     /// <summary>

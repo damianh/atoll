@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Atoll.Server\Atoll.Server.csproj" />
+    <ProjectReference Include="..\Atoll.Middleware\Atoll.Middleware.csproj" />
     <ProjectReference Include="..\Atoll.Build\Atoll.Build.csproj" />
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>

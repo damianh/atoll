@@ -4,7 +4,7 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Atoll.Server\Atoll.Server.csproj" />
+    <ProjectReference Include="..\..\src\Atoll.Middleware\Atoll.Middleware.csproj" />
     <ProjectReference Include="..\..\src\Atoll.Build\Atoll.Build.csproj" />
     <ProjectReference Include="..\..\src\Atoll.Cli\Atoll.Cli.csproj" />
     <ProjectReference Include="..\..\samples\Atoll.Samples.Blog\Atoll.Samples.Blog.csproj" />

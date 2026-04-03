@@ -1,7 +1,7 @@
 using System.Net;
 using Atoll.Core.Components;
+using Atoll.Middleware.Server.Hosting;
 using Atoll.Routing;
-using Atoll.Server.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;

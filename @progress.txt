@@ -566,3 +566,50 @@ All passing, 0 warnings, 0 errors in Release mode.
 - AtollRequestHandler.HandlePageAsync only builds props from route parameters — pages needing DI services (like CollectionQuery) must receive them via direct rendering, not through the middleware
 
 **What's next**: Story 65 (portfolio sample), Story 66 (E2E integration tests), Story 67 (code quality pass), Story 68 (README)
+
+### Session: 2026-04-03
+
+**Project Consolidation (Option B)** ✅ COMMITTED (`5f4f8c6`)
+
+Consolidated 8 source projects down to 6 by merging `Atoll.Content` into `Atoll.Build` and `Atoll.Server` into `Atoll.Middleware`.
+
+**Changes made:**
+- Merged `Atoll.Content` (12 source files) into `src/Atoll.Build/Content/`, preserving `Atoll.Content.*` namespaces
+- Merged `Atoll.Server` (8 source files) into `src/Atoll.Middleware/Server/`, updating namespaces to `Atoll.Middleware.Server.*`
+- Upgraded `Atoll.Middleware.csproj` to `Microsoft.NET.Sdk.Web` (needed for ASP.NET Core types from Server)
+- Added `Atoll.Build` dependency to `Atoll.Middleware` (Server depended on Content, now in Build)
+- Added Markdig + YamlDotNet packages to `Atoll.Build.csproj` (were in Content)
+- Moved 6 Content test files to `tests/Atoll.Build.Tests/Content/` (updated test namespaces)
+- Moved 4 Server test files to `tests/Atoll.Middleware.Tests/Server/` (updated test namespaces)
+- Updated all `.csproj` references across Cli, samples, and integration tests
+- Deleted `src/Atoll.Content/`, `src/Atoll.Server/`, `tests/Atoll.Content.Tests/`, `tests/Atoll.Server.Tests/`
+- Updated `Atoll.slnx` solution file
+
+**Additional enhancements in same commit:**
+- Added `IContentConfiguration` interface + `ContentConfig` blog sample for assembly-based content discovery
+- Added `PageRouteAttribute` for explicit type-based route declaration
+- Added service prop injection in `RouteEnumerator` for DI into page components during SSG
+- Implemented full `BuildCommandHandler`: dotnet build → assembly scan → route discovery → CollectionQuery → SSG pipeline
+- Implemented `DevCommandHandler` with real ASP.NET Core dev server and assembly loading
+- Implemented `PreviewCommandHandler` with static file serving from `dist/`
+- Fixed `NewCommandHandler` scaffolded templates (`Atoll.Server` → `Atoll.Middleware`)
+- Added `.gitattributes`, updated `.editorconfig`, added `dist/` to `.gitignore`
+
+**Test counts: 1,946 total** (824 core + 229 routing + 460 build + 184 middleware + 249 integration)
+All passing, 0 warnings, 0 errors in Release mode.
+
+**Key discoveries:**
+- Server file namespaces were updated to `Atoll.Middleware.Server.*` (deviated from Option B plan that said preserve; but this is cleaner)
+- `NewCommandHandler` string templates had stale `Atoll.Server` references — needed manual fix
+- Git correctly detects renames when files are moved + content is ~99% similar
+- `Microsoft.NET.Sdk.Web` auto-generates `Properties/launchSettings.json`
+- `AssemblyLoadContext` with `Resolving` handler is needed for loading user project assemblies
+
+**Current project structure (6 source + 2 sample + 5 test):**
+```
+src/: Atoll.Core, Atoll.Routing, Atoll.Build, Atoll.Middleware, Atoll.Blazor (empty), Atoll.Cli
+tests/: Atoll.Core.Tests, Atoll.Routing.Tests, Atoll.Build.Tests, Atoll.Middleware.Tests, Atoll.Integration.Tests
+  (Atoll.Blazor.Tests exists but is empty — 0 tests)
+```
+
+**What's next**: The main implementation plan (astro-dotnet-fork.md) has all 68 stories complete. Remaining tasks are verification/polish items from the task list. The consolidation work is done.

@@ -8,6 +8,7 @@ namespace Atoll.Samples.Blog.Pages;
 /// The about page with site and author information.
 /// </summary>
 [Layout(typeof(BlogLayout))]
+[PageRoute("/about")]
 public sealed class AboutPage : AtollComponent, IAtollPage
 {
     /// <inheritdoc />

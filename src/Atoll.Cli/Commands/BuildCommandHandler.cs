@@ -1,12 +1,18 @@
+using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.Loader;
 using Atoll.Build.Pipeline;
 using Atoll.Build.Ssg;
+using Atoll.Content.Collections;
 using Atoll.Core.Configuration;
+using Atoll.Routing;
+using Atoll.Routing.FileSystem;
 
 namespace Atoll.Cli.Commands;
 
 /// <summary>
 /// Handles the <c>atoll build</c> command. Runs the full SSG pipeline:
-/// load config → discover routes → render pages → process assets → post-process HTML → write manifest.
+/// load config → build project → discover routes → render pages → process assets → post-process HTML → write manifest.
 /// </summary>
 public sealed class BuildCommandHandler
 {
@@ -23,6 +29,7 @@ public sealed class BuildCommandHandler
         var config = await AtollConfigLoader.LoadAsync(projectRoot);
         var outputDir = AtollConfigLoader.ResolveOutputDirectory(config, projectRoot);
         var publicDir = AtollConfigLoader.ResolvePublicDirectory(config, projectRoot);
+        var srcDir = AtollConfigLoader.ResolveSrcDirectory(config, projectRoot);
         var basePath = AtollConfigLoader.NormalizeBasePath(config.Base);
         var basePathForAssets = basePath == "/" ? "" : basePath;
 
@@ -33,6 +40,14 @@ public sealed class BuildCommandHandler
             Console.WriteLine($"  Base:   {basePath}");
         }
 
+        // Build the user project and discover routes
+        var (routes, assembly) = await BuildAndDiscoverRoutesAsync(projectRoot, srcDir);
+
+        Console.WriteLine($"  Routes: {routes.Count} discovered");
+
+        // Build service props (e.g., CollectionQuery for content-driven pages)
+        var serviceProps = BuildServiceProps(assembly, projectRoot);
+
         // SSG options
         var ssgOptions = new SsgOptions(outputDir)
         {
@@ -42,10 +57,9 @@ public sealed class BuildCommandHandler
             CleanOutputDirectory = config.Build.Clean,
         };
 
-        // Discover routes (placeholder: in real usage, routes come from assembly scanning)
-        // For now, we render an empty route table — the caller provides routes via library mode.
-        var generator = new StaticSiteGenerator(ssgOptions);
-        var ssgResult = await generator.GenerateAsync([]);
+        // Generate static site
+        var generator = new StaticSiteGenerator(ssgOptions, serviceProps);
+        var ssgResult = await generator.GenerateAsync(routes);
 
         // Asset pipeline
         var pipelineOptions = new AssetPipelineOptions(outputDir)
@@ -116,5 +130,357 @@ public sealed class BuildCommandHandler
 
         Console.WriteLine($"  Time:   {elapsed.TotalMilliseconds:F0}ms");
         Console.WriteLine($"  Done!   {outputDir}");
+    }
+
+    /// <summary>
+    /// Builds service props by discovering content configuration from the loaded assembly.
+    /// If the assembly implements <see cref="IContentConfiguration"/>, a <see cref="CollectionQuery"/>
+    /// is created and included as a service prop for injection into page components.
+    /// </summary>
+    private static IReadOnlyDictionary<string, object?> BuildServiceProps(
+        Assembly? assembly,
+        string projectRoot)
+    {
+        var props = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+
+        if (assembly is null)
+        {
+            return props;
+        }
+
+        var collectionQuery = CreateCollectionQueryFromAssembly(assembly, projectRoot);
+        if (collectionQuery is not null)
+        {
+            props["Query"] = collectionQuery;
+            Console.WriteLine("  Content: collection configuration discovered");
+        }
+
+        return props;
+    }
+
+    /// <summary>
+    /// Scans the assembly for an <see cref="IContentConfiguration"/> implementation
+    /// and creates a <see cref="CollectionQuery"/> from it.
+    /// </summary>
+    private static CollectionQuery? CreateCollectionQueryFromAssembly(
+        Assembly assembly,
+        string projectRoot)
+    {
+        Type? configType = null;
+
+        foreach (var type in assembly.GetExportedTypes())
+        {
+            if (type.IsAbstract || type.IsInterface)
+            {
+                continue;
+            }
+
+            if (!typeof(IContentConfiguration).IsAssignableFrom(type))
+            {
+                continue;
+            }
+
+            configType = type;
+            break;
+        }
+
+        if (configType is null)
+        {
+            return null;
+        }
+
+        var configInstance = (IContentConfiguration)Activator.CreateInstance(configType)!;
+        var collectionConfig = configInstance.Configure();
+
+        // Resolve the base directory relative to the project root
+        var resolvedBaseDir = Path.IsPathRooted(collectionConfig.BaseDirectory)
+            ? collectionConfig.BaseDirectory
+            : Path.GetFullPath(Path.Combine(projectRoot, collectionConfig.BaseDirectory));
+
+        // Create a new config with the resolved absolute path
+        var resolvedConfig = new CollectionConfig(resolvedBaseDir);
+        foreach (var kvp in collectionConfig.Collections)
+        {
+            resolvedConfig.AddCollection(kvp.Value);
+        }
+
+        var fileProvider = new PhysicalFileProvider();
+        var loader = new CollectionLoader(resolvedConfig, fileProvider);
+        return new CollectionQuery(loader);
+    }
+
+    /// <summary>
+    /// Builds the user project and discovers routable types from the compiled assembly.
+    /// Returns the discovered routes and the loaded assembly (for further scanning).
+    /// </summary>
+    private static async Task<(IReadOnlyList<RouteEntry> Routes, Assembly? Assembly)> BuildAndDiscoverRoutesAsync(
+        string projectRoot,
+        string pagesDirectory)
+    {
+        var csprojPath = FindProjectFile(projectRoot);
+        if (csprojPath is null)
+        {
+            Console.WriteLine("  Warning: No .csproj found — no routes to discover.");
+            return ([], null);
+        }
+
+        Console.WriteLine($"  Building {Path.GetFileName(csprojPath)}...");
+
+        // Build the project
+        var buildSuccess = await BuildProjectAsync(csprojPath);
+        if (!buildSuccess)
+        {
+            Console.WriteLine("  Error: Project build failed. Cannot discover routes.");
+            return ([], null);
+        }
+
+        // Find and load the assembly
+        var assemblyPath = FindOutputAssembly(csprojPath);
+        if (assemblyPath is null)
+        {
+            Console.WriteLine("  Warning: Could not locate compiled assembly — no routes to discover.");
+            return ([], null);
+        }
+
+        var assembly = LoadAssembly(assemblyPath);
+        if (assembly is null)
+        {
+            Console.WriteLine("  Warning: Failed to load assembly — no routes to discover.");
+            return ([], null);
+        }
+
+        // Discover routes using assembly scanning
+        var discovery = new RouteDiscovery(pagesDirectory);
+        var routes = discovery.DiscoverRoutes(new[] { assembly });
+
+        // If file-based discovery found nothing (no Pages/ directory on disk),
+        // fall back to discovering from type metadata directly
+        if (routes.Count == 0)
+        {
+            routes = DiscoverRoutesFromTypes(assembly);
+        }
+
+        return (routes, assembly);
+    }
+
+    /// <summary>
+    /// Discovers routes by scanning the assembly for types that implement
+    /// <see cref="IAtollPage"/>. Uses the <see cref="PageRouteAttribute"/> if present,
+    /// otherwise infers the route pattern from the type name.
+    /// </summary>
+    private static IReadOnlyList<RouteEntry> DiscoverRoutesFromTypes(Assembly assembly)
+    {
+        var entries = new List<RouteEntry>();
+
+        foreach (var type in assembly.GetExportedTypes())
+        {
+            if (type.IsAbstract || type.IsInterface)
+            {
+                continue;
+            }
+
+            if (!typeof(IAtollPage).IsAssignableFrom(type))
+            {
+                continue;
+            }
+
+            // Check for explicit [PageRoute] attribute first
+            var routeAttr = type.GetCustomAttribute<PageRouteAttribute>();
+            if (routeAttr is not null)
+            {
+                var pattern = routeAttr.Pattern.StartsWith('/')
+                    ? routeAttr.Pattern
+                    : "/" + routeAttr.Pattern;
+                entries.Add(new RouteEntry(pattern, type, pattern));
+                continue;
+            }
+
+            // Fall back to convention-based inference
+            var filePath = InferFilePathFromType(type);
+            var inferredEntries = RouteDiscovery.DiscoverRoutesFromEntries(
+                new[] { (filePath, type) });
+            entries.AddRange(inferredEntries);
+        }
+
+        return entries;
+    }
+
+    /// <summary>
+    /// Infers a route file path from a page type name using Atoll conventions.
+    /// </summary>
+    private static string InferFilePathFromType(Type type)
+    {
+        var name = type.Name;
+
+        // Strip "Page" suffix if present
+        if (name.EndsWith("Page", StringComparison.Ordinal))
+        {
+            name = name[..^4];
+        }
+
+        // Convert PascalCase to kebab-case path segments
+        // e.g., "BlogPost" -> "blog-post", "TagsIndex" -> "tags-index"
+        // Special case: "Index" -> "index" (root of directory)
+        if (name.Equals("Index", StringComparison.OrdinalIgnoreCase))
+        {
+            return "index.cs";
+        }
+
+        // Check if this is an index page for a subdirectory
+        // e.g., "BlogIndex" -> "blog/index.cs", "TagsIndex" -> "tags/index.cs"
+        if (name.EndsWith("Index", StringComparison.Ordinal))
+        {
+            var prefix = ToKebabCase(name[..^5]);
+            return prefix + "/index.cs";
+        }
+
+        // Check for dynamic route types (implement IStaticPathsProvider)
+        // e.g., "BlogPost" -> "blog/[slug].cs", "Tag" -> "tags/[tag].cs"
+        if (typeof(IStaticPathsProvider).IsAssignableFrom(type))
+        {
+            var segment = ToKebabCase(name);
+            // For dynamic routes, use the parent directory from namespace or type name
+            // and a [slug] parameter. The actual parameter name comes from GetStaticPaths.
+            return segment + "/[slug].cs";
+        }
+
+        // Static page: "About" -> "about.cs"
+        return ToKebabCase(name) + ".cs";
+    }
+
+    /// <summary>
+    /// Converts a PascalCase name to kebab-case.
+    /// </summary>
+    private static string ToKebabCase(string pascalCase)
+    {
+        if (pascalCase.Length == 0)
+        {
+            return pascalCase;
+        }
+
+        var chars = new List<char>(pascalCase.Length + 4);
+        for (var i = 0; i < pascalCase.Length; i++)
+        {
+            var c = pascalCase[i];
+            if (char.IsUpper(c) && i > 0)
+            {
+                chars.Add('-');
+            }
+
+            chars.Add(char.ToLowerInvariant(c));
+        }
+
+        return new string(chars.ToArray());
+    }
+
+    /// <summary>
+    /// Finds the .csproj file in the project root directory.
+    /// </summary>
+    private static string? FindProjectFile(string projectRoot)
+    {
+        var csprojFiles = Directory.GetFiles(projectRoot, "*.csproj", SearchOption.TopDirectoryOnly);
+        return csprojFiles.Length switch
+        {
+            0 => null,
+            1 => csprojFiles[0],
+            _ => csprojFiles[0], // Use first if multiple
+        };
+    }
+
+    /// <summary>
+    /// Builds the project using <c>dotnet build</c>.
+    /// </summary>
+    private static async Task<bool> BuildProjectAsync(string csprojPath)
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = "dotnet",
+            Arguments = $"build \"{csprojPath}\" -c Release --nologo -v q",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+
+        using var process = Process.Start(psi);
+        if (process is null)
+        {
+            return false;
+        }
+
+        await process.WaitForExitAsync();
+
+        if (process.ExitCode != 0)
+        {
+            var error = await process.StandardError.ReadToEndAsync();
+            if (error.Length > 0)
+            {
+                Console.WriteLine($"  Build errors:\n{error}");
+            }
+        }
+
+        return process.ExitCode == 0;
+    }
+
+    /// <summary>
+    /// Finds the output assembly DLL for the project.
+    /// </summary>
+    private static string? FindOutputAssembly(string csprojPath)
+    {
+        var projectDir = Path.GetDirectoryName(csprojPath)!;
+        var projectName = Path.GetFileNameWithoutExtension(csprojPath);
+
+        // Check Release first, then Debug
+        var candidates = new[]
+        {
+            Path.Combine(projectDir, "bin", "Release"),
+            Path.Combine(projectDir, "bin", "Debug"),
+        };
+
+        foreach (var binDir in candidates)
+        {
+            if (!Directory.Exists(binDir))
+            {
+                continue;
+            }
+
+            // Find the TFM directory (e.g., net10.0)
+            var tfmDirs = Directory.GetDirectories(binDir);
+            foreach (var tfmDir in tfmDirs)
+            {
+                var dllPath = Path.Combine(tfmDir, projectName + ".dll");
+                if (File.Exists(dllPath))
+                {
+                    return dllPath;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Loads an assembly from the specified path using an isolated load context.
+    /// </summary>
+    private static Assembly? LoadAssembly(string assemblyPath)
+    {
+        try
+        {
+            var loadContext = new AssemblyLoadContext("AtollBuild", isCollectible: false);
+            loadContext.Resolving += (context, assemblyName) =>
+            {
+                // Try to resolve from the assembly's directory
+                var dir = Path.GetDirectoryName(assemblyPath)!;
+                var candidate = Path.Combine(dir, assemblyName.Name + ".dll");
+                return File.Exists(candidate) ? context.LoadFromAssemblyPath(candidate) : null;
+            };
+
+            return loadContext.LoadFromAssemblyPath(Path.GetFullPath(assemblyPath));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"  Warning: Failed to load assembly '{assemblyPath}': {ex.Message}");
+            return null;
+        }
     }
 }

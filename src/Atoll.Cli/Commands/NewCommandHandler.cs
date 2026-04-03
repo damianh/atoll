@@ -58,7 +58,7 @@ public sealed class NewCommandHandler
                 <ImplicitUsings>enable</ImplicitUsings>
               </PropertyGroup>
               <ItemGroup>
-                <PackageReference Include="Atoll.Server" Version="*" />
+                <PackageReference Include="Atoll.Middleware" Version="*" />
               </ItemGroup>
             </Project>
             """;
@@ -86,7 +86,7 @@ public sealed class NewCommandHandler
     private static async Task WriteProgramFileAsync(string projectDir, string name)
     {
         var content = """
-            using Atoll.Server.Hosting;
+            using Atoll.Middleware.Server.Hosting;
 
             var builder = WebApplication.CreateBuilder(args);
 
