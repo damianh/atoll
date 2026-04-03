@@ -373,13 +373,13 @@ Deliver a usable, testable, documented .NET framework that implements Astro's co
     - `tests/Atoll.Integration.Tests/Atoll.Integration.Tests.csproj`
   **Acceptance**: `dotnet build -c Release` succeeds; `dotnet test` discovers 0 tests (no failures)
 
-- [ ] 2. **Configure CI with GitHub Actions**
+- [x] 2. **Configure CI with GitHub Actions**
   **What**: Build + test on push/PR. Matrix: windows + ubuntu. Release mode build.
   **Files**:
     - `.github/workflows/ci.yml`
   **Acceptance**: Push triggers CI; build + test passes on both OS
 
-- [ ] 3. **Add .editorconfig and analyzer configuration**
+- [x] 3. **Add .editorconfig and analyzer configuration**
   **What**: Enforce coding standards via analyzers. Enable `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>` in Release.
   **Files**:
     - `.editorconfig`
