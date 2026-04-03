@@ -1,5 +1,5 @@
-using Atoll.Core.Components;
-using Atoll.Core.Islands;
+using Atoll.Components;
+using Atoll.Islands;
 
 namespace Atoll.Samples.Blog.Islands;
 

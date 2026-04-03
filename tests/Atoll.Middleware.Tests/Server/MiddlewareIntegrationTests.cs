@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Net;
 using System.Text.Json;
-using Atoll.Core.Components;
+using Atoll.Components;
 using Atoll.Middleware.Server.Hosting;
 using Atoll.Routing;
 using Microsoft.AspNetCore.Builder;

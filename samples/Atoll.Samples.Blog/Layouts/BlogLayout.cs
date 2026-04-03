@@ -1,4 +1,4 @@
-using Atoll.Core.Components;
+using Atoll.Components;
 
 namespace Atoll.Samples.Blog.Layouts;
 

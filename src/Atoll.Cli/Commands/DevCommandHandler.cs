@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Runtime.Loader;
 using Atoll.Content.Collections;
-using Atoll.Core.Configuration;
+using Atoll.Configuration;
 using Atoll.Middleware.Server.Hosting;
 using Atoll.Routing;
 using Atoll.Routing.FileSystem;

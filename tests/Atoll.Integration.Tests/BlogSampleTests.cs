@@ -1,7 +1,7 @@
 using System.Net;
 using Atoll.Content.Collections;
-using Atoll.Core.Components;
-using Atoll.Core.Rendering;
+using Atoll.Components;
+using Atoll.Rendering;
 using Atoll.Middleware.Server.Hosting;
 using Atoll.Routing;
 using Atoll.Samples.Blog;
@@ -665,9 +665,9 @@ public sealed class BlogSampleTests
     [Fact]
     public void ThemeToggleShouldHaveClientLoadDirective()
     {
-        var directive = Atoll.Core.Islands.DirectiveExtractor.GetDirective(typeof(ThemeToggle));
+        var directive = Atoll.Islands.DirectiveExtractor.GetDirective(typeof(ThemeToggle));
         directive.ShouldNotBeNull();
-        directive.DirectiveType.ShouldBe(Atoll.Core.Instructions.ClientDirectiveType.Load);
+        directive.DirectiveType.ShouldBe(Atoll.Instructions.ClientDirectiveType.Load);
     }
 
     [Fact]
@@ -700,9 +700,9 @@ public sealed class BlogSampleTests
     [Fact]
     public void SearchBoxShouldHaveClientLoadDirective()
     {
-        var directive = Atoll.Core.Islands.DirectiveExtractor.GetDirective(typeof(SearchBox));
+        var directive = Atoll.Islands.DirectiveExtractor.GetDirective(typeof(SearchBox));
         directive.ShouldNotBeNull();
-        directive.DirectiveType.ShouldBe(Atoll.Core.Instructions.ClientDirectiveType.Load);
+        directive.DirectiveType.ShouldBe(Atoll.Instructions.ClientDirectiveType.Load);
     }
 
     [Fact]

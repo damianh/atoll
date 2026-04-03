@@ -4,7 +4,7 @@ using System.Runtime.Loader;
 using Atoll.Build.Pipeline;
 using Atoll.Build.Ssg;
 using Atoll.Content.Collections;
-using Atoll.Core.Configuration;
+using Atoll.Configuration;
 using Atoll.Routing;
 using Atoll.Routing.FileSystem;
 

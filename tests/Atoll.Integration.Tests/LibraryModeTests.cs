@@ -1,5 +1,5 @@
 using System.Net;
-using Atoll.Core.Components;
+using Atoll.Components;
 using Atoll.Middleware.Server.Hosting;
 using Atoll.Routing;
 using Microsoft.AspNetCore.Builder;

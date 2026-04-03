@@ -1,8 +1,8 @@
 using System.Net;
-using Atoll.Core.Components;
-using Atoll.Core.Instructions;
-using Atoll.Core.Islands;
-using Atoll.Core.Rendering;
+using Atoll.Components;
+using Atoll.Instructions;
+using Atoll.Islands;
+using Atoll.Rendering;
 using Atoll.Middleware.Server.Hosting;
 using Atoll.Routing;
 using Atoll.Samples.Portfolio.Components;

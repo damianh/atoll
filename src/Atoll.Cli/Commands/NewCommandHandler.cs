@@ -110,7 +110,7 @@ public sealed class NewCommandHandler
         var namespaceName = SanitizeNamespace(name);
         var escapedName = name.Replace("\"", "\\\"");
         var content = $$"""
-            using Atoll.Core.Components;
+            using Atoll.Components;
             using Atoll.Routing;
 
             namespace {{namespaceName}}.Pages;
@@ -133,7 +133,7 @@ public sealed class NewCommandHandler
     private static async Task WriteMainLayoutAsync(string projectDir)
     {
         var content = """
-            using Atoll.Core.Components;
+            using Atoll.Components;
 
             namespace Layouts;
 

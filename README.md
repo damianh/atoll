@@ -53,7 +53,7 @@ Add the Atoll project references (or NuGet packages when published):
 Layouts wrap pages with shared structure (HTML shell, nav, footer). A layout renders its page content via `RenderSlotAsync()`:
 
 ```csharp
-using Atoll.Core.Components;
+using Atoll.Components;
 
 public sealed class MainLayout : AtollComponent
 {
@@ -93,7 +93,7 @@ public sealed class MainLayout : AtollComponent
 Pages implement `IAtollPage` and are routed to URLs. Use the `[Layout]` attribute to wrap the page in a layout:
 
 ```csharp
-using Atoll.Core.Components;
+using Atoll.Components;
 using Atoll.Routing;
 
 [Layout(typeof(MainLayout))]
@@ -147,7 +147,7 @@ var result = await generator.GenerateAsync(routes, assemblies);
 Atoll is organized into focused libraries:
 
 ```
-Atoll.Core          Components, rendering, islands, CSS scoping, slots, head management
+Atoll                Components, rendering, islands, CSS scoping, slots, head management
 Atoll.Routing       Route patterns, matching, discovery, pages, API endpoints
 Atoll.Content       Markdown rendering, YAML frontmatter, content collections
 Atoll.Middleware     Request middleware pipeline with rewrite support
@@ -185,7 +185,7 @@ Components are rendered top-down, synchronously or asynchronously, producing a s
 Components are reusable UI building blocks. They accept props via `[Parameter]` properties:
 
 ```csharp
-using Atoll.Core.Components;
+using Atoll.Components;
 
 public sealed class Card : AtollComponent
 {
@@ -298,8 +298,8 @@ Each directive controls *when* the island's JavaScript loads:
 Extend `VanillaJsIsland` and apply a client directive attribute:
 
 ```csharp
-using Atoll.Core.Components;
-using Atoll.Core.Islands;
+using Atoll.Components;
+using Atoll.Islands;
 
 [ClientLoad]
 public sealed class ThemeToggle : VanillaJsIsland

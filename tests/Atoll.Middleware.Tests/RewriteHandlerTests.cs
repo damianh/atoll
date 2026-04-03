@@ -1,4 +1,4 @@
-using Atoll.Core.Components;
+using Atoll.Components;
 using Atoll.Middleware.Pipeline;
 using Atoll.Routing;
 using Atoll.Routing.Matching;

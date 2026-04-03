@@ -1,5 +1,5 @@
-using Atoll.Core.Components;
-using Atoll.Core.Rendering;
+using Atoll.Components;
+using Atoll.Rendering;
 using Atoll.Routing;
 using Atoll.Samples.Portfolio.Components;
 using Atoll.Samples.Portfolio.Islands;
