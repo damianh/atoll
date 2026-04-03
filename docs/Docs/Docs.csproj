@@ -1,9 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <RootNamespace>Atoll.Docs</RootNamespace>
+    <AssemblyName>Atoll.Docs.Site</AssemblyName>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Atoll.Middleware\Atoll.Middleware.csproj" />
+    <ProjectReference Include="..\..\src\Atoll.Docs\Atoll.Docs.csproj" />
   </ItemGroup>
 </Project>

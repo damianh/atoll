@@ -1,4 +1,5 @@
 using Atoll.Build.Content.Collections;
+using Atoll.Build.Content.Markdown;
 using Atoll.Components;
 using Atoll.Rendering;
 using Atoll.Routing;
@@ -11,7 +12,7 @@ namespace Atoll.Docs.Pages;
 /// by the URL slug and wraps it in a prose layout with the sidebar.
 /// Route: /docs/[slug]
 /// </summary>
-[Layout(typeof(DocsLayout))]
+[Layout(typeof(SiteLayout))]
 [PageRoute("/docs/[slug]")]
 public sealed class DocsPage : AtollComponent, IAtollPage, IStaticPathsProvider
 {
@@ -26,6 +27,18 @@ public sealed class DocsPage : AtollComponent, IAtollPage, IStaticPathsProvider
     /// </summary>
     [Parameter(Required = true)]
     public CollectionQuery Query { get; set; } = null!;
+
+    /// <summary>Gets or sets the page title for the layout &lt;title&gt; and TOC.</summary>
+    [Parameter]
+    public string PageTitle { get; set; } = "";
+
+    /// <summary>Gets or sets the page description for the meta description tag.</summary>
+    [Parameter]
+    public string? PageDescription { get; set; }
+
+    /// <summary>Gets or sets the headings extracted from the rendered Markdown for the TOC.</summary>
+    [Parameter]
+    public IReadOnlyList<MarkdownHeading> Headings { get; set; } = [];
 
     /// <inheritdoc />
     public Task<IReadOnlyList<StaticPath>> GetStaticPathsAsync()
@@ -53,11 +66,14 @@ public sealed class DocsPage : AtollComponent, IAtollPage, IStaticPathsProvider
 
         var rendered = Query.Render(entry);
 
-        WriteHtml("<article>");
-        WriteHtml("<div class=\"prose\">");
+        // Expose metadata so the layout (SiteLayout → DocsLayout) can consume it
+        PageTitle = entry.Data.Title;
+        PageDescription = entry.Data.Description;
+        Headings = rendered.Headings;
+
+        // The addon DocsLayout wraps content in <article class="docs-article prose">,
+        // so render the content directly without extra wrappers.
         var contentComponent = ContentComponent.FromRenderedContent(rendered);
         await RenderAsync(contentComponent.ToRenderFragment());
-        WriteHtml("</div>");
-        WriteHtml("</article>");
     }
 }

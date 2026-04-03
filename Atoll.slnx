@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/Atoll.Cli/Atoll.Cli.csproj" />
     <Project Path="src/Atoll/Atoll.csproj" />
+    <Project Path="src/Atoll.Docs/Atoll.Docs.csproj" />
     <Project Path="src/Atoll.Middleware/Atoll.Middleware.csproj" />
   </Folder>
   <Folder Name="/samples/">
@@ -9,10 +10,11 @@
     <Project Path="samples/Atoll.Samples.Portfolio/Atoll.Samples.Portfolio.csproj" />
   </Folder>
   <Folder Name="/docs/">
-    <Project Path="docs/Atoll.Docs/Atoll.Docs.csproj" />
+    <Project Path="docs/Docs/Docs.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Atoll.Tests/Atoll.Tests.csproj" />
+    <Project Path="tests/Atoll.Docs.Tests/Atoll.Docs.Tests.csproj" />
     <Project Path="tests/Atoll.Integration.Tests/Atoll.Integration.Tests.csproj" />
     <Project Path="tests/Atoll.Middleware.Tests/Atoll.Middleware.Tests.csproj" />
   </Folder>

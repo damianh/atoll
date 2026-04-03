@@ -1,0 +1,63 @@
+using Atoll.Docs.Configuration;
+
+namespace Atoll.Docs;
+
+/// <summary>
+/// Provides the <see cref="DocsConfig"/> for the Atoll documentation site.
+/// Used by <see cref="Layouts.SiteLayout"/> to configure the <c>Atoll.Docs</c> addon layout.
+/// </summary>
+public static class DocsSetup
+{
+    /// <summary>
+    /// Gets the documentation site configuration, including title, sidebar items, and feature flags.
+    /// </summary>
+    public static DocsConfig Config { get; } = new DocsConfig
+    {
+        Title = "Atoll",
+        Description = "A .NET-native static-site framework inspired by Astro.",
+        BasePath = "",
+        EnableMermaid = false,
+        Social =
+        [
+            new SocialLink("GitHub", "https://github.com/damianh/atoll", SocialIcon.GitHub),
+        ],
+        Sidebar =
+        [
+            new SidebarItem
+            {
+                Label = "Getting Started",
+                Link = "/docs/getting-started",
+            },
+            new SidebarItem
+            {
+                Label = "Basics",
+                Items =
+                [
+                    new SidebarItem { Label = "Components",              Link = "/docs/components" },
+                    new SidebarItem { Label = "Layouts",                 Link = "/docs/layouts" },
+                    new SidebarItem { Label = "Pages & Routing",         Link = "/docs/pages-and-routing" },
+                    new SidebarItem { Label = "Configuration",           Link = "/docs/configuration" },
+                ],
+            },
+            new SidebarItem
+            {
+                Label = "Features",
+                Items =
+                [
+                    new SidebarItem { Label = "Content Collections",     Link = "/docs/content-collections" },
+                    new SidebarItem { Label = "CSS Scoping",             Link = "/docs/css-scoping" },
+                    new SidebarItem { Label = "Islands Architecture",    Link = "/docs/islands" },
+                    new SidebarItem { Label = "Static Site Generation",  Link = "/docs/static-site-generation" },
+                ],
+            },
+            new SidebarItem
+            {
+                Label = "Reference",
+                Items =
+                [
+                    new SidebarItem { Label = "API Endpoints",           Link = "/docs/api-endpoints" },
+                ],
+            },
+        ],
+    };
+}

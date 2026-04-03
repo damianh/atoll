@@ -49,4 +49,19 @@ public sealed class MarkdownOptions
     /// Default: <c>null</c>.
     /// </summary>
     public string? CodeBlockClass { get; set; }
+
+    /// <summary>
+    /// Gets or sets the link resolution options for rewriting relative Markdown file links to clean URL paths.
+    /// When <c>null</c>, relative links are not rewritten.
+    /// Default: <c>null</c>.
+    /// </summary>
+    public LinkResolutionOptions? LinkResolution { get; set; }
+
+    /// <summary>
+    /// Gets or sets the external link options for adding <c>target="_blank"</c> and
+    /// <c>rel="noopener noreferrer"</c> to external links.
+    /// When <c>null</c>, external links are not modified.
+    /// Default: <c>null</c>.
+    /// </summary>
+    public ExternalLinkOptions? ExternalLinks { get; set; }
 }

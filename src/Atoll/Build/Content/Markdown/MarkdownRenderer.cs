@@ -159,6 +159,16 @@ public static class MarkdownRenderer
             builder.UseAutoIdentifiers();
         }
 
+        if (options.LinkResolution is { } linkResolution)
+        {
+            builder.Extensions.Add(new LinkResolutionExtension(linkResolution));
+        }
+
+        if (options.ExternalLinks is { } externalLinks)
+        {
+            builder.Extensions.Add(new ExternalLinkExtension(externalLinks));
+        }
+
         return builder.Build();
     }
 

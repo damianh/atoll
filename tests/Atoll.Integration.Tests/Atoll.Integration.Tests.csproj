@@ -9,7 +9,7 @@
     <ProjectReference Include="..\..\src\Atoll.Cli\Atoll.Cli.csproj" />
     <ProjectReference Include="..\..\samples\Atoll.Samples.Blog\Atoll.Samples.Blog.csproj" />
     <ProjectReference Include="..\..\samples\Atoll.Samples.Portfolio\Atoll.Samples.Portfolio.csproj" />
-    <ProjectReference Include="..\..\docs\Atoll.Docs\Atoll.Docs.csproj" />
+    <ProjectReference Include="..\..\docs\Docs\Docs.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />

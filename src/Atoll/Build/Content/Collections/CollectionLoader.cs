@@ -37,7 +37,7 @@ public sealed class CollectionLoader
     /// </summary>
     /// <typeparam name="TData">The schema type for frontmatter data.</typeparam>
     /// <param name="collectionName">The name of the collection to load.</param>
-    /// <returns>A list of content entries, sorted by file name.</returns>
+    /// <returns>A list of content entries, sorted by file path.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collectionName"/> is <c>null</c>.</exception>
     /// <exception cref="KeyNotFoundException">The collection is not registered.</exception>
     public IReadOnlyList<ContentEntry<TData>> LoadCollection<TData>(string collectionName)
@@ -49,6 +49,45 @@ public sealed class CollectionLoader
 
         var directory = _config.GetCollectionDirectory(collectionName);
         var files = _fileProvider.GetMarkdownFiles(directory);
+        var entries = new List<ContentEntry<TData>>();
+
+        foreach (var file in files.OrderBy(f => f.RelativePath, StringComparer.OrdinalIgnoreCase))
+        {
+            var entry = LoadEntry<TData>(collectionName, file);
+            entries.Add(entry);
+        }
+
+        return entries;
+    }
+
+    /// <summary>
+    /// Loads all entries from the specified collection, optionally scanning subdirectories recursively.
+    /// </summary>
+    /// <typeparam name="TData">The schema type for frontmatter data.</typeparam>
+    /// <param name="collectionName">The name of the collection to load.</param>
+    /// <param name="recursive">
+    /// When <c>true</c>, subdirectories are scanned recursively and the <c>RelativePath</c>
+    /// of each entry includes the subdirectory (e.g., <c>guides/getting-started.md</c>).
+    /// When <c>false</c>, behaves identically to <see cref="LoadCollection{TData}(string)"/>.
+    /// </param>
+    /// <returns>A list of content entries, sorted by relative file path.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collectionName"/> is <c>null</c>.</exception>
+    /// <exception cref="KeyNotFoundException">The collection is not registered.</exception>
+    public IReadOnlyList<ContentEntry<TData>> LoadCollection<TData>(string collectionName, bool recursive)
+        where TData : class, new()
+    {
+        ArgumentNullException.ThrowIfNull(collectionName);
+
+        if (!recursive)
+        {
+            return LoadCollection<TData>(collectionName);
+        }
+
+        var collection = _config.GetCollection(collectionName);
+        ValidateSchemaType<TData>(collection);
+
+        var directory = _config.GetCollectionDirectory(collectionName);
+        var files = _fileProvider.GetMarkdownFiles(directory, recursive: true);
         var entries = new List<ContentEntry<TData>>();
 
         foreach (var file in files.OrderBy(f => f.RelativePath, StringComparer.OrdinalIgnoreCase))
@@ -99,7 +138,14 @@ public sealed class CollectionLoader
         var entryId = $"{collectionName}/{file.RelativePath}";
         validationResult.ThrowIfInvalid(entryId);
 
-        var slug = Path.GetFileNameWithoutExtension(file.RelativePath);
+        // Slug is the relative path without extension, using forward slashes.
+        // For top-level files: "my-post.md" → "my-post"
+        // For nested files:    "guides/getting-started.md" → "guides/getting-started"
+        var relativePath = file.RelativePath.Replace('\\', '/');
+        var slug = relativePath.Contains('/')
+            ? relativePath[..relativePath.LastIndexOf('.')] // strip extension only
+            : Path.GetFileNameWithoutExtension(relativePath);
+
         return new ContentEntry<TData>(entryId, collectionName, slug, parseResult.Body, data);
     }
 
@@ -150,11 +196,24 @@ public sealed class ContentFile
 public interface IFileProvider
 {
     /// <summary>
-    /// Gets all Markdown files (*.md) in the specified directory.
+    /// Gets all Markdown files (*.md) in the specified directory (non-recursive).
     /// </summary>
     /// <param name="directory">The directory path to scan.</param>
     /// <returns>A collection of content files.</returns>
     IReadOnlyList<ContentFile> GetMarkdownFiles(string directory);
+
+    /// <summary>
+    /// Gets all Markdown files (*.md) in the specified directory, optionally scanning subdirectories.
+    /// </summary>
+    /// <param name="directory">The directory path to scan.</param>
+    /// <param name="recursive">
+    /// When <c>true</c>, subdirectories are scanned recursively and each file's
+    /// <see cref="ContentFile.RelativePath"/> includes the subdirectory
+    /// (e.g., <c>"guides/getting-started.md"</c>).
+    /// When <c>false</c>, behaves identically to <see cref="GetMarkdownFiles(string)"/>.
+    /// </param>
+    /// <returns>A collection of content files.</returns>
+    IReadOnlyList<ContentFile> GetMarkdownFiles(string directory, bool recursive);
 
     /// <summary>
     /// Gets a single Markdown file by slug (file name without extension).
@@ -186,6 +245,37 @@ public sealed class PhysicalFileProvider : IFileProvider
         foreach (var file in files)
         {
             var relativePath = Path.GetFileName(file);
+            var content = File.ReadAllText(file);
+            entries.Add(new ContentFile(relativePath, content));
+        }
+
+        return entries;
+    }
+
+    /// <inheritdoc />
+    public IReadOnlyList<ContentFile> GetMarkdownFiles(string directory, bool recursive)
+    {
+        ArgumentNullException.ThrowIfNull(directory);
+
+        if (!recursive)
+        {
+            return GetMarkdownFiles(directory);
+        }
+
+        if (!Directory.Exists(directory))
+        {
+            return [];
+        }
+
+        var files = Directory.GetFiles(directory, "*.md", SearchOption.AllDirectories);
+        var entries = new List<ContentFile>();
+        var normalizedBase = directory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+        foreach (var file in files)
+        {
+            var fullPath = file;
+            var relativePath = fullPath[(normalizedBase.Length + 1)..]
+                .Replace(Path.DirectorySeparatorChar, '/');
             var content = File.ReadAllText(file);
             entries.Add(new ContentFile(relativePath, content));
         }
@@ -256,6 +346,47 @@ public sealed class InMemoryFileProvider : IFileProvider
         }
 
         return list.Where(f => f.RelativePath.EndsWith(".md", StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+
+    /// <inheritdoc />
+    public IReadOnlyList<ContentFile> GetMarkdownFiles(string directory, bool recursive)
+    {
+        ArgumentNullException.ThrowIfNull(directory);
+
+        if (!recursive)
+        {
+            return GetMarkdownFiles(directory);
+        }
+
+        var normalizedDir = NormalizePath(directory);
+
+        // Collect all files under the directory prefix (including subdirectories).
+        var results = new List<ContentFile>();
+        foreach (var (dir, files) in _files)
+        {
+            // Match exact directory OR any subdirectory that starts with normalizedDir + "/"
+            if (dir.Equals(normalizedDir, StringComparison.OrdinalIgnoreCase) ||
+                dir.StartsWith(normalizedDir + "/", StringComparison.OrdinalIgnoreCase))
+            {
+                foreach (var file in files)
+                {
+                    if (!file.RelativePath.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    // Build relative path from base directory.
+                    var subdirRelative = dir.Equals(normalizedDir, StringComparison.OrdinalIgnoreCase)
+                        ? ""
+                        : dir[(normalizedDir.Length + 1)..] + "/";
+
+                    var fullRelativePath = subdirRelative + file.RelativePath;
+                    results.Add(new ContentFile(fullRelativePath, file.Content));
+                }
+            }
+        }
+
+        return results;
     }
 
     /// <inheritdoc />
