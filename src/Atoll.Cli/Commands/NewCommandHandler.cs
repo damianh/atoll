@@ -1,17 +1,140 @@
+using System.Diagnostics;
+
 namespace Atoll.Cli.Commands;
 
 /// <summary>
 /// Handles the <c>atoll new</c> command. Scaffolds a new Atoll project
 /// with a directory structure, sample page, layout, and configuration.
+/// When a <c>dotnet new</c> template is available (e.g. after <c>dotnet new install Atoll.Templates</c>),
+/// delegates to it for richer templates. Falls back to built-in starter scaffolding when the
+/// template pack is not installed.
 /// </summary>
 public sealed class NewCommandHandler
 {
     /// <summary>
-    /// Executes the new command.
+    /// Executes the new command using built-in procedural scaffolding (starter template).
     /// </summary>
     /// <param name="name">The project name (also used as the directory name).</param>
     /// <param name="parentDirectory">The parent directory to create the project in.</param>
-    public async Task ExecuteAsync(string name, string parentDirectory)
+    public Task ExecuteAsync(string name, string parentDirectory)
+        => ExecuteAsync(name, parentDirectory, "starter");
+
+    /// <summary>
+    /// Executes the new command with the specified template.
+    /// </summary>
+    /// <param name="name">The project name (also used as the directory name).</param>
+    /// <param name="parentDirectory">The parent directory to create the project in.</param>
+    /// <param name="template">The template name: empty, starter, blog, or portfolio.</param>
+    public async Task ExecuteAsync(string name, string parentDirectory, string template)
+    {
+        // For non-starter templates, attempt to delegate to dotnet new
+        if (!string.Equals(template, "starter", StringComparison.OrdinalIgnoreCase))
+        {
+            var delegated = await TryDelegateToDotnetNewAsync(name, parentDirectory, template);
+            if (delegated)
+            {
+                return;
+            }
+
+            // Non-starter template requested but not installed
+            Console.WriteLine($"Error: The '{template}' template requires the Atoll.Templates pack.");
+            Console.WriteLine("Install it with: dotnet new install Atoll.Templates");
+            Console.WriteLine($"Then retry: atoll new {name} --template {template}");
+            return;
+        }
+
+        // Starter (default): also try dotnet new first, fall back to built-in
+        var delegatedStarter = await TryDelegateToDotnetNewAsync(name, parentDirectory, "starter");
+        if (delegatedStarter)
+        {
+            return;
+        }
+
+        // Built-in procedural scaffolding (fallback for starter)
+        await ScaffoldStarterAsync(name, parentDirectory);
+    }
+
+    /// <summary>
+    /// Attempts to delegate project creation to <c>dotnet new atoll-{template}</c>.
+    /// Returns <see langword="true"/> if the template was found and instantiation succeeded.
+    /// </summary>
+    private static async Task<bool> TryDelegateToDotnetNewAsync(
+        string name,
+        string parentDirectory,
+        string template)
+    {
+        var shortName = $"atoll-{template}";
+
+        // Dry-run to check whether the template is installed
+        var dryRunPsi = new ProcessStartInfo
+        {
+            FileName = "dotnet",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+        dryRunPsi.ArgumentList.Add("new");
+        dryRunPsi.ArgumentList.Add(shortName);
+        dryRunPsi.ArgumentList.Add("--dry-run");
+
+        using var dryRun = Process.Start(dryRunPsi);
+        if (dryRun is null)
+        {
+            return false;
+        }
+
+        await dryRun.WaitForExitAsync();
+        if (dryRun.ExitCode != 0)
+        {
+            return false;
+        }
+
+        // Template is installed — invoke dotnet new for real
+        var outputDir = Path.Combine(parentDirectory, name);
+        Console.WriteLine($"Atoll — creating new '{template}' project '{name}'...");
+
+        var newPsi = new ProcessStartInfo
+        {
+            FileName = "dotnet",
+            RedirectStandardOutput = false,
+            RedirectStandardError = false,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+        newPsi.ArgumentList.Add("new");
+        newPsi.ArgumentList.Add(shortName);
+        newPsi.ArgumentList.Add("-n");
+        newPsi.ArgumentList.Add(name);
+        newPsi.ArgumentList.Add("-o");
+        newPsi.ArgumentList.Add(outputDir);
+
+        using var newProcess = Process.Start(newPsi);
+        if (newProcess is null)
+        {
+            return false;
+        }
+
+        await newProcess.WaitForExitAsync();
+        if (newProcess.ExitCode != 0)
+        {
+            return false;
+        }
+
+        Console.WriteLine();
+        Console.WriteLine($"  Created project at {outputDir}");
+        Console.WriteLine();
+        Console.WriteLine("  Next steps:");
+        Console.WriteLine($"    cd {name}");
+        Console.WriteLine("    dotnet run");
+        Console.WriteLine();
+        return true;
+    }
+
+    /// <summary>
+    /// Scaffolds a new Atoll starter project procedurally (built-in fallback).
+    /// </summary>
+    private static async Task ScaffoldStarterAsync(string name, string parentDirectory)
     {
         var projectDir = Path.Combine(parentDirectory, name);
 

@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Atoll Contributors",
+  "classifications": ["Web", "Atoll", "Portfolio"],
+  "identity": "Atoll.Templates.Portfolio",
+  "name": "Atoll Portfolio",
+  "shortName": "atoll-portfolio",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "AtollPortfolio",
+  "preferNameDirectory": true,
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "exclude": ["bin/**", "obj/**", ".template.config/**"]
+        }
+      ]
+    }
+  ]
+}

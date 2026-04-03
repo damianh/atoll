@@ -1,0 +1,8 @@
+<Project>
+  <!-- Block inheritance from repo root Directory.Build.props.
+       Template source files must be standalone — they ship to users
+       who won't have the repo's build configuration. -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>

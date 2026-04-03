@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Atoll Contributors",
+  "classifications": ["Web", "Atoll", "Blog"],
+  "identity": "Atoll.Templates.Blog",
+  "name": "Atoll Blog",
+  "shortName": "atoll-blog",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "AtollBlog",
+  "preferNameDirectory": true,
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "exclude": ["bin/**", "obj/**", ".template.config/**"]
+        }
+      ]
+    }
+  ]
+}

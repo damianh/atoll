@@ -362,4 +362,81 @@ public sealed class CliCommandTests
         var command = CommandFactory.CreateNewCommand();
         command.Options.ShouldNotContain(o => o.Name == "--port");
     }
+
+    // ── New command --template option ──
+
+    [Fact]
+    public void ShouldCreateNewCommandWithTemplateOption()
+    {
+        var command = CommandFactory.CreateNewCommand();
+        command.Options.ShouldContain(o => o.Name == "--template");
+    }
+
+    [Fact]
+    public void ShouldCreateNewCommandWithTemplateShortAlias()
+    {
+        var command = CommandFactory.CreateNewCommand();
+        var templateOption = command.Options.FirstOrDefault(o => o.Name == "--template");
+        templateOption.ShouldNotBeNull();
+        templateOption!.Aliases.ShouldContain("-t");
+    }
+
+    [Fact]
+    public void ShouldParseNewCommandWithTemplateOption()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        var result = rootCommand.Parse("new my-project --template blog");
+
+        result.Errors.Count.ShouldBe(0);
+        result.GetValue<string>("--template").ShouldBe("blog");
+    }
+
+    [Fact]
+    public void ShouldParseNewCommandWithTemplateShortAlias()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        var result = rootCommand.Parse("new my-project -t portfolio");
+
+        result.Errors.Count.ShouldBe(0);
+        result.GetValue<string>("--template").ShouldBe("portfolio");
+    }
+
+    [Fact]
+    public void ShouldDefaultTemplateToStarter()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        var result = rootCommand.Parse("new my-project");
+
+        result.Errors.Count.ShouldBe(0);
+        result.GetValue<string>("--template").ShouldBe("starter");
+    }
+
+    [Fact]
+    public void ShouldParseNewCommandWithEmptyTemplate()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        var result = rootCommand.Parse("new my-project --template empty");
+
+        result.Errors.Count.ShouldBe(0);
+        result.GetValue<string>("--template").ShouldBe("empty");
+    }
+
+    [Fact]
+    public void ShouldParseNewCommandWithStarterTemplate()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        var result = rootCommand.Parse("new my-project --template starter");
+
+        result.Errors.Count.ShouldBe(0);
+        result.GetValue<string>("--template").ShouldBe("starter");
+    }
+
+    [Fact]
+    public void ShouldRejectUnknownTemplateValue()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        var result = rootCommand.Parse("new my-project --template unknown-template");
+
+        result.Errors.Count.ShouldBeGreaterThan(0);
+    }
 }

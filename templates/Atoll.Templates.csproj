@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Atoll.Templates</PackageId>
+    <PackageVersion>0.1.0</PackageVersion>
+    <Title>Atoll Templates</Title>
+    <Description>Project templates for scaffolding Atoll sites with dotnet new.</Description>
+    <Authors>Atoll Contributors</Authors>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageType>Template</PackageType>
+    <IncludeContentInPack>true</IncludeContentInPack>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <ContentTargetFolders>content</ContentTargetFolders>
+    <NoDefaultExcludes>true</NoDefaultExcludes>
+    <!-- CPM is disabled by templates/Directory.Build.props but ensure it here too -->
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <!-- Exclude template source .cs files from compilation — they are content only -->
+  <ItemGroup>
+    <Compile Remove="**\*.cs" />
+  </ItemGroup>
+
+  <!-- Include all four template directories as pack content -->
+  <ItemGroup>
+    <Content Include="atoll-empty\**\*"
+             Exclude="atoll-empty\bin\**;atoll-empty\obj\**" />
+    <Content Include="atoll-starter\**\*"
+             Exclude="atoll-starter\bin\**;atoll-starter\obj\**" />
+    <Content Include="atoll-blog\**\*"
+             Exclude="atoll-blog\bin\**;atoll-blog\obj\**" />
+    <Content Include="atoll-portfolio\**\*"
+             Exclude="atoll-portfolio\bin\**;atoll-portfolio\obj\**" />
+  </ItemGroup>
+
+</Project>

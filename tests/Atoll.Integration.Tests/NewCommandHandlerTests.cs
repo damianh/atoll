@@ -287,4 +287,41 @@ public sealed class NewCommandHandlerTests : IDisposable
         Directory.Exists(Path.Combine(projectDir, "Layouts")).ShouldBeTrue();
         Directory.Exists(Path.Combine(projectDir, "public")).ShouldBeTrue();
     }
+
+    // ── --template option: explicit starter ──
+
+    [Fact]
+    public async Task ShouldScaffoldStarterWhenTemplateIsExplicitlyStarter()
+    {
+        var handler = new NewCommandHandler();
+        await handler.ExecuteAsync("explicit-starter", _tempDir, "starter");
+
+        var projectDir = Path.Combine(_tempDir, "explicit-starter");
+        File.Exists(Path.Combine(projectDir, "explicit-starter.csproj")).ShouldBeTrue();
+        File.Exists(Path.Combine(projectDir, "Program.cs")).ShouldBeTrue();
+        File.Exists(Path.Combine(projectDir, "atoll.json")).ShouldBeTrue();
+        File.Exists(Path.Combine(projectDir, "Pages", "Index.cs")).ShouldBeTrue();
+        File.Exists(Path.Combine(projectDir, "Layouts", "MainLayout.cs")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task ShouldProduceIdenticalOutputForDefaultAndExplicitStarter()
+    {
+        var handler = new NewCommandHandler();
+
+        var defaultDir = Path.Combine(_tempDir, "default-starter");
+        Directory.CreateDirectory(defaultDir);
+        await handler.ExecuteAsync("my-project", defaultDir);
+
+        var explicitDir = Path.Combine(_tempDir, "explicit-starter");
+        Directory.CreateDirectory(explicitDir);
+        await handler.ExecuteAsync("my-project", explicitDir, "starter");
+
+        var defaultCsproj = await File.ReadAllTextAsync(
+            Path.Combine(defaultDir, "my-project", "my-project.csproj"));
+        var explicitCsproj = await File.ReadAllTextAsync(
+            Path.Combine(explicitDir, "my-project", "my-project.csproj"));
+
+        defaultCsproj.ShouldBe(explicitCsproj);
+    }
 }

@@ -92,15 +92,25 @@ public static class CommandFactory
             Description = "The name of the new project (also used as the directory name)",
         };
 
+        var templateOption = new Option<string>("--template")
+        {
+            Description = "The template to use: empty, starter, blog, or portfolio (defaults to starter)",
+            DefaultValueFactory = _ => "starter",
+        };
+        templateOption.Aliases.Add("-t");
+        templateOption.AcceptOnlyFromAmong("empty", "starter", "blog", "portfolio");
+
         var command = new Command("new", "Create a new Atoll project from a template");
         command.Add(nameArgument);
+        command.Add(templateOption);
 
         command.SetAction(async (parseResult, cancellationToken) =>
         {
             var root = parseResult.GetValue<string>("--root")!;
             var name = parseResult.GetRequiredValue(nameArgument);
+            var template = parseResult.GetValue(templateOption)!;
             var handler = new Commands.NewCommandHandler();
-            await handler.ExecuteAsync(name, root);
+            await handler.ExecuteAsync(name, root, template);
         });
 
         return command;

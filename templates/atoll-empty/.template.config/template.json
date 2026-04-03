@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Atoll Contributors",
+  "classifications": ["Web", "Atoll"],
+  "identity": "Atoll.Templates.Empty",
+  "name": "Atoll Empty Project",
+  "shortName": "atoll-empty",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "AtollEmpty",
+  "preferNameDirectory": true,
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "exclude": ["bin/**", "obj/**", ".template.config/**"]
+        }
+      ]
+    }
+  ]
+}

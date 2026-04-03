@@ -28,3 +28,12 @@ jobs:
 
       - name: Test
         run: dotnet test -c Release --no-build --verbosity normal
+
+      - name: Pack Templates
+        run: dotnet pack templates/Atoll.Templates.csproj -c Release
+
+      - name: Upload Template Pack
+        uses: actions/upload-artifact@v4
+        with:
+          name: atoll-templates-nupkg-${{ matrix.os }}
+          path: templates/bin/Release/*.nupkg
