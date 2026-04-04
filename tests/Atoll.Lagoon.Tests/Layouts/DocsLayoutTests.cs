@@ -626,7 +626,8 @@ public sealed class DocsLayoutTests
             config, "", null, null, null, null, null, null, null, "/fr/intro", true);
 
         html.ShouldContain("class=\"untranslated-notice\"");
-        html.ShouldContain("This page has not been translated yet.");
+        // French locale auto-resolves to French built-in translations
+        html.ShouldContain("Cette page n&#39;a pas encore été traduite.");
     }
 
     [Fact]

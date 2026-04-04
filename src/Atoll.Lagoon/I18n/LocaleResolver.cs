@@ -52,19 +52,22 @@ public static class LocaleResolver
                 || remaining.StartsWith(localePrefix + "/", StringComparison.OrdinalIgnoreCase))
             {
                 var contentPath = StripPrefix(remaining, localePrefix);
-                return new ResolvedLocale(key, config, localePrefix, NormalizePath(contentPath));
+                var resolved = AutoResolveTranslations(config);
+                return new ResolvedLocale(key, resolved, localePrefix, NormalizePath(contentPath));
             }
         }
 
         // No prefix matched — fall back to "root" locale if configured.
         if (locales.TryGetValue("root", out var rootConfig))
         {
-            return new ResolvedLocale("root", rootConfig, "", NormalizePath(remaining));
+            var resolved = AutoResolveTranslations(rootConfig);
+            return new ResolvedLocale("root", resolved, "", NormalizePath(remaining));
         }
 
         // No "root" key — fall back to the first locale in the dictionary.
         var first = locales.First();
-        return new ResolvedLocale(first.Key, first.Value, "/" + first.Key, NormalizePath(remaining));
+        var firstResolved = AutoResolveTranslations(first.Value);
+        return new ResolvedLocale(first.Key, firstResolved, "/" + first.Key, NormalizePath(remaining));
     }
 
     /// <inheritdoc cref="Resolve(string, IReadOnlyDictionary{string, LocaleConfig}?, string)"/>
@@ -90,4 +93,25 @@ public static class LocaleResolver
 
     private static string NormalizePath(string path) =>
         string.IsNullOrEmpty(path) ? "/" : path;
+
+    /// <summary>
+    /// When the user has not provided custom translations (i.e., <see cref="LocaleConfig.Translations"/>
+    /// is still <see cref="UiTranslations.Default"/>), attempts to auto-fill with a built-in translation
+    /// matching the locale's <see cref="LocaleConfig.Lang"/>.
+    /// </summary>
+    private static LocaleConfig AutoResolveTranslations(LocaleConfig config)
+    {
+        if (!ReferenceEquals(config.Translations, UiTranslations.Default))
+        {
+            return config;
+        }
+
+        var builtIn = BuiltInTranslations.ForLanguage(config.Lang);
+        if (builtIn is null || ReferenceEquals(builtIn, UiTranslations.Default))
+        {
+            return config;
+        }
+
+        return config with { Translations = builtIn };
+    }
 }
