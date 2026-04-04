@@ -38,18 +38,10 @@ public sealed class DocsLayoutTests
         ComponentDelegate? slotContent = null,
         string currentPath = "/")
     {
-        return await RenderLayoutWithHeadContentAsync(
-            config,
-            pageTitle,
-            pageDescription,
-            headings,
-            sidebarItems,
-            previous,
-            next,
-            breadcrumbItems,
-            slotContent,
-            pageHeadContent: null,
-            currentPath: currentPath);
+        return await RenderLayoutCoreAsync(
+            config, pageTitle, pageDescription, headings, sidebarItems,
+            previous, next, breadcrumbItems, slotContent, currentPath,
+            isUntranslatedContent: false, pageHeadContent: null);
     }
 
     private static async Task<string> RenderLayoutWithHeadContentAsync(
@@ -65,6 +57,26 @@ public sealed class DocsLayoutTests
         string? pageHeadContent = null,
         string currentPath = "/")
     {
+        return await RenderLayoutCoreAsync(
+            config, pageTitle, pageDescription, headings, sidebarItems,
+            previous, next, breadcrumbItems, slotContent, currentPath,
+            isUntranslatedContent: false, pageHeadContent: pageHeadContent);
+    }
+
+    private static async Task<string> RenderLayoutCoreAsync(
+        DocsConfig config,
+        string pageTitle,
+        string? pageDescription,
+        IReadOnlyList<MarkdownHeading>? headings,
+        IReadOnlyList<ResolvedSidebarItem>? sidebarItems,
+        PaginationLink? previous,
+        PaginationLink? next,
+        IReadOnlyList<BreadcrumbItem>? breadcrumbItems,
+        ComponentDelegate? slotContent,
+        string currentPath,
+        bool isUntranslatedContent,
+        string? pageHeadContent = null)
+    {
         var destination = new StringRenderDestination();
         var props = new Dictionary<string, object?>
         {
@@ -78,6 +90,7 @@ public sealed class DocsLayoutTests
             ["BreadcrumbItems"] = breadcrumbItems ?? [],
             ["PageHeadContent"] = pageHeadContent,
             ["CurrentPath"] = currentPath,
+            ["IsUntranslatedContent"] = isUntranslatedContent,
         };
 
         SlotCollection slots;
@@ -592,5 +605,82 @@ public sealed class DocsLayoutTests
         var html = await RenderLayoutAsync(config, currentPath: "/docs/intro");
 
         html.ShouldContain("data-index-url=\"/docs/search-index.json\"");
+    }
+
+    // --- Untranslated content notice ---
+
+    [Fact]
+    public async Task ShouldRenderUntranslatedNoticeWhenFlagIsSetAndLocalesConfigured()
+    {
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            Locales = new Dictionary<string, LocaleConfig>
+            {
+                ["root"] = new() { Label = "English", Lang = "en" },
+                ["fr"] = new() { Label = "French", Lang = "fr" },
+            },
+        };
+
+        var html = await RenderLayoutCoreAsync(
+            config, "", null, null, null, null, null, null, null, "/fr/intro", true);
+
+        html.ShouldContain("class=\"untranslated-notice\"");
+        html.ShouldContain("This page has not been translated yet.");
+    }
+
+    [Fact]
+    public async Task ShouldNotRenderUntranslatedNoticeWhenFlagIsFalse()
+    {
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            Locales = new Dictionary<string, LocaleConfig>
+            {
+                ["root"] = new() { Label = "English", Lang = "en" },
+                ["fr"] = new() { Label = "French", Lang = "fr" },
+            },
+        };
+
+        var html = await RenderLayoutCoreAsync(
+            config, "", null, null, null, null, null, null, null, "/fr/intro", false);
+
+        html.ShouldNotContain("untranslated-notice");
+    }
+
+    [Fact]
+    public async Task ShouldNotRenderUntranslatedNoticeWithoutLocales()
+    {
+        var config = MakeConfig();
+
+        var html = await RenderLayoutCoreAsync(
+            config, "", null, null, null, null, null, null, null, "/", true);
+
+        html.ShouldNotContain("untranslated-notice");
+    }
+
+    [Fact]
+    public async Task ShouldRenderCustomUntranslatedNoticeFromTranslations()
+    {
+        var frenchTranslations = UiTranslations.Default with
+        {
+            UntranslatedContentNotice = "Pas traduite",
+        };
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            Locales = new Dictionary<string, LocaleConfig>
+            {
+                ["root"] = new() { Label = "English", Lang = "en" },
+                ["fr"] = new() { Label = "French", Lang = "fr", Translations = frenchTranslations },
+            },
+        };
+
+        var html = await RenderLayoutCoreAsync(
+            config, "", null, null, null, null, null, null, null, "/fr/intro", true);
+
+        html.ShouldContain("class=\"untranslated-notice\"");
+        html.ShouldContain("Pas traduite");
+        html.ShouldNotContain("This page has not been translated yet.");
     }
 }

@@ -179,6 +179,85 @@ public sealed class LagoonSearchIndexGeneratorTests : IDisposable
         json.ShouldContain("\"generatedAt\"");
     }
 
+    // ── Per-locale search index overload ──
+
+    [Fact]
+    public async Task ShouldGenerateSearchIndexInLocaleSubdirectory()
+    {
+        var documents = new[]
+        {
+            new SearchDocumentInput("Guide FR", "/fr/guide/"),
+        };
+        var generator = new LagoonSearchIndexGenerator(_outputDir);
+
+        var result = await generator.GenerateAsync(documents, "fr");
+
+        result.EntryCount.ShouldBe(1);
+        var expectedPath = Path.Combine(_outputDir, "fr", "search-index.json");
+        result.OutputPath.ShouldBe(expectedPath);
+        File.Exists(expectedPath).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task ShouldGenerateSearchIndexAtRootWhenLocalePrefixIsEmpty()
+    {
+        var documents = new[]
+        {
+            new SearchDocumentInput("Doc", "/doc/"),
+        };
+        var generator = new LagoonSearchIndexGenerator(_outputDir);
+
+        var result = await generator.GenerateAsync(documents, "");
+
+        result.OutputPath.ShouldBe(SearchIndexPath(_outputDir));
+        File.Exists(SearchIndexPath(_outputDir)).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task ShouldGenerateSeparateIndicesPerLocale()
+    {
+        var generator = new LagoonSearchIndexGenerator(_outputDir);
+
+        var enDocs = new[] { new SearchDocumentInput("English Doc", "/guide/") };
+        var frDocs = new[] { new SearchDocumentInput("French Doc", "/fr/guide/") };
+
+        var enResult = await generator.GenerateAsync(enDocs, "");
+        var frResult = await generator.GenerateAsync(frDocs, "fr");
+
+        enResult.EntryCount.ShouldBe(1);
+        frResult.EntryCount.ShouldBe(1);
+
+        var enPath = SearchIndexPath(_outputDir);
+        var frPath = Path.Combine(_outputDir, "fr", "search-index.json");
+
+        File.Exists(enPath).ShouldBeTrue();
+        File.Exists(frPath).ShouldBeTrue();
+
+        var enJson = await File.ReadAllTextAsync(enPath);
+        var frJson = await File.ReadAllTextAsync(frPath);
+
+        enJson.ShouldContain("English Doc");
+        enJson.ShouldNotContain("French Doc");
+        frJson.ShouldContain("French Doc");
+        frJson.ShouldNotContain("English Doc");
+    }
+
+    [Fact]
+    public async Task ShouldHandleLocalePrefixWithLeadingSlash()
+    {
+        var documents = new[]
+        {
+            new SearchDocumentInput("Doc", "/es/doc/"),
+        };
+        var generator = new LagoonSearchIndexGenerator(_outputDir);
+
+        var result = await generator.GenerateAsync(documents, "/es");
+
+        var expectedPath = Path.Combine(_outputDir, "es", "search-index.json");
+        result.OutputPath.ShouldBe(expectedPath);
+        File.Exists(expectedPath).ShouldBeTrue();
+    }
+
     // ── Helpers ──
 
     private static CollectionQuery CreateEmptyQuery()

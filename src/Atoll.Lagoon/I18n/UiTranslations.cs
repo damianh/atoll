@@ -80,6 +80,11 @@ public sealed record UiTranslations
     /// <summary>Gets the accessible label for the language selector.</summary>
     public string LanguageSelectLabel { get; init; } = "Select language";
 
+    // -- Content notices --
+
+    /// <summary>Gets the notice text shown when a page has not been translated for the current locale.</summary>
+    public string UntranslatedContentNotice { get; init; } = "This page has not been translated yet.";
+
     /// <summary>English defaults.</summary>
     public static UiTranslations Default { get; } = new();
 }

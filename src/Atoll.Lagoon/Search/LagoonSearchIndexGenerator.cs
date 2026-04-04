@@ -73,7 +73,33 @@ public sealed class LagoonSearchIndexGenerator
         IEnumerable<SearchDocumentInput> documents)
     {
         ArgumentNullException.ThrowIfNull(documents);
+        return await GenerateFromDocumentsAsync(documents, "");
+    }
 
+    /// <summary>
+    /// Generates the search index from a collection of <see cref="SearchDocumentInput"/> items and
+    /// writes it to a locale-specific subdirectory (e.g., <c>fr/search-index.json</c>).
+    /// </summary>
+    /// <param name="documents">The documents to include in the search index.</param>
+    /// <param name="localePrefix">
+    /// The locale prefix (e.g., <c>"fr"</c>). When non-empty, the index is written to
+    /// <c>{outputDirectory}/{localePrefix}/search-index.json</c>.
+    /// When empty, the index is written to <c>{outputDirectory}/search-index.json</c>.
+    /// </param>
+    /// <returns>A <see cref="SearchIndexGenerationResult"/> with stats about the generated index.</returns>
+    public async Task<SearchIndexGenerationResult> GenerateAsync(
+        IEnumerable<SearchDocumentInput> documents,
+        string localePrefix)
+    {
+        ArgumentNullException.ThrowIfNull(documents);
+        ArgumentNullException.ThrowIfNull(localePrefix);
+        return await GenerateFromDocumentsAsync(documents, localePrefix);
+    }
+
+    private async Task<SearchIndexGenerationResult> GenerateFromDocumentsAsync(
+        IEnumerable<SearchDocumentInput> documents,
+        string localePrefix)
+    {
         var sw = Stopwatch.StartNew();
 
         var builder = new SearchIndexBuilder();
@@ -83,10 +109,23 @@ public sealed class LagoonSearchIndexGenerator
         }
 
         var index = builder.Build();
-        await _writer.WriteAsync(index, _outputDirectory);
+
+        var targetDirectory = ResolveOutputDirectory(localePrefix);
+        await _writer.WriteAsync(index, targetDirectory);
 
         sw.Stop();
-        var outputPath = Path.Combine(_outputDirectory, "search-index.json");
+        var outputPath = Path.Combine(targetDirectory, "search-index.json");
         return new SearchIndexGenerationResult(index.Entries.Count, outputPath, sw.Elapsed);
+    }
+
+    private string ResolveOutputDirectory(string localePrefix)
+    {
+        if (string.IsNullOrEmpty(localePrefix))
+        {
+            return _outputDirectory;
+        }
+
+        var normalized = localePrefix.Trim('/');
+        return Path.Combine(_outputDirectory, normalized);
     }
 }

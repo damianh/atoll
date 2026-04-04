@@ -66,6 +66,13 @@ public sealed class DocsLayout : AtollComponent
     [Parameter]
     public string CurrentPath { get; set; } = "/";
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the current page is showing untranslated (fallback) content.
+    /// When <c>true</c> and locales are configured, a notice banner is rendered before the main content.
+    /// </summary>
+    [Parameter]
+    public bool IsUntranslatedContent { get; set; }
+
     /// <inheritdoc />
     protected override async Task RenderCoreAsync(RenderContext context)
     {
@@ -195,6 +202,13 @@ public sealed class DocsLayout : AtollComponent
         }
 
         // Article slot
+        if (IsUntranslatedContent && locale is not null)
+        {
+            WriteHtml("<div class=\"untranslated-notice\">");
+            WriteText(translations.UntranslatedContentNotice);
+            WriteHtml("</div>");
+        }
+
         WriteHtml("<article class=\"docs-article prose\">");
         await RenderSlotAsync();
         WriteHtml("</article>");

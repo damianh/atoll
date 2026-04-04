@@ -18,7 +18,7 @@ namespace Atoll.Lagoon.Styles;
 [GlobalStyle]
 [Styles(Reset + LightTokens + DarkTokens + Layout + Typography + Prose + CodeBlocks +
         SidebarNav + TocNav + PaginationStyles + BreadcrumbStyles + HeroStyles + SplashStyles + SearchStyles +
-        LanguagePickerStyles)]
+        LanguagePickerStyles + UntranslatedNoticeStyles)]
 public sealed class DocsTheme : AtollComponent
 {
     // -------------------------------------------------------------------------
@@ -694,6 +694,19 @@ public sealed class DocsTheme : AtollComponent
         .language-picker select:focus {
             outline: 2px solid var(--docs-primary);
             outline-offset: 1px;
+        }
+        """;
+
+    private const string UntranslatedNoticeStyles = """
+        /* ---- Untranslated content notice ---- */
+        .untranslated-notice {
+            background: var(--docs-bg-subtle);
+            border: 1px solid var(--docs-border);
+            border-radius: 0.375rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--docs-text-muted);
         }
         """;
 
