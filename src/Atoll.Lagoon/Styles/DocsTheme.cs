@@ -17,7 +17,8 @@ namespace Atoll.Lagoon.Styles;
 /// </remarks>
 [GlobalStyle]
 [Styles(Reset + LightTokens + DarkTokens + Layout + Typography + Prose + CodeBlocks +
-        SidebarNav + TocNav + PaginationStyles + BreadcrumbStyles + HeroStyles + SplashStyles + SearchStyles)]
+        SidebarNav + TocNav + PaginationStyles + BreadcrumbStyles + HeroStyles + SplashStyles + SearchStyles +
+        LanguagePickerStyles)]
 public sealed class DocsTheme : AtollComponent
 {
     // -------------------------------------------------------------------------
@@ -663,6 +664,37 @@ public sealed class DocsTheme : AtollComponent
             transition: color 0.1s;
         }
         #theme-toggle:hover { color: var(--docs-text); }
+        """;
+
+    private const string LanguagePickerStyles = """
+        /* ---- Language picker ---- */
+        .language-picker {
+            display: inline-flex;
+            align-items: center;
+        }
+        .language-picker select {
+            appearance: none;
+            -webkit-appearance: none;
+            background: var(--docs-bg-subtle);
+            color: var(--docs-text);
+            border: 1px solid var(--docs-border);
+            border-radius: 0.375rem;
+            padding: 0.3rem 1.75rem 0.3rem 0.5rem;
+            font-size: 0.8125rem;
+            font-family: inherit;
+            cursor: pointer;
+            transition: border-color 0.1s;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+        }
+        .language-picker select:hover {
+            border-color: var(--docs-primary);
+        }
+        .language-picker select:focus {
+            outline: 2px solid var(--docs-primary);
+            outline-offset: 1px;
+        }
         """;
 
     /// <inheritdoc />

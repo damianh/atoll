@@ -142,6 +142,19 @@ public sealed class DocsLayout : AtollComponent
             WriteHtml("</a>");
         }
 
+        // Language picker (only for multi-locale sites)
+        if (Config.Locales is not null && Config.Locales.Count > 1 && locale is not null)
+        {
+            await RenderAsync(ComponentRenderer.ToFragment<LanguagePicker>(new Dictionary<string, object?>
+            {
+                ["Locales"] = Config.Locales,
+                ["CurrentLocaleKey"] = locale.Key,
+                ["CurrentContentPath"] = locale.ContentPath,
+                ["BasePath"] = Config.BasePath,
+                ["Translations"] = translations,
+            }));
+        }
+
         // Theme toggle island
         await IslandRenderer.RenderIslandAsync<ThemeToggle>(
             context.Destination,
