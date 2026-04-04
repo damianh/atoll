@@ -4,6 +4,9 @@ using Xunit;
 
 namespace Atoll.Integration.Tests;
 
+// Serialized to avoid flaky failures from concurrent dotnet process spawning
+// and Windows file-handle races during parallel temp directory cleanup.
+[Collection("NewCommandHandler")]
 public sealed class NewCommandHandlerTests : IDisposable
 {
     private readonly string _tempDir;
