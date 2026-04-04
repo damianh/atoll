@@ -139,10 +139,7 @@ public sealed class MiddlewareContext
     /// <summary>
     /// Clears the pending rewrite target.
     /// </summary>
-    internal void ClearRewrite()
-    {
-        RewriteTarget = null;
-    }
+    internal void ClearRewrite() => RewriteTarget = null;
 
     /// <summary>
     /// Gets a typed local value by key.
@@ -190,12 +187,9 @@ public sealed class MiddlewareContext
     public string GetParameter(string name)
     {
         ArgumentNullException.ThrowIfNull(name);
-        if (!Parameters.TryGetValue(name, out var value))
-        {
-            throw new KeyNotFoundException($"Route parameter '{name}' not found.");
-        }
-
-        return value;
+        return !Parameters.TryGetValue(name, out var value)
+            ? throw new KeyNotFoundException($"Route parameter '{name}' not found.")
+            : value;
     }
 
     private static readonly IReadOnlyDictionary<string, string> EmptyParameters =

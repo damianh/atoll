@@ -207,132 +207,128 @@ public static class ErrorOverlay
     /// <summary>
     /// HTML-encodes a string for safe inclusion in HTML content.
     /// </summary>
-    private static string HtmlEncode(string value)
-    {
-        return value
+    private static string HtmlEncode(string value) =>
+        value
             .Replace("&", "&amp;", StringComparison.Ordinal)
             .Replace("<", "&lt;", StringComparison.Ordinal)
             .Replace(">", "&gt;", StringComparison.Ordinal)
             .Replace("\"", "&quot;", StringComparison.Ordinal)
             .Replace("'", "&#39;", StringComparison.Ordinal);
-    }
 
     /// <summary>
     /// Returns the inline CSS for the error overlay.
     /// </summary>
-    private static string GetCss()
-    {
-        return """
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body {
-              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-              background: #1a1a2e;
-              color: #eee;
-              min-height: 100vh;
-              display: flex;
-              align-items: flex-start;
-              justify-content: center;
-              padding: 2rem 1rem;
-            }
-            .overlay {
-              max-width: 960px;
-              width: 100%;
-              background: #16213e;
-              border: 1px solid #e94560;
-              border-radius: 12px;
-              overflow: hidden;
-              box-shadow: 0 4px 24px rgba(233, 69, 96, 0.3);
-            }
-            .header {
-              background: #e94560;
-              padding: 1.5rem 2rem;
-              display: flex;
-              align-items: center;
-              gap: 1rem;
-            }
-            .badge {
-              background: #fff;
-              color: #e94560;
-              font-weight: 700;
-              font-size: 0.75rem;
-              padding: 0.25rem 0.75rem;
-              border-radius: 4px;
-              letter-spacing: 0.05em;
-            }
-            .header h1 {
-              font-size: 1.25rem;
-              font-weight: 600;
-              color: #fff;
-            }
-            .section {
-              padding: 1.5rem 2rem;
-              border-top: 1px solid #233554;
-            }
-            .section h3, .section h4 {
-              color: #a3b8d4;
-              font-size: 0.85rem;
-              font-weight: 500;
-              text-transform: uppercase;
-              letter-spacing: 0.05em;
-              margin-bottom: 0.75rem;
-            }
-            .exception-type {
-              color: #ff6b6b;
-              font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
-              font-size: 1.1rem;
-              font-weight: 600;
-              margin-bottom: 0.5rem;
-            }
-            .exception-message {
-              color: #eee;
-              font-size: 1rem;
-              line-height: 1.6;
-              word-break: break-word;
-            }
-            .source-location {
-              background: #0f3460;
-              border-radius: 8px;
-              padding: 1rem 1.5rem;
-              display: flex;
-              align-items: center;
-              gap: 1rem;
-              flex-wrap: wrap;
-            }
-            .file-path {
-              color: #53c0f5;
-              font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
-              font-size: 0.95rem;
-              word-break: break-all;
-            }
-            .line-number {
-              color: #ffd93d;
-              font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
-              font-size: 0.95rem;
-              font-weight: 600;
-            }
-            .stack-trace {
-              background: #0d1b2a;
-              border-radius: 8px;
-              padding: 1.25rem;
-              font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
-              font-size: 0.85rem;
-              line-height: 1.7;
-              overflow-x: auto;
-              color: #8899aa;
-              white-space: pre-wrap;
-              word-break: break-word;
-            }
-            .stack-trace .highlight-path {
-              color: #53c0f5;
-            }
-            .inner-exception {
-              background: #111b2e;
-            }
-            .inner-exception .exception-type {
-              font-size: 0.95rem;
-            }
-            """;
-    }
+    private static string GetCss() =>
+        """
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          background: #1a1a2e;
+          color: #eee;
+          min-height: 100vh;
+          display: flex;
+          align-items: flex-start;
+          justify-content: center;
+          padding: 2rem 1rem;
+        }
+        .overlay {
+          max-width: 960px;
+          width: 100%;
+          background: #16213e;
+          border: 1px solid #e94560;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 4px 24px rgba(233, 69, 96, 0.3);
+        }
+        .header {
+          background: #e94560;
+          padding: 1.5rem 2rem;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+        .badge {
+          background: #fff;
+          color: #e94560;
+          font-weight: 700;
+          font-size: 0.75rem;
+          padding: 0.25rem 0.75rem;
+          border-radius: 4px;
+          letter-spacing: 0.05em;
+        }
+        .header h1 {
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: #fff;
+        }
+        .section {
+          padding: 1.5rem 2rem;
+          border-top: 1px solid #233554;
+        }
+        .section h3, .section h4 {
+          color: #a3b8d4;
+          font-size: 0.85rem;
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 0.75rem;
+        }
+        .exception-type {
+          color: #ff6b6b;
+          font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+          font-size: 1.1rem;
+          font-weight: 600;
+          margin-bottom: 0.5rem;
+        }
+        .exception-message {
+          color: #eee;
+          font-size: 1rem;
+          line-height: 1.6;
+          word-break: break-word;
+        }
+        .source-location {
+          background: #0f3460;
+          border-radius: 8px;
+          padding: 1rem 1.5rem;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+        .file-path {
+          color: #53c0f5;
+          font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+          font-size: 0.95rem;
+          word-break: break-all;
+        }
+        .line-number {
+          color: #ffd93d;
+          font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+          font-size: 0.95rem;
+          font-weight: 600;
+        }
+        .stack-trace {
+          background: #0d1b2a;
+          border-radius: 8px;
+          padding: 1.25rem;
+          font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+          font-size: 0.85rem;
+          line-height: 1.7;
+          overflow-x: auto;
+          color: #8899aa;
+          white-space: pre-wrap;
+          word-break: break-word;
+        }
+        .stack-trace .highlight-path {
+          color: #53c0f5;
+        }
+        .inner-exception {
+          background: #111b2e;
+        }
+        .inner-exception .exception-type {
+          font-size: 0.95rem;
+        }
+        """;
 }
 
 /// <summary>

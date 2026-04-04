@@ -176,71 +176,69 @@ public sealed class LiveReloadMiddleware
     /// handles full page reloads, CSS-only reloads, and build error overlays.
     /// Exposed for testing.
     /// </summary>
-    public static string GetInjectedScript()
-    {
-        return """
-            <script data-atoll-live-reload>
-            (function(){
-              var protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-              var url = protocol + '//' + location.host + '/__atoll-live-reload';
-              var reconnectDelay = 1000;
-              function connect(){
-                var ws = new WebSocket(url);
-                ws.onmessage = function(e){
-                  var data = JSON.parse(e.data);
-                  if(data.type === 'reload'){
-                    location.reload();
-                  } else if(data.type === 'css-reload'){
-                    var links = document.querySelectorAll('link[rel="stylesheet"]');
-                    links.forEach(function(link){
-                      var href = link.getAttribute('href');
-                      if(href){
-                        var separator = href.indexOf('?') >= 0 ? '&' : '?';
-                        link.setAttribute('href', href.split('?')[0] + separator + '_r=' + Date.now());
-                      }
-                    });
-                  } else if(data.type === 'build-error'){
-                    var existing = document.getElementById('atoll-build-error-overlay');
-                    if(existing) existing.remove();
-                    var overlay = document.createElement('div');
-                    overlay.id = 'atoll-build-error-overlay';
-                    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;background:#1a1a2e;color:#eee;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;overflow:auto;';
-                    var header = document.createElement('div');
-                    header.style.cssText = 'background:#e94560;padding:1.5rem 2rem;display:flex;align-items:center;justify-content:space-between;';
-                    var title = document.createElement('div');
-                    title.style.cssText = 'display:flex;align-items:center;gap:1rem;';
-                    var badge = document.createElement('span');
-                    badge.textContent = 'BUILD ERROR';
-                    badge.style.cssText = 'background:#fff;color:#e94560;font-weight:700;font-size:0.75rem;padding:0.25rem 0.75rem;border-radius:4px;letter-spacing:0.05em;';
-                    var h1 = document.createElement('h1');
-                    h1.textContent = 'Build failed';
-                    h1.style.cssText = 'font-size:1.25rem;font-weight:600;color:#fff;margin:0;';
-                    title.appendChild(badge);
-                    title.appendChild(h1);
-                    var closeBtn = document.createElement('button');
-                    closeBtn.textContent = '\u00D7';
-                    closeBtn.style.cssText = 'background:none;border:none;color:#fff;font-size:2rem;cursor:pointer;padding:0 0.5rem;line-height:1;';
-                    closeBtn.onclick = function(){ overlay.remove(); };
-                    header.appendChild(title);
-                    header.appendChild(closeBtn);
-                    overlay.appendChild(header);
-                    var content = document.createElement('div');
-                    content.style.cssText = 'padding:2rem;';
-                    var pre = document.createElement('pre');
-                    pre.textContent = data.errors;
-                    pre.style.cssText = 'background:#0d1b2a;border-radius:8px;padding:1.25rem;font-family:"Cascadia Code","Fira Code","JetBrains Mono",monospace;font-size:0.85rem;line-height:1.7;overflow-x:auto;color:#8899aa;white-space:pre-wrap;word-break:break-word;margin:0;';
-                    content.appendChild(pre);
-                    overlay.appendChild(content);
-                    document.body.appendChild(overlay);
+    public static string GetInjectedScript() =>
+        """
+        <script data-atoll-live-reload>
+        (function(){
+          var protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+          var url = protocol + '//' + location.host + '/__atoll-live-reload';
+          var reconnectDelay = 1000;
+          function connect(){
+            var ws = new WebSocket(url);
+            ws.onmessage = function(e){
+              var data = JSON.parse(e.data);
+              if(data.type === 'reload'){
+                location.reload();
+              } else if(data.type === 'css-reload'){
+                var links = document.querySelectorAll('link[rel="stylesheet"]');
+                links.forEach(function(link){
+                  var href = link.getAttribute('href');
+                  if(href){
+                    var separator = href.indexOf('?') >= 0 ? '&' : '?';
+                    link.setAttribute('href', href.split('?')[0] + separator + '_r=' + Date.now());
                   }
-                };
-                ws.onclose = function(){
-                  setTimeout(connect, reconnectDelay);
-                };
+                });
+              } else if(data.type === 'build-error'){
+                var existing = document.getElementById('atoll-build-error-overlay');
+                if(existing) existing.remove();
+                var overlay = document.createElement('div');
+                overlay.id = 'atoll-build-error-overlay';
+                overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;background:#1a1a2e;color:#eee;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;overflow:auto;';
+                var header = document.createElement('div');
+                header.style.cssText = 'background:#e94560;padding:1.5rem 2rem;display:flex;align-items:center;justify-content:space-between;';
+                var title = document.createElement('div');
+                title.style.cssText = 'display:flex;align-items:center;gap:1rem;';
+                var badge = document.createElement('span');
+                badge.textContent = 'BUILD ERROR';
+                badge.style.cssText = 'background:#fff;color:#e94560;font-weight:700;font-size:0.75rem;padding:0.25rem 0.75rem;border-radius:4px;letter-spacing:0.05em;';
+                var h1 = document.createElement('h1');
+                h1.textContent = 'Build failed';
+                h1.style.cssText = 'font-size:1.25rem;font-weight:600;color:#fff;margin:0;';
+                title.appendChild(badge);
+                title.appendChild(h1);
+                var closeBtn = document.createElement('button');
+                closeBtn.textContent = '\u00D7';
+                closeBtn.style.cssText = 'background:none;border:none;color:#fff;font-size:2rem;cursor:pointer;padding:0 0.5rem;line-height:1;';
+                closeBtn.onclick = function(){ overlay.remove(); };
+                header.appendChild(title);
+                header.appendChild(closeBtn);
+                overlay.appendChild(header);
+                var content = document.createElement('div');
+                content.style.cssText = 'padding:2rem;';
+                var pre = document.createElement('pre');
+                pre.textContent = data.errors;
+                pre.style.cssText = 'background:#0d1b2a;border-radius:8px;padding:1.25rem;font-family:"Cascadia Code","Fira Code","JetBrains Mono",monospace;font-size:0.85rem;line-height:1.7;overflow-x:auto;color:#8899aa;white-space:pre-wrap;word-break:break-word;margin:0;';
+                content.appendChild(pre);
+                overlay.appendChild(content);
+                document.body.appendChild(overlay);
               }
-              connect();
-            })();
-            </script>
-            """;
-    }
+            };
+            ws.onclose = function(){
+              setTimeout(connect, reconnectDelay);
+            };
+          }
+          connect();
+        })();
+        </script>
+        """;
 }

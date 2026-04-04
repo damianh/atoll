@@ -38,9 +38,8 @@ public sealed class RewriteHandler
     /// before calling the next handler in the pipeline.
     /// </summary>
     /// <returns>A middleware handler that processes rewrites.</returns>
-    public MiddlewareHandler CreateHandler()
-    {
-        return async (context, next) =>
+    public MiddlewareHandler CreateHandler() =>
+        async (context, next) =>
         {
             if (context.HasRewrite)
             {
@@ -51,7 +50,6 @@ public sealed class RewriteHandler
 
             return response;
         };
-    }
 
     /// <summary>
     /// Attempts to resolve the specified path against the route table.
