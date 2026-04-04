@@ -422,7 +422,7 @@ await RenderAsync(contentComponent.ToRenderFragment());
 
 ## API Endpoints
 
-Endpoints return structured HTTP responses instead of HTML. They implement `IAtollEndpoint`:
+Endpoints return structured HTTP responses instead of HTML. They implement `IAtollEndpoint` and share the same routing system as pages — same `RouteMatcher`, same file-based discovery conventions, same dynamic segment syntax. This unified routing is why Atoll has its own endpoint abstraction rather than delegating to ASP.NET Core's minimal APIs. It also means endpoint code is decoupled from `HttpContext`, so the same endpoints can be pre-rendered as JSON during static site generation.
 
 ```csharp
 using Atoll.Routing;
