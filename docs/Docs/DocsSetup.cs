@@ -58,6 +58,21 @@ public static class DocsSetup
                     new SidebarItem { Label = "API Endpoints",           Link = "/docs/api-endpoints" },
                 ],
             },
+            new SidebarItem
+            {
+                Label = "Lagoon Theme",
+                Items =
+                [
+                    new SidebarItem { Label = "Overview",              Link = "/docs/lagoon/overview" },
+                    new SidebarItem { Label = "Configuration",         Link = "/docs/lagoon/configuration" },
+                    new SidebarItem { Label = "Sidebar Navigation",    Link = "/docs/lagoon/sidebar" },
+                    new SidebarItem { Label = "Theme & Styling",       Link = "/docs/lagoon/theming" },
+                    new SidebarItem { Label = "Components & Layout",   Link = "/docs/lagoon/components" },
+                    new SidebarItem { Label = "Site Search",           Link = "/docs/lagoon/search" },
+                    new SidebarItem { Label = "Islands & Mermaid",     Link = "/docs/lagoon/islands-and-mermaid" },
+                    new SidebarItem { Label = "Starlight Comparison",  Link = "/docs/lagoon/starlight-comparison" },
+                ],
+            },
         ],
     };
 }
