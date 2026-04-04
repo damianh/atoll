@@ -1,0 +1,21 @@
+@inherits Atoll.Components.AtollLayoutSlice
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Atoll Blog</title>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/">Home</a>
+        </nav>
+    </header>
+    <main>
+        @{ await RenderBodyAsync(); }
+    </main>
+    <footer>
+        <p>Built with Atoll.</p>
+    </footer>
+</body>
+</html>

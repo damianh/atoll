@@ -4,6 +4,7 @@ using Atoll.Components;
 using Atoll.Instructions;
 using Atoll.Rendering;
 using Atoll.Slots;
+using RazorSlices;
 
 namespace Atoll.Islands;
 
@@ -84,10 +85,13 @@ public static class IslandRenderer
         ArgumentNullException.ThrowIfNull(props);
         ArgumentNullException.ThrowIfNull(slots);
 
-        if (!typeof(IAtollComponent).IsAssignableFrom(componentType))
+        if (!typeof(IAtollComponent).IsAssignableFrom(componentType) &&
+            !typeof(RazorSlice).IsAssignableFrom(componentType) &&
+            !typeof(IRazorSliceProxy).IsAssignableFrom(componentType))
         {
             throw new ArgumentException(
-                $"Type '{componentType.FullName}' must implement {nameof(IAtollComponent)}.",
+                $"Type '{componentType.FullName}' must implement {nameof(IAtollComponent)}, " +
+                $"derive from {nameof(RazorSlice)}, or implement {nameof(IRazorSliceProxy)}.",
                 nameof(componentType));
         }
 
@@ -95,7 +99,58 @@ public static class IslandRenderer
             destination, metadata, props, slots,
             async (dest, p, s) =>
             {
-                var component = (IAtollComponent)Activator.CreateInstance(componentType)!;
+                IAtollComponent component;
+                if (typeof(IAtollComponent).IsAssignableFrom(componentType))
+                {
+                    component = (IAtollComponent)Activator.CreateInstance(componentType)!;
+                }
+                else if (typeof(IRazorSliceProxy).IsAssignableFrom(componentType))
+                {
+                    var interfaceMap = componentType.GetInterfaceMap(typeof(IRazorSliceProxy));
+                    var createSliceMethod = typeof(IRazorSliceProxy).GetMethod("CreateSlice")!;
+                    var createSliceIndex = Array.IndexOf(interfaceMap.InterfaceMethods, createSliceMethod);
+                    var targetMethod = interfaceMap.TargetMethods[createSliceIndex];
+                    var razorSlice = (RazorSlice)targetMethod.Invoke(null, null)!;
+                    component = new SliceComponentAdapter(razorSlice);
+                }
+                else
+                {
+                    var razorSlice = (RazorSlice)Activator.CreateInstance(componentType)!;
+                    component = new SliceComponentAdapter(razorSlice);
+                }
+                await ComponentRenderer.RenderComponentAsync(component, dest, p, s);
+            });
+    }
+
+    /// <summary>
+    /// Renders a Razor slice island component to the specified destination, wrapping the SSR output
+    /// in an <c>&lt;atoll-island&gt;</c> custom element. The slice is created via the
+    /// <see cref="IRazorSliceProxy.CreateSlice"/> static interface method.
+    /// </summary>
+    /// <typeparam name="TSlice">The Razor slice proxy type. Must implement <see cref="IRazorSliceProxy"/>.</typeparam>
+    /// <param name="destination">The render destination.</param>
+    /// <param name="metadata">The island metadata (component URL, directive, etc.).</param>
+    /// <param name="props">The props dictionary to pass to the component and serialize for hydration.</param>
+    /// <param name="slots">The slot collection.</param>
+    /// <returns>A <see cref="Task"/> representing the async render operation.</returns>
+    public static async Task RenderSliceIslandAsync<TSlice>(
+        IRenderDestination destination,
+        IslandMetadata metadata,
+        IReadOnlyDictionary<string, object?> props,
+        SlotCollection slots)
+        where TSlice : IRazorSliceProxy
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        ArgumentNullException.ThrowIfNull(metadata);
+        ArgumentNullException.ThrowIfNull(props);
+        ArgumentNullException.ThrowIfNull(slots);
+
+        await RenderIslandCoreAsync(
+            destination, metadata, props, slots,
+            async (dest, p, s) =>
+            {
+                var razorSlice = TSlice.CreateSlice();
+                var component = new SliceComponentAdapter(razorSlice);
                 await ComponentRenderer.RenderComponentAsync(component, dest, p, s);
             });
     }

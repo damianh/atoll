@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Atoll.Components;
 using Atoll.Rendering;
 using Atoll.Routing;
+using RazorSlices;
 
 namespace Atoll.Build.Ssg;
 
@@ -197,7 +198,34 @@ public sealed class StaticSiteGenerator
         // Build a component delegate that renders the page inside its layout chain
         ComponentDelegate renderDelegate = async context =>
         {
-            var component = (IAtollComponent)Activator.CreateInstance(componentType)!;
+            // Create the component instance — supports both IAtollComponent and IRazorSliceProxy types
+            IAtollComponent component;
+            if (typeof(IAtollComponent).IsAssignableFrom(componentType))
+            {
+                component = (IAtollComponent)Activator.CreateInstance(componentType)!;
+            }
+            else if (typeof(IRazorSliceProxy).IsAssignableFrom(componentType))
+            {
+                // Razor slice pages that don't inherit IAtollComponent are wrapped via SliceComponentAdapter.
+                // The proxy is NOT a RazorSlice subtype — call CreateSlice() via the interface map.
+                var interfaceMap = componentType.GetInterfaceMap(typeof(IRazorSliceProxy));
+                var createSliceMethod = interfaceMap.TargetMethods
+                    .FirstOrDefault(m => m.Name.EndsWith("CreateSlice", StringComparison.Ordinal)
+                                      && m.GetParameters().Length == 0);
+                if (createSliceMethod is null)
+                {
+                    throw new InvalidOperationException(
+                        $"Could not find CreateSlice() method on '{componentType.FullName}'.");
+                }
+
+                var slice = (RazorSlice)createSliceMethod.Invoke(null, null)!;
+                component = new SliceComponentAdapter(slice);
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    $"Component type '{componentType.FullName}' does not implement IAtollComponent or IRazorSliceProxy.");
+            }
 
             // Render the page component to a fragment
             var pageFragment = RenderFragment.FromAsync(async destination =>
@@ -251,5 +279,5 @@ public sealed class StaticSiteGenerator
     }
 
     private static readonly IReadOnlyDictionary<string, object?> EmptyServiceProps =
-        new Dictionary<string, object?>();
+        new ReadOnlyDictionary<string, object?>(new Dictionary<string, object?>());
 }

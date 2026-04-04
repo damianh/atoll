@@ -1,10 +1,10 @@
 using Atoll.Build.Content.Collections;
 using Atoll.Components;
 using Atoll.Routing;
-using Atoll.Docs.Components;
-using Atoll.Docs.Layouts;
+using Atoll.Lagoon.Components;
+using Docs.Layouts;
 
-namespace Atoll.Docs.Pages;
+namespace Docs.Pages;
 
 /// <summary>
 /// The documentation site landing page. Displays a hero section with a tagline

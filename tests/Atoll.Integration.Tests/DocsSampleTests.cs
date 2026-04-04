@@ -1,8 +1,8 @@
 using Atoll.Build.Content.Collections;
 using Atoll.Build.Ssg;
 using Atoll.Components;
-using Atoll.Docs;
-using Atoll.Docs.Pages;
+using Docs;
+using Docs.Pages;
 using Atoll.Rendering;
 using Atoll.Routing;
 using Shouldly;

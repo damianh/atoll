@@ -1,6 +1,7 @@
 using Atoll.Components;
 using Atoll.Rendering;
 using Atoll.Slots;
+using Atoll.Tests.Components.Fixtures;
 using Shouldly;
 using Xunit;
 
@@ -426,6 +427,151 @@ public sealed class ComponentRenderingTests
         var component = new ContextAccessTestComponent();
 
         Should.Throw<InvalidOperationException>(() => component.TryAccessContext());
+    }
+
+    // ── RenderSliceAsync / ToSliceFragment tests ──
+
+    [Fact]
+    public async Task RenderSliceAsyncShouldRenderSimpleSlice()
+    {
+        var destination = new StringRenderDestination();
+
+        await ComponentRenderer.RenderSliceAsync<SimpleSlice>(destination);
+
+        destination.GetOutput().ShouldContain("<p>Hello from Razor!</p>");
+    }
+
+    [Fact]
+    public async Task RenderSliceAsyncShouldRenderSliceWithDefaultSlot()
+    {
+        var destination = new StringRenderDestination();
+        var slots = SlotCollection.FromDefault(RenderFragment.FromHtml("<em>slot content</em>"));
+
+        await ComponentRenderer.RenderSliceAsync<SliceWithDefaultSlot>(destination, slots);
+
+        destination.GetOutput().ShouldContain("<em>slot content</em>");
+    }
+
+    [Fact]
+    public async Task RenderSliceAsyncShouldRenderSliceWithNoSlotsOverload()
+    {
+        var destination = new StringRenderDestination();
+
+        await ComponentRenderer.RenderSliceAsync<SimpleSlice>(destination);
+
+        destination.GetOutput().ShouldContain("<p>Hello from Razor!</p>");
+    }
+
+    [Fact]
+    public async Task RenderSliceAsyncShouldRenderTypedSlice()
+    {
+        var destination = new StringRenderDestination();
+
+        await ComponentRenderer.RenderSliceAsync<GreetingSlice, GreetingModel>(
+            destination, new GreetingModel("Alice"));
+
+        destination.GetOutput().ShouldContain("Hello, Alice!");
+    }
+
+    [Fact]
+    public async Task RenderSliceAsyncShouldRenderTypedSliceWithSlots()
+    {
+        var destination = new StringRenderDestination();
+        var slots = SlotCollection.Empty;
+
+        await ComponentRenderer.RenderSliceAsync<GreetingSlice, GreetingModel>(
+            destination, new GreetingModel("Bob"), slots);
+
+        destination.GetOutput().ShouldContain("Hello, Bob!");
+    }
+
+    [Fact]
+    public async Task ToSliceFragmentShouldRenderSliceWhenEvaluated()
+    {
+        var fragment = ComponentRenderer.ToSliceFragment<SimpleSlice>();
+
+        var output = await fragment.RenderToStringAsync();
+
+        output.ShouldContain("<p>Hello from Razor!</p>");
+    }
+
+    [Fact]
+    public async Task ToSliceFragmentWithSlotsShouldInjectSlots()
+    {
+        var slots = SlotCollection.FromDefault(RenderFragment.FromHtml("<b>body</b>"));
+        var fragment = ComponentRenderer.ToSliceFragment<SliceWithDefaultSlot>(slots);
+
+        var output = await fragment.RenderToStringAsync();
+
+        output.ShouldContain("<b>body</b>");
+    }
+
+    [Fact]
+    public async Task ToSliceFragmentTypedShouldRenderWithModel()
+    {
+        var fragment = ComponentRenderer.ToSliceFragment<GreetingSlice, GreetingModel>(
+            new GreetingModel("Charlie"));
+
+        var output = await fragment.RenderToStringAsync();
+
+        output.ShouldContain("Hello, Charlie!");
+    }
+
+    [Fact]
+    public async Task ToSliceFragmentTypedWithSlotsShouldRenderWithModelAndSlots()
+    {
+        var slots = SlotCollection.Empty;
+        var fragment = ComponentRenderer.ToSliceFragment<GreetingSlice, GreetingModel>(
+            new GreetingModel("Diana"), slots);
+
+        var output = await fragment.RenderToStringAsync();
+
+        output.ShouldContain("Hello, Diana!");
+    }
+
+    [Fact]
+    public async Task RenderSliceAsyncShouldThrowWhenDestinationIsNull()
+    {
+        await Should.ThrowAsync<ArgumentNullException>(
+            () => ComponentRenderer.RenderSliceAsync<SimpleSlice>(null!).AsTask());
+    }
+
+    [Fact]
+    public async Task RenderSliceAsyncWithSlotsShouldThrowWhenDestinationIsNull()
+    {
+        await Should.ThrowAsync<ArgumentNullException>(
+            () => ComponentRenderer.RenderSliceAsync<SimpleSlice>(null!, SlotCollection.Empty).AsTask());
+    }
+
+    [Fact]
+    public async Task RenderSliceAsyncWithSlotsShouldThrowWhenSlotsIsNull()
+    {
+        var destination = new StringRenderDestination();
+        await Should.ThrowAsync<ArgumentNullException>(
+            () => ComponentRenderer.RenderSliceAsync<SimpleSlice>(destination, null!).AsTask());
+    }
+
+    [Fact]
+    public async Task RenderSliceAsyncTypedShouldThrowWhenDestinationIsNull()
+    {
+        await Should.ThrowAsync<ArgumentNullException>(
+            () => ComponentRenderer.RenderSliceAsync<GreetingSlice, GreetingModel>(
+                null!, new GreetingModel("X")).AsTask());
+    }
+
+    [Fact]
+    public void ToSliceFragmentWithSlotsShouldThrowWhenSlotsIsNull()
+    {
+        Should.Throw<ArgumentNullException>(
+            () => ComponentRenderer.ToSliceFragment<SimpleSlice>(null!));
+    }
+
+    [Fact]
+    public void ToSliceFragmentTypedWithSlotsShouldThrowWhenSlotsIsNull()
+    {
+        Should.Throw<ArgumentNullException>(
+            () => ComponentRenderer.ToSliceFragment<GreetingSlice, GreetingModel>(
+                new GreetingModel("X"), null!));
     }
 
     // ── Helper methods ──

@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Reflection;
 using Atoll.Rendering;
 using Atoll.Slots;
+using RazorSlices;
 
 namespace Atoll.Components;
 
@@ -184,7 +185,7 @@ public static class LayoutResolver
     {
         return RenderFragment.FromAsync(async destination =>
         {
-            var layout = (IAtollComponent)Activator.CreateInstance(layoutType)!;
+            var layout = CreateLayoutComponent(layoutType);
             var slots = SlotCollection.FromDefault(innerContent);
             await ComponentRenderer.RenderComponentAsync(layout, destination, EmptyProps, slots);
         });
@@ -201,9 +202,53 @@ public static class LayoutResolver
     {
         return RenderFragment.FromAsync(async destination =>
         {
-            var layout = (IAtollComponent)Activator.CreateInstance(layoutType)!;
+            var layout = CreateLayoutComponent(layoutType);
             var slots = SlotCollection.FromDefault(innerContent);
             await ComponentRenderer.RenderComponentAsync(layout, destination, props, slots);
         });
+    }
+
+    /// <summary>
+    /// Creates an <see cref="IAtollComponent"/> instance for the given layout type.
+    /// If the type derives from <see cref="RazorSlice"/> but does not implement
+    /// <see cref="IAtollComponent"/>, it is wrapped in a <see cref="SliceComponentAdapter"/>.
+    /// If the type implements <see cref="IRazorSliceProxy"/> (source-generated Razor slice proxy),
+    /// the slice is created via the static <c>CreateSlice()</c> interface method and wrapped
+    /// in a <see cref="SliceComponentAdapter"/>.
+    /// </summary>
+    private static IAtollComponent CreateLayoutComponent(Type layoutType)
+    {
+        // Fast path: already an IAtollComponent (C# layout)
+        if (typeof(IAtollComponent).IsAssignableFrom(layoutType))
+        {
+            var component = Activator.CreateInstance(layoutType)
+                ?? throw new InvalidOperationException(
+                    $"Failed to create an instance of layout type '{layoutType.FullName}'.");
+            return (IAtollComponent)component;
+        }
+
+        // Razor slice proxy: implements IRazorSliceProxy (source-generated, not a RazorSlice subclass)
+        if (typeof(IRazorSliceProxy).IsAssignableFrom(layoutType))
+        {
+            var interfaceMap = layoutType.GetInterfaceMap(typeof(IRazorSliceProxy));
+            var createSliceMethod = typeof(IRazorSliceProxy).GetMethod("CreateSlice")!;
+            var createSliceIndex = Array.IndexOf(interfaceMap.InterfaceMethods, createSliceMethod);
+            var targetMethod = interfaceMap.TargetMethods[createSliceIndex];
+            var razorSlice = (RazorSlice)targetMethod.Invoke(null, null)!;
+            return new SliceComponentAdapter(razorSlice);
+        }
+
+        // Direct RazorSlice subclass (not using the source generator)
+        if (typeof(RazorSlice).IsAssignableFrom(layoutType))
+        {
+            var instance = Activator.CreateInstance(layoutType)
+                ?? throw new InvalidOperationException(
+                    $"Failed to create an instance of layout type '{layoutType.FullName}'.");
+            return new SliceComponentAdapter((RazorSlice)instance);
+        }
+
+        throw new InvalidOperationException(
+            $"Layout type '{layoutType.FullName}' must implement '{nameof(IAtollComponent)}' " +
+            $"or derive from '{nameof(RazorSlice)}'.");
     }
 }

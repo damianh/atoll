@@ -1,10 +1,10 @@
-using Atoll.Docs.Configuration;
+using Atoll.Lagoon.Configuration;
 
-namespace Atoll.Docs;
+namespace Docs;
 
 /// <summary>
 /// Provides the <see cref="DocsConfig"/> for the Atoll documentation site.
-/// Used by <see cref="Layouts.SiteLayout"/> to configure the <c>Atoll.Docs</c> addon layout.
+/// Used by <see cref="Layouts.SiteLayout"/> to configure the <c>Atoll.Lagoon</c> addon layout.
 /// </summary>
 public static class DocsSetup
 {

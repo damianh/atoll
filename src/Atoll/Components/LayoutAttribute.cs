@@ -1,3 +1,5 @@
+using RazorSlices;
+
 namespace Atoll.Components;
 
 /// <summary>
@@ -16,6 +18,11 @@ namespace Atoll.Components;
 /// <c>RenderSlotAsync()</c> to insert the page content at the desired location.
 /// Nested layouts are supported: a layout can itself have a <see cref="LayoutAttribute"/>
 /// pointing to a parent layout.
+/// </para>
+/// <para>
+/// The layout type may implement <see cref="IAtollComponent"/> (C# layout), derive from
+/// <see cref="RazorSlice"/> (direct subclass), or implement <see cref="IRazorSliceProxy"/>
+/// (source-generated Razor slice proxy, as produced by <c>@inherits AtollLayoutSlice</c>).
 /// </para>
 /// </remarks>
 /// <example>
@@ -48,23 +55,29 @@ public sealed class LayoutAttribute : Attribute
     /// Initializes a new <see cref="LayoutAttribute"/> with the specified layout component type.
     /// </summary>
     /// <param name="layoutType">
-    /// The type of the layout component. Must implement <see cref="IAtollComponent"/>
-    /// and have a parameterless constructor.
+    /// The type of the layout component. Must implement <see cref="IAtollComponent"/>,
+    /// derive from <see cref="RazorSlice"/>, or implement <see cref="IRazorSliceProxy"/>
+    /// (the source-generated proxy for Razor slice layouts).
+    /// Must have a parameterless constructor.
     /// </param>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="layoutType"/> is <c>null</c>.
     /// </exception>
     /// <exception cref="ArgumentException">
-    /// Thrown when <paramref name="layoutType"/> does not implement <see cref="IAtollComponent"/>.
+    /// Thrown when <paramref name="layoutType"/> does not implement <see cref="IAtollComponent"/>
+    /// and is not a Razor slice type.
     /// </exception>
     public LayoutAttribute(Type layoutType)
     {
         ArgumentNullException.ThrowIfNull(layoutType);
 
-        if (!typeof(IAtollComponent).IsAssignableFrom(layoutType))
+        if (!typeof(IAtollComponent).IsAssignableFrom(layoutType)
+            && !typeof(RazorSlice).IsAssignableFrom(layoutType)
+            && !typeof(IRazorSliceProxy).IsAssignableFrom(layoutType))
         {
             throw new ArgumentException(
-                $"Layout type '{layoutType.FullName}' must implement {nameof(IAtollComponent)}.",
+                $"Layout type '{layoutType.FullName}' must implement {nameof(IAtollComponent)} " +
+                $"or derive from {nameof(RazorSlice)}.",
                 nameof(layoutType));
         }
 

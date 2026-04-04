@@ -1,8 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AngleSharp" />
     <PackageReference Include="NUglify" />
     <PackageReference Include="Markdig" />
+    <PackageReference Include="RazorSlices" />
     <PackageReference Include="System.IO.Hashing" />
     <PackageReference Include="YamlDotNet" />
   </ItemGroup>

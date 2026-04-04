@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Atoll.Docs;
+namespace Docs;
 
 /// <summary>
 /// Frontmatter schema for documentation content entries.

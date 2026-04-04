@@ -3,9 +3,9 @@ using Atoll.Build.Content.Markdown;
 using Atoll.Components;
 using Atoll.Rendering;
 using Atoll.Routing;
-using Atoll.Docs.Layouts;
+using Docs.Layouts;
 
-namespace Atoll.Docs.Pages;
+namespace Docs.Pages;
 
 /// <summary>
 /// The individual documentation page. Renders a Markdown doc entry identified

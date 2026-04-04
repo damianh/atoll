@@ -1,6 +1,6 @@
 using Atoll.Build.Content.Collections;
 
-namespace Atoll.Docs;
+namespace Docs;
 
 /// <summary>
 /// Content collection configuration for the documentation site.

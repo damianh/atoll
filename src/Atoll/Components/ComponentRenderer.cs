@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Reflection;
 using Atoll.Rendering;
 using Atoll.Slots;
+using RazorSlices;
 
 namespace Atoll.Components;
 
@@ -276,6 +277,153 @@ public sealed class ComponentRenderer
     public static RenderFragment ToFragment(ComponentDelegate componentDelegate)
     {
         return ToFragment(componentDelegate, EmptyProps, SlotCollection.Empty);
+    }
+
+    // ── Razor Slice rendering methods ──
+
+    /// <summary>
+    /// Renders a Razor slice of the specified type to the given destination.
+    /// </summary>
+    /// <typeparam name="TSlice">The Razor slice type. Must implement <see cref="IRazorSliceProxy"/>.</typeparam>
+    /// <param name="destination">The render destination.</param>
+    /// <returns>A <see cref="ValueTask"/> representing the async render operation.</returns>
+    public static ValueTask RenderSliceAsync<TSlice>(IRenderDestination destination)
+        where TSlice : IRazorSliceProxy
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        return RenderSliceAsync<TSlice>(destination, SlotCollection.Empty);
+    }
+
+    /// <summary>
+    /// Renders a Razor slice of the specified type to the given destination with the specified slots.
+    /// </summary>
+    /// <typeparam name="TSlice">The Razor slice type. Must implement <see cref="IRazorSliceProxy"/>.</typeparam>
+    /// <param name="destination">The render destination.</param>
+    /// <param name="slots">The slot collection.</param>
+    /// <returns>A <see cref="ValueTask"/> representing the async render operation.</returns>
+    public static async ValueTask RenderSliceAsync<TSlice>(IRenderDestination destination, SlotCollection slots)
+        where TSlice : IRazorSliceProxy
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        ArgumentNullException.ThrowIfNull(slots);
+
+        using var slice = TSlice.CreateSlice();
+        InjectAtollSliceContext(slice, destination, slots);
+        await using var writer = new RenderDestinationTextWriter(destination);
+        await slice.RenderAsync(writer);
+    }
+
+    /// <summary>
+    /// Renders a typed Razor slice of the specified type to the given destination with the specified model.
+    /// </summary>
+    /// <typeparam name="TSlice">The Razor slice type. Must implement <see cref="IRazorSliceProxy{TModel}"/>.</typeparam>
+    /// <typeparam name="TModel">The model type.</typeparam>
+    /// <param name="destination">The render destination.</param>
+    /// <param name="model">The model instance.</param>
+    /// <returns>A <see cref="ValueTask"/> representing the async render operation.</returns>
+    public static ValueTask RenderSliceAsync<TSlice, TModel>(IRenderDestination destination, TModel model)
+        where TSlice : IRazorSliceProxy<TModel>
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        return RenderSliceAsync<TSlice, TModel>(destination, model, SlotCollection.Empty);
+    }
+
+    /// <summary>
+    /// Renders a typed Razor slice of the specified type to the given destination with the specified model and slots.
+    /// </summary>
+    /// <typeparam name="TSlice">The Razor slice type. Must implement <see cref="IRazorSliceProxy{TModel}"/>.</typeparam>
+    /// <typeparam name="TModel">The model type.</typeparam>
+    /// <param name="destination">The render destination.</param>
+    /// <param name="model">The model instance.</param>
+    /// <param name="slots">The slot collection.</param>
+    /// <returns>A <see cref="ValueTask"/> representing the async render operation.</returns>
+    public static async ValueTask RenderSliceAsync<TSlice, TModel>(
+        IRenderDestination destination,
+        TModel model,
+        SlotCollection slots)
+        where TSlice : IRazorSliceProxy<TModel>
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        ArgumentNullException.ThrowIfNull(slots);
+
+        using var slice = TSlice.CreateSlice(model);
+        InjectAtollSliceContext(slice, destination, slots);
+        await using var writer = new RenderDestinationTextWriter(destination);
+        await slice.RenderAsync(writer);
+    }
+
+    /// <summary>
+    /// Creates a <see cref="RenderFragment"/> that renders the specified Razor slice type when evaluated.
+    /// </summary>
+    /// <typeparam name="TSlice">The Razor slice type. Must implement <see cref="IRazorSliceProxy"/>.</typeparam>
+    /// <returns>A <see cref="RenderFragment"/> that renders the slice.</returns>
+    public static RenderFragment ToSliceFragment<TSlice>()
+        where TSlice : IRazorSliceProxy
+    {
+        return ToSliceFragment<TSlice>(SlotCollection.Empty);
+    }
+
+    /// <summary>
+    /// Creates a <see cref="RenderFragment"/> that renders the specified Razor slice type
+    /// with the specified slots when evaluated.
+    /// </summary>
+    /// <typeparam name="TSlice">The Razor slice type. Must implement <see cref="IRazorSliceProxy"/>.</typeparam>
+    /// <param name="slots">The slot collection.</param>
+    /// <returns>A <see cref="RenderFragment"/> that renders the slice.</returns>
+    public static RenderFragment ToSliceFragment<TSlice>(SlotCollection slots)
+        where TSlice : IRazorSliceProxy
+    {
+        ArgumentNullException.ThrowIfNull(slots);
+
+        return RenderFragment.FromAsync(destination => RenderSliceAsync<TSlice>(destination, slots));
+    }
+
+    /// <summary>
+    /// Creates a <see cref="RenderFragment"/> that renders the specified typed Razor slice type
+    /// with the specified model when evaluated.
+    /// </summary>
+    /// <typeparam name="TSlice">The Razor slice type. Must implement <see cref="IRazorSliceProxy{TModel}"/>.</typeparam>
+    /// <typeparam name="TModel">The model type.</typeparam>
+    /// <param name="model">The model instance.</param>
+    /// <returns>A <see cref="RenderFragment"/> that renders the slice.</returns>
+    public static RenderFragment ToSliceFragment<TSlice, TModel>(TModel model)
+        where TSlice : IRazorSliceProxy<TModel>
+    {
+        return ToSliceFragment<TSlice, TModel>(model, SlotCollection.Empty);
+    }
+
+    /// <summary>
+    /// Creates a <see cref="RenderFragment"/> that renders the specified typed Razor slice type
+    /// with the specified model and slots when evaluated.
+    /// </summary>
+    /// <typeparam name="TSlice">The Razor slice type. Must implement <see cref="IRazorSliceProxy{TModel}"/>.</typeparam>
+    /// <typeparam name="TModel">The model type.</typeparam>
+    /// <param name="model">The model instance.</param>
+    /// <param name="slots">The slot collection.</param>
+    /// <returns>A <see cref="RenderFragment"/> that renders the slice.</returns>
+    public static RenderFragment ToSliceFragment<TSlice, TModel>(TModel model, SlotCollection slots)
+        where TSlice : IRazorSliceProxy<TModel>
+    {
+        ArgumentNullException.ThrowIfNull(slots);
+
+        return RenderFragment.FromAsync(
+            destination => RenderSliceAsync<TSlice, TModel>(destination, model, slots));
+    }
+
+    /// <summary>
+    /// Injects Atoll context (destination and slots) into the slice if it implements
+    /// <see cref="IAtollSliceContext"/>.
+    /// </summary>
+    private static void InjectAtollSliceContext(
+        RazorSlice slice,
+        IRenderDestination destination,
+        SlotCollection slots)
+    {
+        if (slice is IAtollSliceContext atollContext)
+        {
+            atollContext.Destination = destination;
+            atollContext.Slots = slots;
+        }
     }
 
     /// <summary>

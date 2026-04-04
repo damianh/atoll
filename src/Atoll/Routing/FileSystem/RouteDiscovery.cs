@@ -1,5 +1,6 @@
 using System.Reflection;
 using Atoll.Components;
+using RazorSlices;
 
 namespace Atoll.Routing.FileSystem;
 
@@ -189,7 +190,8 @@ public sealed class RouteDiscovery
         }
 
         return typeof(IAtollComponent).IsAssignableFrom(type)
-               || typeof(IAtollEndpoint).IsAssignableFrom(type);
+               || typeof(IAtollEndpoint).IsAssignableFrom(type)
+               || typeof(IRazorSliceProxy).IsAssignableFrom(type);
     }
 
     private static IReadOnlyDictionary<string, Type> BuildTypeMap(IEnumerable<Assembly> assemblies)

@@ -13,6 +13,8 @@
     <PackageVersion Include="NUglify" Version="1.21.17" />
     <!-- CLI -->
     <PackageVersion Include="System.CommandLine" Version="2.0.5" />
+    <!-- Razor Slices -->
+    <PackageVersion Include="RazorSlices" Version="0.10.0" />
     <!-- Hashing -->
     <PackageVersion Include="System.IO.Hashing" Version="9.0.5" />
     <!-- Testing -->

@@ -1,15 +1,15 @@
 using Atoll.Build.Content.Collections;
 using Atoll.Build.Content.Markdown;
 using Atoll.Components;
-using Atoll.Docs.Navigation;
+using Atoll.Lagoon.Navigation;
 using Atoll.Slots;
-using AddonLayout = Atoll.Docs.Layouts.DocsLayout;
+using AddonLayout = Atoll.Lagoon.Layouts.DocsLayout;
 
-namespace Atoll.Docs.Layouts;
+namespace Docs.Layouts;
 
 /// <summary>
 /// Site-specific wrapper layout for the Atoll documentation site.
-/// Wires <see cref="DocsSetup.Config"/> into the <c>Atoll.Docs</c> addon
+/// Wires <see cref="DocsSetup.Config"/> into the <c>Atoll.Lagoon</c> addon
 /// <see cref="AddonLayout"/>, building sidebar, pagination, and breadcrumbs
 /// from the content collection query and current page slug.
 /// </summary>

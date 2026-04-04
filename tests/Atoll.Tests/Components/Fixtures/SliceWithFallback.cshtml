@@ -1,0 +1,8 @@
+@inherits Atoll.Components.AtollSlice
+@{
+    var fallback = Atoll.Rendering.RenderFragment.FromHtml("<em>no content</em>");
+}
+@if (HasSlot("badge")) {
+  <span class="badge">@{ await RenderSlotAsync("badge"); }</span>
+}
+<p>@{ await RenderSlotAsync("content", fallback); }</p>

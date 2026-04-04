@@ -85,6 +85,11 @@ public sealed class RenderContext
     public SlotCollection Slots { get; }
 
     /// <summary>
+    /// Gets the render destination.
+    /// </summary>
+    public IRenderDestination Destination => _destination;
+
+    /// <summary>
     /// Gets a typed prop value by name.
     /// </summary>
     /// <typeparam name="T">The expected type of the prop value.</typeparam>

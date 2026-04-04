@@ -1,0 +1,6 @@
+@inherits Atoll.Components.AtollSlice
+<div>
+  @{ await RenderSlotAsync("header"); }
+  <main>@{ await RenderSlotAsync(); }</main>
+  @{ await RenderSlotAsync("footer"); }
+</div>
