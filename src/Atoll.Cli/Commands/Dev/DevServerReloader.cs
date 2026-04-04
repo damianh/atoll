@@ -374,17 +374,19 @@ internal sealed class DevServerReloader
     {
         try
         {
+            var absolutePath = Path.GetFullPath(assemblyPath);
+
             // isCollectible: true — allows this ALC to be unloaded after hot-reload,
             // preventing memory leaks from accumulated assembly loads.
             var loadContext = new AssemblyLoadContext(contextName, isCollectible: true);
             loadContext.Resolving += (context, assemblyName) =>
             {
-                var dir = Path.GetDirectoryName(assemblyPath)!;
+                var dir = Path.GetDirectoryName(absolutePath)!;
                 var candidate = Path.Combine(dir, assemblyName.Name + ".dll");
                 return File.Exists(candidate) ? context.LoadFromAssemblyPath(candidate) : null;
             };
 
-            var assembly = loadContext.LoadFromAssemblyPath(Path.GetFullPath(assemblyPath));
+            var assembly = loadContext.LoadFromAssemblyPath(absolutePath);
             return (loadContext, assembly);
         }
         catch (Exception ex)
