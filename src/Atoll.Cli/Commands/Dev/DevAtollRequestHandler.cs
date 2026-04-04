@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using Atoll.Components;
+using Atoll.Css;
 using Atoll.Rendering;
 using Atoll.Routing;
 using Atoll.Routing.Matching;
@@ -183,6 +184,15 @@ internal sealed class DevAtollRequestHandler
 
         // PageRenderer must be instantiated fresh per request — it has instance fields.
         var renderer = new PageRenderer();
+
+        // Inject global CSS (from [GlobalStyle] components) into <head>.
+        // In SSG builds the asset pipeline writes CSS to a file and injects a <link> tag;
+        // in dev mode we inline it as a <style> element for simplicity.
+        if (state.GlobalCss.Length > 0)
+        {
+            renderer.HeadManager.Add(CssInjector.CreateInlineStyle(state.GlobalCss));
+        }
+
         var result = await renderer.RenderPageAsync(renderDelegate);
 
         httpContext.Response.StatusCode = 200;

@@ -43,7 +43,7 @@ public sealed class DevHotReloadTests : IDisposable
         var routeEntries = RouteDiscovery.DiscoverRoutesFromEntries(routes);
         var matcher = new RouteMatcher(routeEntries);
         var options = new AtollOptions();
-        return new DevServerState(matcher, options, null, null);
+        return new DevServerState(matcher, options, null, null, "");
     }
 
     /// <summary>
@@ -312,7 +312,7 @@ public sealed class DevHotReloadTests : IDisposable
 
         // Content-only new state reuses the same null ALC.
         var options = new AtollOptions();
-        var stateB = new DevServerState(new RouteMatcher([]), options, null, null);
+        var stateB = new DevServerState(new RouteMatcher([]), options, null, null, "");
 
         // Should not throw — must not try to unload null ALC.
         var exception = Record.Exception(() => handler.UpdateState(stateB));

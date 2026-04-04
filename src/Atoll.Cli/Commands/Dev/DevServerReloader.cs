@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Runtime.Loader;
 using Atoll.Build.Content.Collections;
 using Atoll.Configuration;
+using Atoll.Css;
 using Atoll.Middleware.Server.Hosting;
 using Atoll.Routing;
 using Atoll.Routing.FileSystem;
@@ -111,11 +112,12 @@ internal sealed class DevServerReloader
         var routes = DiscoverRoutes(assembly, pagesDirectory);
         var collectionQuery = CreateCollectionQueryFromAssembly(assembly, _projectRoot);
         var options = BuildOptions(collectionQuery);
+        var globalCss = AggregateGlobalCss(assembly);
 
         Console.WriteLine($"  Routes: {routes.Count} discovered");
         Console.WriteLine($"  Reload complete ({sw.ElapsedMilliseconds}ms)");
 
-        return (new DevServerState(new RouteMatcher(routes), options, loadContext, assembly), null);
+        return (new DevServerState(new RouteMatcher(routes), options, loadContext, assembly, globalCss), null);
     }
 
     // ── Private: content-only reload ───────────────────────────────────────────
@@ -135,7 +137,7 @@ internal sealed class DevServerReloader
         // Preserve existing routes — code hasn't changed.
         Console.WriteLine($"  Reload complete ({sw.ElapsedMilliseconds}ms)");
         return Task.FromResult(
-            new DevServerState(current.RouteMatcher, options, current.LoadContext, current.UserAssembly));
+            new DevServerState(current.RouteMatcher, options, current.LoadContext, current.UserAssembly, current.GlobalCss));
     }
 
     // ── Private: shared helpers ─────────────────────────────────────────────────
@@ -143,7 +145,7 @@ internal sealed class DevServerReloader
     private static DevServerState BuildEmptyState()
     {
         var options = new AtollOptions();
-        return new DevServerState(new RouteMatcher([]), options, null, null);
+        return new DevServerState(new RouteMatcher([]), options, null, null, "");
     }
 
     private static AtollOptions BuildOptions(CollectionQuery? collectionQuery)
@@ -167,6 +169,61 @@ internal sealed class DevServerReloader
         }
 
         return routes;
+    }
+
+    /// <summary>
+    /// Discovers all <c>[GlobalStyle]</c> components from the user assembly and its
+    /// referenced assemblies, aggregates their CSS, and returns the combined result.
+    /// </summary>
+    private string AggregateGlobalCss(Assembly userAssembly)
+    {
+        var assemblies = GetAssemblyWithReferences(userAssembly);
+        var globalTypes = GlobalStyleDiscovery.DiscoverGlobalStyles(assemblies);
+
+        if (globalTypes.Count == 0)
+        {
+            return "";
+        }
+
+        var aggregator = new CssAggregator();
+        foreach (var type in globalTypes)
+        {
+            aggregator.Add(type);
+        }
+
+        var css = aggregator.GetCombinedCss();
+        _logger.LogDebug("Discovered {Count} global style(s), {Length} chars of CSS", globalTypes.Count, css.Length);
+        return css;
+    }
+
+    /// <summary>
+    /// Returns the user assembly plus any referenced assemblies that are already loaded
+    /// in the same <see cref="AssemblyLoadContext"/> (e.g. Atoll.Lagoon).
+    /// </summary>
+    private static IEnumerable<Assembly> GetAssemblyWithReferences(Assembly userAssembly)
+    {
+        yield return userAssembly;
+
+        var loadContext = AssemblyLoadContext.GetLoadContext(userAssembly);
+        if (loadContext is null)
+        {
+            yield break;
+        }
+
+        foreach (var referencedName in userAssembly.GetReferencedAssemblies())
+        {
+            Assembly? referenced;
+            try
+            {
+                referenced = loadContext.LoadFromAssemblyName(referencedName);
+            }
+            catch
+            {
+                continue;
+            }
+
+            yield return referenced;
+        }
     }
 
     private static IReadOnlyList<RouteEntry> DiscoverRoutesFromTypes(Assembly assembly)

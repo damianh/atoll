@@ -19,16 +19,22 @@ namespace Atoll.Cli.Commands.Dev;
 /// <param name="UserAssembly">
 /// The user project assembly, or <c>null</c> if the build failed or no project was found.
 /// </param>
+/// <param name="GlobalCss">
+/// Pre-aggregated global CSS discovered from <c>[GlobalStyle]</c> components in the user
+/// assembly and its referenced assemblies. Injected as an inline <c>&lt;style&gt;</c> tag
+/// into every page response. Empty string when no global styles are found.
+/// </param>
 internal sealed record DevServerState(
     RouteMatcher RouteMatcher,
     AtollOptions Options,
     AssemblyLoadContext? LoadContext,
-    Assembly? UserAssembly)
+    Assembly? UserAssembly,
+    string GlobalCss)
 {
     /// <summary>
     /// Gets an empty state with no routes and no loaded assembly.
     /// Used when no project file is present or the initial build fails.
     /// </summary>
     public static DevServerState Empty { get; } =
-        new DevServerState(new RouteMatcher([]), new AtollOptions(), null, null);
+        new DevServerState(new RouteMatcher([]), new AtollOptions(), null, null, "");
 }
