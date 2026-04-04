@@ -517,4 +517,80 @@ public sealed class DocsLayoutTests
 
         html.ShouldContain("<html lang=\"fr\" dir=\"ltr\">");
     }
+
+    // --- Search index URL ---
+
+    [Fact]
+    public async Task ShouldRenderDefaultSearchIndexUrlWithoutLocales()
+    {
+        var html = await RenderLayoutAsync(MakeConfig());
+
+        html.ShouldContain("data-index-url=\"/search-index.json\"");
+    }
+
+    [Fact]
+    public async Task ShouldRenderBasePathPrefixedSearchIndexUrl()
+    {
+        var config = new DocsConfig { Title = "Docs", BasePath = "/docs" };
+
+        var html = await RenderLayoutAsync(config);
+
+        html.ShouldContain("data-index-url=\"/docs/search-index.json\"");
+    }
+
+    [Fact]
+    public async Task ShouldRenderLocalePrefixedSearchIndexUrl()
+    {
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            Locales = new Dictionary<string, LocaleConfig>
+            {
+                ["root"] = new() { Label = "English", Lang = "en" },
+                ["fr"] = new() { Label = "French", Lang = "fr" },
+            },
+        };
+
+        var html = await RenderLayoutAsync(config, currentPath: "/fr/intro");
+
+        html.ShouldContain("data-index-url=\"/fr/search-index.json\"");
+    }
+
+    [Fact]
+    public async Task ShouldRenderLocalePrefixedSearchIndexUrlWithBasePath()
+    {
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            BasePath = "/docs",
+            Locales = new Dictionary<string, LocaleConfig>
+            {
+                ["root"] = new() { Label = "English", Lang = "en" },
+                ["fr"] = new() { Label = "French", Lang = "fr" },
+            },
+        };
+
+        var html = await RenderLayoutAsync(config, currentPath: "/docs/fr/intro");
+
+        html.ShouldContain("data-index-url=\"/docs/fr/search-index.json\"");
+    }
+
+    [Fact]
+    public async Task ShouldRenderRootLocaleSearchIndexUrlWithBasePath()
+    {
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            BasePath = "/docs",
+            Locales = new Dictionary<string, LocaleConfig>
+            {
+                ["root"] = new() { Label = "English", Lang = "en" },
+                ["fr"] = new() { Label = "French", Lang = "fr" },
+            },
+        };
+
+        var html = await RenderLayoutAsync(config, currentPath: "/docs/intro");
+
+        html.ShouldContain("data-index-url=\"/docs/search-index.json\"");
+    }
 }

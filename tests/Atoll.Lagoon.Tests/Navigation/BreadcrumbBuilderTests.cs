@@ -156,4 +156,36 @@ public sealed class BreadcrumbBuilderTests
         result[0].Label.ShouldBe("Guides");
         result[1].Label.ShouldBe("Start");
     }
+
+    // --- Locale-prefixed hrefs ---
+
+    [Fact]
+    public void BuildShouldFindCurrentPageWithLocalePrefixedHrefs()
+    {
+        var builder = new BreadcrumbBuilder([
+            Group("Guides", [
+                Link("Start", "/docs/fr/guides/start"),
+                Link("Advanced", "/docs/fr/guides/advanced")
+            ])
+        ]);
+
+        var result = builder.Build("/docs/fr/guides/start");
+
+        result.Count.ShouldBe(2);
+        result[0].Label.ShouldBe("Guides");
+        result[1].Label.ShouldBe("Start");
+        result[1].IsCurrent.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void BuildShouldNotMatchDifferentLocalePrefixedHref()
+    {
+        var builder = new BreadcrumbBuilder([
+            Link("Start", "/docs/fr/guides/start")
+        ]);
+
+        var result = builder.Build("/docs/es/guides/start");
+
+        result.ShouldBeEmpty();
+    }
 }

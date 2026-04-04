@@ -75,6 +75,13 @@ public sealed class DocsLayout : AtollComponent
         var effectiveDir = locale?.Config.Dir ?? "ltr";
         var translations = locale?.Config.Translations ?? Config.Translations;
 
+        // Compute locale-aware search index URL.
+        var searchIndexUrl = locale is not null && !string.IsNullOrEmpty(locale.PathPrefix)
+            ? LocalePathHelper.PrefixPath("/search-index.json", locale.PathPrefix, Config.BasePath)
+            : !string.IsNullOrEmpty(Config.BasePath)
+                ? Config.BasePath.TrimEnd('/') + "/search-index.json"
+                : "/search-index.json";
+
         WriteHtml("<!DOCTYPE html>");
         WriteHtml($"<html lang=\"{HtmlEncode(effectiveLang)}\" dir=\"{HtmlEncode(effectiveDir)}\">");
 
@@ -123,6 +130,7 @@ public sealed class DocsLayout : AtollComponent
             new Dictionary<string, object?>
             {
                 ["Translations"] = translations,
+                ["IndexUrl"] = searchIndexUrl,
             },
             Atoll.Slots.SlotCollection.Empty);
 

@@ -203,4 +203,39 @@ public sealed class PaginationResolverTests
         resultFlat.Previous!.Href.ShouldBe(resultTree.Previous!.Href);
         resultFlat.Next!.Href.ShouldBe(resultTree.Next!.Href);
     }
+
+    // --- Locale-prefixed hrefs ---
+
+    [Fact]
+    public void ResolveShouldFindLocalePrefixedCurrentPage()
+    {
+        var resolver = new PaginationResolver([
+            Link("Start", "/docs/fr/guides/start"),
+            Link("Advanced", "/docs/fr/guides/advanced"),
+            Link("API", "/docs/fr/api")
+        ]);
+
+        var result = resolver.Resolve("/docs/fr/guides/advanced");
+
+        result.Previous.ShouldNotBeNull();
+        result.Previous!.Label.ShouldBe("Start");
+        result.Previous.Href.ShouldBe("/docs/fr/guides/start");
+        result.Next.ShouldNotBeNull();
+        result.Next!.Label.ShouldBe("API");
+        result.Next.Href.ShouldBe("/docs/fr/api");
+    }
+
+    [Fact]
+    public void ResolveShouldNotMatchDifferentLocalePrefix()
+    {
+        var resolver = new PaginationResolver([
+            Link("Start", "/docs/fr/guides/start"),
+            Link("Advanced", "/docs/fr/guides/advanced")
+        ]);
+
+        var result = resolver.Resolve("/docs/es/guides/start");
+
+        result.Previous.ShouldBeNull();
+        result.Next.ShouldBeNull();
+    }
 }
