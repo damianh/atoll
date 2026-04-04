@@ -18,6 +18,7 @@ Lagoon vs [Astro Starlight](https://starlight.astro.build) — extracted from th
 | Mermaid diagrams | `MermaidExtension` — opt-in via `EnableMermaid = true` | Via plugin/integration |
 | Custom CSS | `DocsConfig.CustomCss` — additional stylesheets on every page | `customCss` config |
 | Social links | `SocialLink` + `SocialIcon` — 8 platform icons in header | `social` config |
+| Splash / landing page template | `SplashLayout` — full-width, sidebar-free layout for landing pages; Hero component works naturally inside | `template: splash` |
 
 ## Minor Gaps
 
@@ -42,15 +43,14 @@ Significant features that may block adoption depending on project requirements.
 | Component overrides | Replace any built-in UI component by path | No override mechanism | Layout/UI not customisable without forking Lagoon source |
 | Plugin system | Plugin API for extending Starlight at build and runtime | No plugin architecture | Extensions must be built as standalone Atoll components |
 | Rich content components | Cards, Tabs, Asides/Callouts, Steps, FileTree, LinkCards, CardGrids, LinkButtons, Icons, expressive Code blocks (title, highlights, line numbers) | `Hero` only — structural components are layout, not content authoring | Inline components must be written from scratch as Atoll components |
-| Splash / landing page template | `template: splash` for wide, sidebar-free pages | No template variants — `Hero` exists but no separate page template | Landing pages require manual layout work |
 | Versioned documentation | Version selector for multiple doc versions simultaneously | Not implemented | No way to serve multiple versions side-by-side |
 | Per-page head / script injection | `head:` frontmatter field for custom `<head>` tags per page | `DocsBaseHead` is a fixed structure | Cannot inject analytics, social meta, or custom scripts per page |
 | Route data API | Typed `StarlightPage` route data accessible in components | No equivalent API | Components cannot access structured page metadata |
 
 ## Summary
 
-**Parity**: 12 features fully covered.
+**Parity**: 13 features fully covered.
 **Minor gaps**: 6 — small convenience features, most have workarounds.
-**Notable gaps**: 8 — significant features that affect extensibility, internationalisation, and content authoring richness.
+**Notable gaps**: 7 — significant features that affect extensibility, internationalisation, and content authoring richness.
 
 Lagoon covers the core requirements for a single-language .NET documentation site. The notable gaps primarily affect projects needing i18n, deep UI customisation, or rich inline content components.

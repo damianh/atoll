@@ -27,6 +27,7 @@ These features exist in Lagoon and are fully documented in this section.
 | Mermaid diagrams | `MermaidExtension` | Opt-in via `EnableMermaid = true` |
 | Custom CSS | `DocsConfig.CustomCss` | Additional stylesheets loaded on every page |
 | Social links | `SocialLink` + `SocialIcon` | 8 platform icons in the header |
+| Splash / landing page template | `SplashLayout` | Full-width, sidebar-free layout for landing pages |
 
 ## Minor gaps
 
@@ -51,7 +52,6 @@ Significant features that Starlight has but Lagoon does not currently support. T
 | Component overrides | Replace any built-in UI component by path | No override mechanism | Layout and UI are not customisable without forking |
 | Plugin system | Plugin API for extending Starlight at build and runtime | No plugin architecture | — |
 | Rich content components | Cards, Tabs, Asides/Callouts, Steps, FileTree, LinkCards, CardGrids, LinkButtons, Icons, expressive Code blocks | `Hero` only — structural components are layout, not content authoring | Inline components must be written from scratch as Atoll components |
-| Splash / landing page template | `template: splash` for wide, sidebar-free pages | No template variants — `Hero` component exists but no separate page template | — |
 | Versioned documentation | Version selector for multiple doc versions simultaneously | Not implemented | — |
 | Per-page head / script injection | `head:` frontmatter field for custom `<head>` tags per page | `DocsBaseHead` is a fixed structure | — |
 | Route data API | Typed `StarlightPage` route data accessible in components | No equivalent API | — |

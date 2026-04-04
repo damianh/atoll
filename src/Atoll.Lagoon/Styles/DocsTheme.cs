@@ -17,7 +17,7 @@ namespace Atoll.Lagoon.Styles;
 /// </remarks>
 [GlobalStyle]
 [Styles(Reset + LightTokens + DarkTokens + Layout + Typography + Prose + CodeBlocks +
-        SidebarNav + TocNav + PaginationStyles + BreadcrumbStyles + HeroStyles + SearchStyles)]
+        SidebarNav + TocNav + PaginationStyles + BreadcrumbStyles + HeroStyles + SplashStyles + SearchStyles)]
 public sealed class DocsTheme : AtollComponent
 {
     // -------------------------------------------------------------------------
@@ -490,6 +490,64 @@ public sealed class DocsTheme : AtollComponent
             text-decoration: none;
         }
         .hero-image { border-radius: 0.5rem; max-height: 24rem; object-fit: cover; }
+        """;
+
+    private const string SplashStyles = """
+        /* ---- Splash layout ---- */
+        .splash-main {
+            max-width: 72rem;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            min-height: calc(100vh - var(--docs-header-height));
+        }
+        .splash-content {
+            max-width: 65rem;
+            margin: 0 auto;
+        }
+
+        /* Hero in splash context — larger, more prominent */
+        .splash-content .hero {
+            padding: 6rem 0 4rem;
+            text-align: center;
+        }
+        .splash-content .hero-title {
+            font-size: 3.5rem;
+        }
+        .splash-content .hero-tagline {
+            font-size: 1.25rem;
+            max-width: 42rem;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .splash-content .hero-actions {
+            justify-content: center;
+        }
+        .splash-content .hero-image {
+            margin: 0 auto;
+        }
+
+        /* On splash pages, when hero has an image, revert to side-by-side on desktop */
+        @media (min-width: 768px) {
+            .splash-content .hero {
+                text-align: left;
+            }
+            .splash-content .hero-tagline {
+                margin-left: 0;
+            }
+            .splash-content .hero-actions {
+                justify-content: flex-start;
+            }
+        }
+
+        /* Splash responsive */
+        @media (max-width: 768px) {
+            .splash-content .hero {
+                padding: 3rem 0 2rem;
+            }
+            .splash-content .hero-title {
+                font-size: 2.25rem;
+            }
+        }
         """;
 
     private const string SearchStyles = """

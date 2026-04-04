@@ -14,6 +14,7 @@ Lagoon is the official documentation theme addon for Atoll. Add it to your Atoll
 | Feature | Description |
 |---|---|
 | **Layout** | Full-page HTML shell with header, sidebar, main content, TOC, and footer |
+| **Splash layout** | Full-width, sidebar-free layout for landing pages (`SplashLayout`) |
 | **Sidebar navigation** | Manual links, collapsible groups, auto-generated sections, badges |
 | **Site search** | Build-time JSON index + client-side `Ctrl+K` search dialog |
 | **Dark mode** | System-preference detection with manual toggle, persisted to localStorage |

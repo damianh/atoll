@@ -7,15 +7,15 @@ using Docs.Layouts;
 namespace Docs.Pages;
 
 /// <summary>
-/// The documentation site landing page. Displays a hero section with a tagline
-/// and feature highlights, linking visitors to the Getting Started guide.
+/// The documentation site landing page. Uses <see cref="SplashSiteLayout"/> for a
+/// full-width, sidebar-free layout with a hero section, tagline, and CTA buttons.
 /// </summary>
-[Layout(typeof(SiteLayout))]
+[Layout(typeof(SplashSiteLayout))]
 [PageRoute("/")]
 public sealed class IndexPage : AtollComponent, IAtollPage
 {
     /// <summary>
-    /// Gets or sets the collection query used by the layout's sidebar navigation.
+    /// Gets or sets the collection query (required by convention; not used directly on this page).
     /// </summary>
     [Parameter(Required = true)]
     public CollectionQuery Query { get; set; } = null!;

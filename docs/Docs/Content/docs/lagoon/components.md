@@ -1,13 +1,13 @@
 ---
 title: Components & Layout
-description: DocsLayout, Hero, breadcrumbs, pagination, and table of contents components.
+description: DocsLayout, SplashLayout, Hero, breadcrumbs, pagination, and table of contents components.
 order: 24
 section: Lagoon Theme
 ---
 
 # Components & Layout
 
-Lagoon provides `DocsLayout` as the full-page shell, a `Hero` component for landing pages, and structural navigation components (breadcrumbs, pagination, table of contents). All are `AtollComponent` subclasses.
+Lagoon provides two full-page layouts (`DocsLayout` for documentation pages, `SplashLayout` for landing pages), a `Hero` component for visually prominent introductions, and structural navigation components (breadcrumbs, pagination, table of contents). All are `AtollComponent` subclasses.
 
 ## `DocsLayout`
 
@@ -45,6 +45,103 @@ It emits:
 - `<title>PageTitle | SiteTitle</title>` (or just `SiteTitle` when `PageTitle` is empty)
 - `<meta name="description">` from `PageDescription ?? Config.Description`
 - `<link rel="stylesheet">` for each entry in `Config.CustomCss`
+
+## `SplashLayout`
+
+`SplashLayout` is a full-width, sidebar-free layout designed for landing and splash pages. It renders the same shared header (logo, search, social links, theme toggle) and footer as `DocsLayout`, but omits the sidebar, table of contents, breadcrumbs, pagination, and mobile nav toggle — yielding a wide, uncluttered canvas.
+
+This is the Lagoon equivalent of Starlight's `template: splash`.
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `Config` | `DocsConfig` | ✅ | Site configuration |
+| `PageTitle` | `string` | | Page-specific title appended to the site title |
+| `PageDescription` | `string?` | | Meta description for this page |
+
+The **default slot** receives your page content (typically a `Hero` component and any additional landing page content).
+
+### What `SplashLayout` renders
+
+1. `<!DOCTYPE html>` + `<html lang="en">`
+2. **`<head>`** via `DocsBaseHead`
+3. **Header** — logo/title, `SearchDialog` island, social links, `ThemeToggle` island
+4. **Main content** — `<main class="splash-main">` with `<article class="splash-content">` wrapping the default slot
+5. **Footer**
+
+### What `SplashLayout` omits
+
+- Sidebar navigation
+- Table of contents
+- Breadcrumbs
+- Pagination (prev/next)
+- Mobile nav toggle (no sidebar to toggle)
+
+### Splash-specific styling
+
+Inside a splash layout, the `Hero` component receives enhanced styling:
+- Larger title (3.5rem vs 2.75rem)
+- Centred text and actions on mobile
+- Side-by-side hero image layout on desktop
+- Wider content container (65rem max-width)
+
+### Example: splash wrapper layout
+
+```csharp
+// Layouts/SplashSiteLayout.cs
+using Atoll.Components;
+using Atoll.Slots;
+using SplashAddonLayout = Atoll.Lagoon.Layouts.SplashLayout;
+
+public sealed class SplashSiteLayout : AtollComponent
+{
+    [Parameter]
+    public string PageTitle { get; set; } = "";
+
+    [Parameter]
+    public string? PageDescription { get; set; }
+
+    protected override async Task RenderCoreAsync(RenderContext context)
+    {
+        var config = DocsSetup.Config;
+        var pageSlot = context.Slots.GetSlotFragment(SlotCollection.DefaultSlotName);
+
+        var addonProps = new Dictionary<string, object?>
+        {
+            ["Config"]          = config,
+            ["PageTitle"]       = PageTitle,
+            ["PageDescription"] = PageDescription,
+        };
+
+        await RenderAsync(ComponentRenderer.ToFragment<SplashAddonLayout>(addonProps,
+            SlotCollection.FromDefault(pageSlot)));
+    }
+}
+```
+
+Then use it on your landing page:
+
+```csharp
+[Layout(typeof(SplashSiteLayout))]
+[PageRoute("/")]
+public sealed class IndexPage : AtollComponent, IAtollPage
+{
+    protected override async Task RenderCoreAsync(RenderContext context)
+    {
+        await RenderAsync(ComponentRenderer.ToFragment<Hero>(new Dictionary<string, object?>
+        {
+            ["Title"]   = "My Project",
+            ["Tagline"] = "A fast, lightweight framework.",
+            ["Actions"] = new[]
+            {
+                new HeroAction("Get Started", "/docs/getting-started"),
+                new HeroAction("GitHub", "https://github.com/...", HeroActionVariant.Secondary),
+            },
+        }));
+    }
+}
+```
 
 ## `Hero`
 
@@ -125,7 +222,12 @@ var crumbs = builder.Build(currentHref);
 
 ## Integration pattern
 
-The typical integration uses a thin wrapper layout (`SiteLayout`) that wires the navigation helpers and passes the results to `DocsLayout`:
+The typical integration uses thin wrapper layouts that wire the navigation helpers and pass the results to Lagoon's layout components:
+
+- **`SiteLayout`** — wraps `DocsLayout` for documentation pages (sidebar, TOC, breadcrumbs, pagination)
+- **`SplashSiteLayout`** — wraps `SplashLayout` for landing pages (no sidebar, full-width)
+
+### Documentation page layout (`SiteLayout`)
 
 ```csharp
 // Layouts/SiteLayout.cs
@@ -183,4 +285,14 @@ Your docs page then uses `SiteLayout` as its layout:
 ```csharp
 [Layout(typeof(SiteLayout))]
 public sealed class GuidePage : AtollComponent, IAtollPage { /* ... */ }
+```
+
+### Landing page layout (`SplashSiteLayout`)
+
+For splash/landing pages, use the simpler `SplashSiteLayout` wrapper shown in the `SplashLayout` section above:
+
+```csharp
+[Layout(typeof(SplashSiteLayout))]
+[PageRoute("/")]
+public sealed class IndexPage : AtollComponent, IAtollPage { /* ... */ }
 ```
