@@ -95,6 +95,20 @@ draft: false
 Content goes here...
 ```
 
+Any property in your schema class can appear in frontmatter. For example, the Lagoon theme's `DocSchema` supports a `head:` field for per-page `<head>` injection — use a YAML literal block (`|`) for multi-line values:
+
+```markdown
+---
+title: My Page
+description: A page with custom head content.
+head: |
+  <meta property="og:title" content="My Page">
+  <script src="/analytics.js"></script>
+---
+```
+
+See [Lagoon Configuration](./lagoon/configuration) for details on the `head:` field.
+
 ## File provider
 
 In production, use `PhysicalFileProvider`. In tests, use `InMemoryFileProvider`:

@@ -36,6 +36,31 @@ public sealed class DocsLayoutTests
         IReadOnlyList<BreadcrumbItem>? breadcrumbItems = null,
         ComponentDelegate? slotContent = null)
     {
+        return await RenderLayoutWithHeadContentAsync(
+            config,
+            pageTitle,
+            pageDescription,
+            headings,
+            sidebarItems,
+            previous,
+            next,
+            breadcrumbItems,
+            slotContent,
+            pageHeadContent: null);
+    }
+
+    private static async Task<string> RenderLayoutWithHeadContentAsync(
+        DocsConfig config,
+        string pageTitle = "",
+        string? pageDescription = null,
+        IReadOnlyList<MarkdownHeading>? headings = null,
+        IReadOnlyList<ResolvedSidebarItem>? sidebarItems = null,
+        PaginationLink? previous = null,
+        PaginationLink? next = null,
+        IReadOnlyList<BreadcrumbItem>? breadcrumbItems = null,
+        ComponentDelegate? slotContent = null,
+        string? pageHeadContent = null)
+    {
         var destination = new StringRenderDestination();
         var props = new Dictionary<string, object?>
         {
@@ -47,6 +72,7 @@ public sealed class DocsLayoutTests
             ["Previous"] = previous,
             ["Next"] = next,
             ["BreadcrumbItems"] = breadcrumbItems ?? [],
+            ["PageHeadContent"] = pageHeadContent,
         };
 
         SlotCollection slots;
@@ -364,5 +390,20 @@ public sealed class DocsLayoutTests
         var html = await RenderLayoutAsync(config);
 
         html.ShouldContain("src=\"/img?a=1&amp;b=2\"");
+    }
+
+    // --- Per-page head content ---
+
+    [Fact]
+    public async Task ShouldPassPageHeadContentThroughToHead()
+    {
+        var html = await RenderLayoutWithHeadContentAsync(
+            MakeConfig(),
+            pageHeadContent: "<script src=\"/analytics.js\"></script>");
+
+        var headStart = html.IndexOf("<head>", StringComparison.Ordinal);
+        var headEnd = html.IndexOf("</head>", StringComparison.Ordinal);
+        var headSection = html.Substring(headStart, headEnd - headStart + "</head>".Length);
+        headSection.ShouldContain("<script src=\"/analytics.js\"></script>");
     }
 }

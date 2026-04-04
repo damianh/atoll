@@ -41,6 +41,11 @@ public sealed class SiteLayout : AtollComponent
         var config = DocsSetup.Config;
         var currentHref = string.IsNullOrEmpty(Slug) ? "/" : $"/docs/{Slug}";
 
+        // Load the current page entry for per-page metadata (head injection, etc.)
+        var currentEntry = !string.IsNullOrEmpty(Slug)
+            ? Query.GetEntry<DocSchema>("docs", Slug)
+            : null;
+
         // Build sidebar entries from the docs collection
         var entries = Query.GetCollection<DocSchema>("docs")
             .Select(e => new SidebarEntry(e.Data.Title, $"/docs/{e.Slug}", e.Slug, e.Data.Order, null))
@@ -72,6 +77,7 @@ public sealed class SiteLayout : AtollComponent
             ["Previous"] = pagination.Previous,
             ["Next"] = pagination.Next,
             ["BreadcrumbItems"] = breadcrumbs,
+            ["PageHeadContent"] = currentEntry?.Data.Head,
         };
 
         var addonSlots = SlotCollection.FromDefault(pageSlot);

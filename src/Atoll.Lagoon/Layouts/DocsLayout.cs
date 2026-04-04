@@ -15,9 +15,9 @@ namespace Atoll.Lagoon.Layouts;
 /// </summary>
 /// <remarks>
 /// Usage: set <see cref="Config"/> (required), optional page-specific parameters
-/// (<see cref="PageTitle"/>, <see cref="PageDescription"/>, <see cref="Headings"/>,
-/// <see cref="SidebarItems"/>, <see cref="Previous"/>, <see cref="Next"/>,
-/// <see cref="BreadcrumbItems"/>), then place page content in the default slot.
+/// (<see cref="PageTitle"/>, <see cref="PageDescription"/>, <see cref="PageHeadContent"/>,
+/// <see cref="Headings"/>, <see cref="SidebarItems"/>, <see cref="Previous"/>,
+/// <see cref="Next"/>, <see cref="BreadcrumbItems"/>), then place page content in the default slot.
 /// </remarks>
 public sealed class DocsLayout : AtollComponent
 {
@@ -53,6 +53,10 @@ public sealed class DocsLayout : AtollComponent
     [Parameter]
     public IReadOnlyList<BreadcrumbItem> BreadcrumbItems { get; set; } = [];
 
+    /// <summary>Gets or sets optional raw HTML to inject into the page's head section.</summary>
+    [Parameter]
+    public string? PageHeadContent { get; set; }
+
     /// <inheritdoc />
     protected override async Task RenderCoreAsync(RenderContext context)
     {
@@ -65,6 +69,7 @@ public sealed class DocsLayout : AtollComponent
             ["Config"] = Config,
             ["PageTitle"] = PageTitle,
             ["PageDescription"] = PageDescription,
+            ["PageHeadContent"] = PageHeadContent,
         }));
 
         WriteHtml("<body>");

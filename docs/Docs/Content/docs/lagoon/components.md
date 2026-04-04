@@ -33,6 +33,7 @@ Lagoon provides two full-page layouts (`DocsLayout` for documentation pages, `Sp
 | `Previous` | `PaginationLink?` | | Previous page link (from `PaginationResolver`) |
 | `Next` | `PaginationLink?` | | Next page link (from `PaginationResolver`) |
 | `BreadcrumbItems` | `IReadOnlyList<BreadcrumbItem>` | | Breadcrumb trail (from `BreadcrumbBuilder`) |
+| `PageHeadContent` | `string?` | | Raw HTML to inject into `<head>` for this page (e.g. analytics, social meta) |
 
 The **default slot** receives your page content.
 
@@ -40,11 +41,38 @@ The **default slot** receives your page content.
 
 `DocsBaseHead` renders the `<head>` section. It is used internally by `DocsLayout` and accepts the same `Config`, `PageTitle`, and `PageDescription` parameters. You rarely need to use it directly.
 
-It emits:
+It emits (in order):
 - `<meta charset="UTF-8">` and viewport meta
 - `<title>PageTitle | SiteTitle</title>` (or just `SiteTitle` when `PageTitle` is empty)
 - `<meta name="description">` from `PageDescription ?? Config.Description`
 - `<link rel="stylesheet">` for each entry in `Config.CustomCss`
+- **Per-page head content** from `PageHeadContent` (if set)
+
+### Per-page head injection
+
+Set `PageHeadContent` on `DocsLayout` to inject raw HTML into `<head>` on a per-page basis. The content is rendered after custom CSS links and before `</head>`. This is useful for analytics snippets, OpenGraph meta tags, or page-specific scripts.
+
+In a typical setup, your wrapper layout loads the current page's frontmatter `head:` field and passes it through:
+
+```csharp
+// In SiteLayout.RenderCoreAsync:
+var currentEntry = !string.IsNullOrEmpty(Slug)
+    ? Query.GetEntry<DocSchema>("docs", Slug)
+    : null;
+
+addonProps["PageHeadContent"] = currentEntry?.Data.Head;
+```
+
+The frontmatter in your Markdown file:
+
+```markdown
+---
+title: My Page
+head: |
+  <meta property="og:title" content="My Page">
+  <script src="/analytics.js"></script>
+---
+```
 
 ## `SplashLayout`
 
@@ -253,6 +281,11 @@ public sealed class SiteLayout : AtollComponent
         var config = DocsSetup.Config;
         var currentHref = $"/docs/{Slug}";
 
+        // Load current page entry for per-page metadata (head injection, etc.)
+        var currentEntry = !string.IsNullOrEmpty(Slug)
+            ? Query.GetEntry<DocSchema>("docs", Slug)
+            : null;
+
         var entries = Query.GetCollection<DocSchema>("docs")
             .Select(e => new SidebarEntry(e.Data.Title, $"/docs/{e.Slug}", e.Slug, e.Data.Order, null))
             .ToList();
@@ -272,6 +305,7 @@ public sealed class SiteLayout : AtollComponent
             ["Previous"]        = pagination.Previous,
             ["Next"]            = pagination.Next,
             ["BreadcrumbItems"] = breadcrumbs,
+            ["PageHeadContent"] = currentEntry?.Data.Head,
         };
 
         await RenderAsync(ComponentRenderer.ToFragment<DocsLayout>(addonProps,

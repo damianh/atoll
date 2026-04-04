@@ -127,3 +127,43 @@ BasePath = "/docs"
 ```
 
 You must also set the corresponding `IndexUrl` on the `SearchDialog` island so it fetches the search index from the correct path. See [Site Search](./search) for details.
+
+## Frontmatter fields
+
+In addition to the `DocsConfig` site-level options, Lagoon supports per-page configuration through YAML frontmatter in your Markdown files. The fields available depend on your `DocSchema` class.
+
+### `head`
+
+Inject raw HTML into the page's `<head>` section. Use a YAML literal block (`head: |`) for multi-line content. This is useful for analytics scripts, OpenGraph / social meta tags, or page-specific stylesheets.
+
+```markdown
+---
+title: My Page
+description: Page description for SEO.
+head: |
+  <meta property="og:title" content="My Page">
+  <meta property="og:image" content="/images/my-page-card.png">
+  <script src="/analytics.js"></script>
+---
+```
+
+The content is injected after custom CSS links and before `</head>`. Pages without a `head:` field render identically to before — no extra output is added.
+
+To use this field, add a `Head` property to your frontmatter schema:
+
+```csharp
+public sealed class DocSchema
+{
+    [Required]
+    public string Title { get; set; } = "";
+
+    public string Description { get; set; } = "";
+
+    /// <summary>
+    /// Optional raw HTML to inject into the page's &lt;head&gt; section.
+    /// </summary>
+    public string? Head { get; set; }
+}
+```
+
+Then wire it in your wrapper layout — see [Components & Layout](./components) for the full integration pattern.

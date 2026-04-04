@@ -21,6 +21,10 @@ public sealed class DocsBaseHead : AtollComponent
     [Parameter]
     public string? PageDescription { get; set; }
 
+    /// <summary>Gets or sets optional raw HTML to inject into the head section per page (e.g., analytics, social meta tags).</summary>
+    [Parameter]
+    public string? PageHeadContent { get; set; }
+
     /// <inheritdoc />
     protected override Task RenderCoreAsync(RenderContext context)
     {
@@ -57,6 +61,12 @@ public sealed class DocsBaseHead : AtollComponent
         foreach (var css in Config.CustomCss)
         {
             WriteHtml($"<link rel=\"stylesheet\" href=\"{HtmlEncode(css)}\" />");
+        }
+
+        // Per-page head content (e.g., from frontmatter head: field)
+        if (!string.IsNullOrEmpty(PageHeadContent))
+        {
+            WriteHtml(PageHeadContent);
         }
 
         WriteHtml("</head>");

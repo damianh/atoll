@@ -553,6 +553,70 @@ public sealed class DocsSampleTests : IDisposable
         searchDialogContent.ShouldContain("Search Dialog");
     }
 
+    // ── Per-page head injection tests ──
+
+    private static CollectionQuery CreateQueryWithHeadInjectionContent()
+    {
+        var provider = CreateDocsContent();
+
+        provider.AddFile("content/docs", "with-head-injection.md", """
+            ---
+            title: Head Injection Test
+            description: Tests per-page head injection.
+            order: 99
+            section: Features
+            head: |
+              <meta property="og:title" content="Head Injection Test">
+              <script src="/analytics.js"></script>
+            ---
+
+            # Head Injection Test
+
+            This page has custom head content.
+            """);
+
+        return CreateCollectionQuery(provider);
+    }
+
+    [Fact]
+    public async Task DocsPageShouldRenderPerPageHeadContent()
+    {
+        var query = CreateQueryWithHeadInjectionContent();
+        var props = new Dictionary<string, object?>
+        {
+            ["Slug"] = "with-head-injection",
+            ["Query"] = query,
+        };
+        var html = await RenderPageAsync<DocsPage>(props);
+
+        // Head content should appear inside <head>
+        var headStart = html.IndexOf("<head>", StringComparison.Ordinal);
+        var headEnd = html.IndexOf("</head>", StringComparison.Ordinal);
+        headStart.ShouldBeGreaterThanOrEqualTo(0);
+        headEnd.ShouldBeGreaterThan(headStart);
+        var headSection = html.Substring(headStart, headEnd - headStart);
+
+        headSection.ShouldContain("<meta property=\"og:title\" content=\"Head Injection Test\">");
+        headSection.ShouldContain("<script src=\"/analytics.js\"></script>");
+    }
+
+    [Fact]
+    public async Task DocsPageWithoutHeadFrontmatterShouldRenderNormally()
+    {
+        var query = CreateQueryWithHeadInjectionContent();
+        var props = new Dictionary<string, object?>
+        {
+            ["Slug"] = "getting-started",
+            ["Query"] = query,
+        };
+        var html = await RenderPageAsync<DocsPage>(props);
+
+        html.ShouldContain("Getting Started");
+        html.ShouldContain("<h1");
+        // Ensure no og:title meta leaked from the other page
+        html.ShouldNotContain("og:title");
+    }
+
     // ── End-to-end build test ──
 
     [Fact]

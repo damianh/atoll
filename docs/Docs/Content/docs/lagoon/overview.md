@@ -25,6 +25,7 @@ Lagoon is the official documentation theme addon for Atoll. Add it to your Atoll
 | **Hero component** | Landing-page hero with title, tagline, image, and CTA buttons |
 | **Mermaid diagrams** | Opt-in rendering of ` ```mermaid ` code blocks |
 | **Custom CSS** | Inject additional stylesheets alongside the built-in theme |
+| **Per-page head injection** | Inject analytics, social meta, or custom scripts per page via frontmatter `head:` field |
 | **Social links** | GitHub, Discord, Twitter, and more in the header |
 
 ## Quick start
