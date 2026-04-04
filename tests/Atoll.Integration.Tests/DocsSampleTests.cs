@@ -204,15 +204,15 @@ public sealed class DocsSampleTests : IDisposable
     }
 
     [Fact]
-    public async Task IndexPageShouldContainFeatureHighlights()
+    public async Task IndexPageShouldContainHeroContent()
     {
         var query = CreateDefaultQuery();
         var props = new Dictionary<string, object?> { ["Query"] = query };
         var html = await RenderPageAsync<IndexPage>(props);
 
-        html.ShouldContain("Content Collections");
-        html.ShouldContain("Islands Architecture");
-        html.ShouldContain("Static Site Generation");
+        html.ShouldContain("Atoll");
+        html.ShouldContain(".NET-native static-site framework");
+        html.ShouldContain("View on GitHub");
     }
 
     // ── Docs page tests ──

@@ -134,7 +134,7 @@ public sealed class NewCommandHandler
     /// <summary>
     /// Scaffolds a new Atoll starter project procedurally (built-in fallback).
     /// </summary>
-    private static async Task ScaffoldStarterAsync(string name, string parentDirectory)
+    internal static async Task ScaffoldStarterAsync(string name, string parentDirectory)
     {
         var projectDir = Path.Combine(parentDirectory, name);
 
