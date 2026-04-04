@@ -1,4 +1,5 @@
 using Atoll.Components;
+using Atoll.Lagoon.I18n;
 using Atoll.Lagoon.Navigation;
 
 namespace Atoll.Lagoon.Components;
@@ -14,10 +15,14 @@ public sealed class Sidebar : AtollComponent
     [Parameter(Required = true)]
     public IReadOnlyList<ResolvedSidebarItem> Items { get; set; } = [];
 
+    /// <summary>Gets or sets the UI translations. Defaults to English.</summary>
+    [Parameter]
+    public UiTranslations Translations { get; set; } = UiTranslations.Default;
+
     /// <inheritdoc />
     protected override async Task RenderCoreAsync(RenderContext context)
     {
-        WriteHtml("<nav aria-label=\"Main\"><ul>");
+        WriteHtml($"<nav aria-label=\"{System.Net.WebUtility.HtmlEncode(Translations.SidebarNavLabel)}\"><ul>");
 
         foreach (var item in Items)
         {

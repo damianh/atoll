@@ -1,5 +1,6 @@
 using Atoll.Build.Content.Markdown;
 using Atoll.Components;
+using Atoll.Lagoon.I18n;
 
 namespace Atoll.Lagoon.Components;
 
@@ -31,6 +32,10 @@ public sealed class TableOfContents : AtollComponent
     [Parameter]
     public int MaxLevel { get; set; } = 3;
 
+    /// <summary>Gets or sets the UI translations. Defaults to English.</summary>
+    [Parameter]
+    public UiTranslations Translations { get; set; } = UiTranslations.Default;
+
     /// <inheritdoc />
     protected override Task RenderCoreAsync(RenderContext context)
     {
@@ -43,7 +48,7 @@ public sealed class TableOfContents : AtollComponent
             return Task.CompletedTask;
         }
 
-        WriteHtml("<nav aria-label=\"On this page\"><ul>");
+        WriteHtml($"<nav aria-label=\"{System.Net.WebUtility.HtmlEncode(Translations.TocLabel)}\"><ul>");
         RenderItems(filtered, MinLevel);
         WriteHtml("</ul></nav>");
         return Task.CompletedTask;

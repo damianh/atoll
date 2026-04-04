@@ -48,10 +48,10 @@ function search(entries, query) {
         .slice(0, 10);
 }
 
-function renderResults(container, results, query) {
+function renderResults(container, results, query, noResultsText) {
     container.innerHTML = '';
     if (!results.length) {
-        container.innerHTML = '<p class="search-no-results">No results found.</p>';
+        container.innerHTML = '<p class="search-no-results">' + escapeHtml(noResultsText) + '</p>';
         return;
     }
     const list = document.createElement('ul');
@@ -76,6 +76,8 @@ function renderResults(container, results, query) {
 }
 
 export default function init(element) {
+    const wrapper = element.querySelector('.search-wrapper') || element;
+    const noResultsText = wrapper.dataset.noResults || 'No results found.';
     const trigger = element.querySelector('#search-trigger');
     const dialog = element.querySelector('#search-dialog');
     const input = element.querySelector('#search-input');
@@ -137,6 +139,6 @@ export default function init(element) {
         }
         const data = await loadIndex(element);
         const hits = search(data.entries || data, q);
-        results && renderResults(results, hits, q);
+        results && renderResults(results, hits, q, noResultsText);
     });
 }

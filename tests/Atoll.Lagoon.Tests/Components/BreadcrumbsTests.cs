@@ -40,7 +40,7 @@ public sealed class BreadcrumbsTests
     {
         var html = await RenderBreadcrumbsAsync([Current("Home")]);
 
-        html.ShouldContain("<nav aria-label=\"Breadcrumbs\">");
+        html.ShouldContain("<nav class=\"docs-breadcrumbs\" aria-label=\"Breadcrumbs\">");
         html.ShouldContain("</nav>");
     }
 

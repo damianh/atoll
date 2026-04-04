@@ -1,3 +1,5 @@
+using Atoll.Lagoon.I18n;
+
 namespace Atoll.Lagoon.Configuration;
 
 /// <summary>
@@ -64,4 +66,10 @@ public sealed class DocsConfig
     /// Default: <c>""</c> (root).
     /// </summary>
     public string BasePath { get; set; } = "";
+
+    /// <summary>
+    /// Gets or sets the UI translations used by all Lagoon components.
+    /// Defaults to <see cref="UiTranslations.Default"/> (English).
+    /// </summary>
+    public UiTranslations Translations { get; set; } = UiTranslations.Default;
 }

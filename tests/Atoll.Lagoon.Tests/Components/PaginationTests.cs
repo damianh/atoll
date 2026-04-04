@@ -40,7 +40,7 @@ public sealed class PaginationTests
     {
         var html = await RenderPaginationAsync(Link("Intro", "/docs/intro/"), null);
 
-        html.ShouldContain("<nav aria-label=\"Pagination\">");
+        html.ShouldContain("<nav class=\"docs-pagination\" aria-label=\"Pagination\">");
         html.ShouldContain("</nav>");
     }
 
@@ -49,7 +49,7 @@ public sealed class PaginationTests
     {
         var html = await RenderPaginationAsync(null, Link("Advanced", "/docs/advanced/"));
 
-        html.ShouldContain("<nav aria-label=\"Pagination\">");
+        html.ShouldContain("<nav class=\"docs-pagination\" aria-label=\"Pagination\">");
         html.ShouldContain("</nav>");
     }
 

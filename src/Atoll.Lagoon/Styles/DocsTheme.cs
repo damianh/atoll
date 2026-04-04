@@ -352,8 +352,7 @@ public sealed class DocsTheme : AtollComponent
         .docs-toc nav a:hover { color: var(--docs-link-hover); text-decoration: none; }
         .docs-toc nav ul ul { padding-left: 0.875rem; }
         .docs-toc nav ul ul a { font-size: 0.78125rem; }
-        .docs-toc::before {
-            content: "On this page";
+        .docs-toc-heading {
             display: block;
             font-size: 0.7rem;
             font-weight: 700;
@@ -366,7 +365,7 @@ public sealed class DocsTheme : AtollComponent
 
     private const string PaginationStyles = """
         /* ---- Pagination ---- */
-        nav[aria-label="Pagination"] {
+        .docs-pagination {
             display: flex;
             justify-content: space-between;
             gap: 1rem;
@@ -374,7 +373,7 @@ public sealed class DocsTheme : AtollComponent
             padding-top: 1.5rem;
             border-top: 1px solid var(--docs-border);
         }
-        nav[aria-label="Pagination"] a {
+        .docs-pagination a {
             display: flex;
             flex-direction: column;
             padding: 0.75rem 1rem;
@@ -383,12 +382,12 @@ public sealed class DocsTheme : AtollComponent
             max-width: 48%;
             transition: border-color 0.1s, background 0.1s;
         }
-        nav[aria-label="Pagination"] a:hover {
+        .docs-pagination a:hover {
             border-color: var(--docs-primary);
             background: var(--docs-bg-subtle);
             text-decoration: none;
         }
-        nav[aria-label="Pagination"] a[rel="next"] {
+        .docs-pagination a[rel="next"] {
             margin-left: auto;
             text-align: right;
         }
@@ -409,10 +408,10 @@ public sealed class DocsTheme : AtollComponent
 
     private const string BreadcrumbStyles = """
         /* ---- Breadcrumbs ---- */
-        nav[aria-label="Breadcrumbs"] {
+        .docs-breadcrumbs {
             margin-bottom: 1.5rem;
         }
-        nav[aria-label="Breadcrumbs"] ol {
+        .docs-breadcrumbs ol {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
@@ -421,14 +420,14 @@ public sealed class DocsTheme : AtollComponent
             font-size: 0.8125rem;
             color: var(--docs-text-muted);
         }
-        nav[aria-label="Breadcrumbs"] ol li + li::before {
+        .docs-breadcrumbs ol li + li::before {
             content: "/";
             margin-right: 0.25rem;
             color: var(--docs-text-faint);
         }
-        nav[aria-label="Breadcrumbs"] a { color: var(--docs-text-muted); }
-        nav[aria-label="Breadcrumbs"] a:hover { color: var(--docs-link-hover); text-decoration: none; }
-        nav[aria-label="Breadcrumbs"] [aria-current="page"] { color: var(--docs-text); font-weight: 500; }
+        .docs-breadcrumbs a { color: var(--docs-text-muted); }
+        .docs-breadcrumbs a:hover { color: var(--docs-link-hover); text-decoration: none; }
+        .docs-breadcrumbs [aria-current="page"] { color: var(--docs-text); font-weight: 500; }
         """;
 
     private const string HeroStyles = """

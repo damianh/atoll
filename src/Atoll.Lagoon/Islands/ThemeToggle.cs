@@ -1,5 +1,6 @@
 using Atoll.Components;
 using Atoll.Islands;
+using Atoll.Lagoon.I18n;
 
 namespace Atoll.Lagoon.Islands;
 
@@ -19,12 +20,17 @@ public sealed class ThemeToggle : VanillaJsIsland
     /// <inheritdoc />
     public override string ClientModuleUrl => "/scripts/atoll-theme-toggle.js";
 
+    /// <summary>Gets or sets the UI translations. Defaults to English.</summary>
+    [Parameter]
+    public UiTranslations Translations { get; set; } = UiTranslations.Default;
+
     /// <inheritdoc />
     protected override Task RenderCoreAsync(RenderContext context)
     {
-        WriteHtml("""
-            <button id="theme-toggle" type="button" aria-label="Toggle theme">☾</button>
-            """);
+        var ariaLabel = System.Net.WebUtility.HtmlEncode(Translations.ThemeToggleLabel);
+        var labelLight = System.Net.WebUtility.HtmlEncode(Translations.ThemeSwitchToLight);
+        var labelDark = System.Net.WebUtility.HtmlEncode(Translations.ThemeSwitchToDark);
+        WriteHtml($"<button id=\"theme-toggle\" type=\"button\" aria-label=\"{ariaLabel}\" data-label-light=\"{labelLight}\" data-label-dark=\"{labelDark}\">☾</button>");
         return Task.CompletedTask;
     }
 }

@@ -1,5 +1,6 @@
 using Atoll.Components;
 using Atoll.Islands;
+using Atoll.Lagoon.I18n;
 
 namespace Atoll.Lagoon.Islands;
 
@@ -20,6 +21,7 @@ public sealed class SearchDialog : VanillaJsIsland
     public override string ClientModuleUrl => "/scripts/atoll-docs-search-dialog.js";
 
     /// <summary>Gets or sets the placeholder text for the search input.</summary>
+    [Obsolete("Use UiTranslations.SearchPlaceholder instead.")]
     [Parameter]
     public string Placeholder { get; set; } = "Search docs...";
 
@@ -31,26 +33,36 @@ public sealed class SearchDialog : VanillaJsIsland
     [Parameter]
     public string IndexUrl { get; set; } = "/search-index.json";
 
+    /// <summary>Gets or sets the UI translations. Defaults to English.</summary>
+    [Parameter]
+    public UiTranslations Translations { get; set; } = UiTranslations.Default;
+
+#pragma warning disable CS0618 // Obsolete member usage is intentional for backward compatibility
+    private string EffectivePlaceholder => Placeholder != "Search docs..." ? Placeholder : Translations.SearchPlaceholder;
+#pragma warning restore CS0618
+
     /// <inheritdoc />
     protected override Task RenderCoreAsync(RenderContext context)
     {
         WriteHtml("<div class=\"search-wrapper\" data-index-url=\"");
         WriteHtml(System.Net.WebUtility.HtmlEncode(IndexUrl));
+        WriteHtml("\" data-no-results=\"");
+        WriteHtml(System.Net.WebUtility.HtmlEncode(Translations.SearchNoResults));
         WriteHtml("\">");
-        WriteHtml("<button id=\"search-trigger\" type=\"button\" aria-label=\"Search\" aria-haspopup=\"dialog\">");
-        WriteText(Placeholder);
+        WriteHtml($"<button id=\"search-trigger\" type=\"button\" aria-label=\"{System.Net.WebUtility.HtmlEncode(Translations.SearchLabel)}\" aria-haspopup=\"dialog\">");
+        WriteText(EffectivePlaceholder);
         WriteHtml(" <kbd>Ctrl+K</kbd>");
         WriteHtml("</button>");
 
-        WriteHtml("<dialog id=\"search-dialog\" aria-label=\"Search docs\">");
+        WriteHtml($"<dialog id=\"search-dialog\" aria-label=\"{System.Net.WebUtility.HtmlEncode(Translations.SearchDialogLabel)}\">");
         WriteHtml("<div class=\"search-dialog-inner\">");
         WriteHtml("<div class=\"search-dialog-header\">");
         WriteHtml("<input id=\"search-input\" type=\"search\" placeholder=\"");
-        WriteHtml(System.Net.WebUtility.HtmlEncode(Placeholder));
+        WriteHtml(System.Net.WebUtility.HtmlEncode(EffectivePlaceholder));
         WriteHtml("\" autofocus />");
-        WriteHtml("<button id=\"search-close\" type=\"button\" aria-label=\"Close search\">&times;</button>");
+        WriteHtml($"<button id=\"search-close\" type=\"button\" aria-label=\"{System.Net.WebUtility.HtmlEncode(Translations.SearchCloseLabel)}\">&times;</button>");
         WriteHtml("</div>");
-        WriteHtml("<div id=\"search-results\" role=\"listbox\" aria-label=\"Search results\"></div>");
+        WriteHtml($"<div id=\"search-results\" role=\"listbox\" aria-label=\"{System.Net.WebUtility.HtmlEncode(Translations.SearchResultsLabel)}\"></div>");
         WriteHtml("</div>");
         WriteHtml("</dialog>");
 

@@ -1,5 +1,6 @@
 using Atoll.Components;
 using Atoll.Islands;
+using Atoll.Lagoon.I18n;
 
 namespace Atoll.Lagoon.Islands;
 
@@ -18,12 +19,15 @@ public sealed class MobileNav : VanillaJsIsland
     /// <inheritdoc />
     public override string ClientModuleUrl => "/scripts/atoll-docs-mobile-nav.js";
 
+    /// <summary>Gets or sets the UI translations. Defaults to English.</summary>
+    [Parameter]
+    public UiTranslations Translations { get; set; } = UiTranslations.Default;
+
     /// <inheritdoc />
     protected override Task RenderCoreAsync(RenderContext context)
     {
-        WriteHtml("""
-            <button id="mobile-nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mobile-nav-menu">&#9776;</button>
-            """);
+        var ariaLabel = System.Net.WebUtility.HtmlEncode(Translations.MobileNavOpenLabel);
+        WriteHtml($"<button id=\"mobile-nav-toggle\" type=\"button\" aria-label=\"{ariaLabel}\" aria-expanded=\"false\" aria-controls=\"mobile-nav-menu\">&#9776;</button>");
         return Task.CompletedTask;
     }
 }

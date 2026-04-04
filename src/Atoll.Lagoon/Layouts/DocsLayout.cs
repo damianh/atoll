@@ -3,6 +3,7 @@ using Atoll.Components;
 using Atoll.Islands;
 using Atoll.Lagoon.Components;
 using Atoll.Lagoon.Configuration;
+using Atoll.Lagoon.I18n;
 using Atoll.Lagoon.Islands;
 using Atoll.Lagoon.Navigation;
 
@@ -57,11 +58,15 @@ public sealed class DocsLayout : AtollComponent
     [Parameter]
     public string? PageHeadContent { get; set; }
 
+    /// <summary>Gets or sets the HTML lang attribute value. Defaults to <c>"en"</c>.</summary>
+    [Parameter]
+    public string Lang { get; set; } = "en";
+
     /// <inheritdoc />
     protected override async Task RenderCoreAsync(RenderContext context)
     {
         WriteHtml("<!DOCTYPE html>");
-        WriteHtml("<html lang=\"en\">");
+        WriteHtml($"<html lang=\"{HtmlEncode(Lang)}\">");
 
         // <head>
         await RenderAsync(ComponentRenderer.ToFragment<DocsBaseHead>(new Dictionary<string, object?>
@@ -82,7 +87,10 @@ public sealed class DocsLayout : AtollComponent
         await IslandRenderer.RenderIslandAsync<MobileNav>(
             context.Destination,
             new MobileNav().CreateMetadata()!,
-            new Dictionary<string, object?>(),
+            new Dictionary<string, object?>
+            {
+                ["Translations"] = Config.Translations,
+            },
             Atoll.Slots.SlotCollection.Empty);
 
         // Logo / site title
@@ -102,7 +110,10 @@ public sealed class DocsLayout : AtollComponent
         await IslandRenderer.RenderIslandAsync<SearchDialog>(
             context.Destination,
             new SearchDialog().CreateMetadata()!,
-            new Dictionary<string, object?>(),
+            new Dictionary<string, object?>
+            {
+                ["Translations"] = Config.Translations,
+            },
             Atoll.Slots.SlotCollection.Empty);
 
         // Social links
@@ -117,7 +128,10 @@ public sealed class DocsLayout : AtollComponent
         await IslandRenderer.RenderIslandAsync<ThemeToggle>(
             context.Destination,
             new ThemeToggle().CreateMetadata()!,
-            new Dictionary<string, object?>(),
+            new Dictionary<string, object?>
+            {
+                ["Translations"] = Config.Translations,
+            },
             Atoll.Slots.SlotCollection.Empty);
 
         WriteHtml("</div>"); // .docs-header-actions
@@ -128,10 +142,11 @@ public sealed class DocsLayout : AtollComponent
         WriteHtml("<div class=\"docs-body\">");
 
         // Sidebar (also serves as the mobile-nav-menu target)
-        WriteHtml("<aside class=\"docs-sidebar\" id=\"mobile-nav-menu\" aria-label=\"Site navigation\">");
+        WriteHtml($"<aside class=\"docs-sidebar\" id=\"mobile-nav-menu\" aria-label=\"{HtmlEncode(Config.Translations.SiteNavigationLabel)}\">");
         await RenderAsync(ComponentRenderer.ToFragment<Sidebar>(new Dictionary<string, object?>
         {
             ["Items"] = SidebarItems,
+            ["Translations"] = Config.Translations,
         }));
         WriteHtml("</aside>");
 
@@ -144,6 +159,7 @@ public sealed class DocsLayout : AtollComponent
             await RenderAsync(ComponentRenderer.ToFragment<Breadcrumbs>(new Dictionary<string, object?>
             {
                 ["Items"] = BreadcrumbItems,
+                ["Translations"] = Config.Translations,
             }));
         }
 
@@ -159,18 +175,23 @@ public sealed class DocsLayout : AtollComponent
             {
                 ["Previous"] = Previous,
                 ["Next"] = Next,
+                ["Translations"] = Config.Translations,
             }));
         }
 
         WriteHtml("</main>");
 
         // Table of contents sidebar (desktop only)
-        WriteHtml("<aside class=\"docs-toc\" aria-label=\"On this page\">");
+        WriteHtml($"<aside class=\"docs-toc\" aria-label=\"{HtmlEncode(Config.Translations.TocLabel)}\">");
+        WriteHtml($"<p class=\"docs-toc-heading\">");
+        WriteText(Config.Translations.TocLabel);
+        WriteHtml("</p>");
         await RenderAsync(ComponentRenderer.ToFragment<TableOfContents>(new Dictionary<string, object?>
         {
             ["Headings"] = Headings,
             ["MinLevel"] = Config.TableOfContents.MinHeadingLevel,
             ["MaxLevel"] = Config.TableOfContents.MaxHeadingLevel,
+            ["Translations"] = Config.Translations,
         }));
         WriteHtml("</aside>");
 
@@ -178,7 +199,9 @@ public sealed class DocsLayout : AtollComponent
 
         // Footer
         WriteHtml("<footer class=\"docs-footer\">");
-        WriteHtml("<p>Built with <a href=\"https://github.com/damianh/atoll\">Atoll</a> &mdash; a .NET-native framework inspired by Astro.</p>");
+        WriteHtml("<p>");
+        WriteText(Config.Translations.BuiltWithLabel);
+        WriteHtml(" <a href=\"https://github.com/damianh/atoll\">Atoll</a> &mdash; a .NET-native framework inspired by Astro.</p>");
         WriteHtml("</footer>");
 
         // Mermaid support (conditionally injected)

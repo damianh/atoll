@@ -1,4 +1,5 @@
 using Atoll.Components;
+using Atoll.Lagoon.I18n;
 using Atoll.Lagoon.Navigation;
 
 namespace Atoll.Lagoon.Components;
@@ -12,6 +13,10 @@ public sealed class Breadcrumbs : AtollComponent
     [Parameter(Required = true)]
     public IReadOnlyList<BreadcrumbItem> Items { get; set; } = [];
 
+    /// <summary>Gets or sets the UI translations. Defaults to English.</summary>
+    [Parameter]
+    public UiTranslations Translations { get; set; } = UiTranslations.Default;
+
     /// <inheritdoc />
     protected override Task RenderCoreAsync(RenderContext context)
     {
@@ -20,7 +25,7 @@ public sealed class Breadcrumbs : AtollComponent
             return Task.CompletedTask;
         }
 
-        WriteHtml("<nav aria-label=\"Breadcrumbs\"><ol>");
+        WriteHtml($"<nav class=\"docs-breadcrumbs\" aria-label=\"{HtmlEncode(Translations.BreadcrumbsLabel)}\"><ol>");
 
         foreach (var item in Items)
         {

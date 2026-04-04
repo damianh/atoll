@@ -1,0 +1,38 @@
+## Slice 1: UI String Abstraction — COMPLETED
+
+### Date: 2026-04-04
+
+### Summary
+Completed all 17 tasks in Slice 1 of the Lagoon i18n plan. Extracted all hardcoded UI strings from components, islands, layouts, and JS assets into a translatable `UiTranslations` record and wired it through the component tree.
+
+### What was done
+
+**New files:**
+- `src/Atoll.Lagoon/I18n/UiTranslations.cs` — sealed record with 20 translatable string properties, all defaulting to English. Static `Default` property for zero-config usage.
+- `tests/Atoll.Lagoon.Tests/I18n/UiTranslationsTests.cs` — 13 tests covering defaults, `with` overrides, and rendering with custom translations across all components.
+
+**Modified source files:**
+- `Configuration/DocsConfig.cs` — Added `UiTranslations Translations` property (default: English)
+- `Layouts/DocsLayout.cs` — Dynamic `lang` attribute via new `Lang` parameter; all child components now receive `Config.Translations`; footer uses `BuiltWithLabel`; TOC heading rendered as real `<p>` element instead of CSS `content:`
+- `Components/Breadcrumbs.cs` — Added `Translations` parameter; uses `BreadcrumbsLabel`; added `class="docs-breadcrumbs"` for CSS targeting
+- `Components/Pagination.cs` — Added `Translations` parameter; uses `PaginationLabel`/`PaginationPrevious`/`PaginationNext`; added `class="docs-pagination"` for CSS targeting
+- `Components/Sidebar.cs` — Added `Translations` parameter; uses `SidebarNavLabel`
+- `Components/TableOfContents.cs` — Added `Translations` parameter; uses `TocLabel`
+- `Islands/SearchDialog.cs` — Added `Translations` parameter; marked `Placeholder` as `[Obsolete]` with backward-compat `EffectivePlaceholder` helper; all aria-labels from translations; `data-no-results` attribute for JS
+- `Islands/ThemeToggle.cs` — Added `Translations` parameter; `data-label-light`/`data-label-dark` attributes for JS
+- `Islands/MobileNav.cs` — Added `Translations` parameter; uses `MobileNavOpenLabel`
+- `Styles/DocsTheme.cs` — Replaced `content: "On this page"` with `.docs-toc-heading` class; replaced `nav[aria-label="Pagination"]` → `.docs-pagination` (4 occurrences); replaced `nav[aria-label="Breadcrumbs"]` → `.docs-breadcrumbs` (6 occurrences)
+- `Islands/Assets/search-dialog.js` — Reads `data-no-results` from wrapper element; passes text to `renderResults()`
+- `Islands/Assets/theme-toggle.js` — Reads `data-label-light`/`data-label-dark` from button; falls back to English defaults
+
+**Modified test files:**
+- `Components/PaginationTests.cs` — Updated 2 assertions: `<nav aria-label="Pagination">` → `<nav class="docs-pagination" aria-label="Pagination">`
+- `Components/BreadcrumbsTests.cs` — Updated 1 assertion: `<nav aria-label="Breadcrumbs">` → `<nav class="docs-breadcrumbs" aria-label="Breadcrumbs">`
+
+### Verification
+- `dotnet build src/Atoll.Lagoon/Atoll.Lagoon.csproj -c Release` — 0 warnings, 0 errors
+- `dotnet test tests/Atoll.Lagoon.Tests/` — 224 tests passed (211 existing + 13 new)
+- Backward compatible: default `DocsConfig` renders identical English strings
+
+### Next steps
+- Slice 2 (Tasks 18-23): Locale Configuration — `LocaleConfig` record, `LocaleResolver`, wire locale into `DocsLayout`

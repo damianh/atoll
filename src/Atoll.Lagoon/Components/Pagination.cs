@@ -1,4 +1,5 @@
 using Atoll.Components;
+using Atoll.Lagoon.I18n;
 using Atoll.Lagoon.Navigation;
 
 namespace Atoll.Lagoon.Components;
@@ -16,6 +17,10 @@ public sealed class Pagination : AtollComponent
     [Parameter]
     public PaginationLink? Next { get; set; }
 
+    /// <summary>Gets or sets the UI translations. Defaults to English.</summary>
+    [Parameter]
+    public UiTranslations Translations { get; set; } = UiTranslations.Default;
+
     /// <inheritdoc />
     protected override Task RenderCoreAsync(RenderContext context)
     {
@@ -24,12 +29,14 @@ public sealed class Pagination : AtollComponent
             return Task.CompletedTask;
         }
 
-        WriteHtml("<nav aria-label=\"Pagination\">");
+        WriteHtml($"<nav class=\"docs-pagination\" aria-label=\"{HtmlEncode(Translations.PaginationLabel)}\">");
 
         if (Previous is not null)
         {
             WriteHtml($"<a href=\"{HtmlEncode(Previous.Href)}\" rel=\"prev\">");
-            WriteHtml("<span class=\"pagination-direction\">Previous</span>");
+            WriteHtml("<span class=\"pagination-direction\">");
+            WriteText(Translations.PaginationPrevious);
+            WriteHtml("</span>");
             WriteHtml("<span class=\"pagination-label\">");
             WriteText(Previous.Label);
             WriteHtml("</span>");
@@ -39,7 +46,9 @@ public sealed class Pagination : AtollComponent
         if (Next is not null)
         {
             WriteHtml($"<a href=\"{HtmlEncode(Next.Href)}\" rel=\"next\">");
-            WriteHtml("<span class=\"pagination-direction\">Next</span>");
+            WriteHtml("<span class=\"pagination-direction\">");
+            WriteText(Translations.PaginationNext);
+            WriteHtml("</span>");
             WriteHtml("<span class=\"pagination-label\">");
             WriteText(Next.Label);
             WriteHtml("</span>");

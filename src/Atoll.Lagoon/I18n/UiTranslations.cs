@@ -1,0 +1,85 @@
+namespace Atoll.Lagoon.I18n;
+
+/// <summary>
+/// Contains all translatable UI strings used by Lagoon components.
+/// Create custom instances to override defaults for a specific locale.
+/// </summary>
+public sealed record UiTranslations
+{
+    // -- Skip link --
+
+    /// <summary>Gets the label for the skip-to-content link.</summary>
+    public string SkipLinkLabel { get; init; } = "Skip to content";
+
+    // -- Search --
+
+    /// <summary>Gets the accessible label for the search trigger button.</summary>
+    public string SearchLabel { get; init; } = "Search";
+
+    /// <summary>Gets the placeholder text for the search input.</summary>
+    public string SearchPlaceholder { get; init; } = "Search docs...";
+
+    /// <summary>Gets the accessible label for the search dialog.</summary>
+    public string SearchDialogLabel { get; init; } = "Search docs";
+
+    /// <summary>Gets the accessible label for the close-search button.</summary>
+    public string SearchCloseLabel { get; init; } = "Close search";
+
+    /// <summary>Gets the accessible label for the search results list.</summary>
+    public string SearchResultsLabel { get; init; } = "Search results";
+
+    /// <summary>Gets the message shown when a search yields no results.</summary>
+    public string SearchNoResults { get; init; } = "No results found.";
+
+    // -- Theme --
+
+    /// <summary>Gets the accessible label for the theme toggle button.</summary>
+    public string ThemeToggleLabel { get; init; } = "Toggle theme";
+
+    /// <summary>Gets the label applied when the theme switches to light mode.</summary>
+    public string ThemeSwitchToLight { get; init; } = "Switch to light theme";
+
+    /// <summary>Gets the label applied when the theme switches to dark mode.</summary>
+    public string ThemeSwitchToDark { get; init; } = "Switch to dark theme";
+
+    // -- Navigation --
+
+    /// <summary>Gets the accessible label for the sidebar navigation.</summary>
+    public string SidebarNavLabel { get; init; } = "Main";
+
+    /// <summary>Gets the accessible label for the site navigation landmark.</summary>
+    public string SiteNavigationLabel { get; init; } = "Site navigation";
+
+    /// <summary>Gets the accessible label for the mobile navigation button.</summary>
+    public string MobileNavOpenLabel { get; init; } = "Open navigation";
+
+    /// <summary>Gets the accessible label for the breadcrumbs navigation.</summary>
+    public string BreadcrumbsLabel { get; init; } = "Breadcrumbs";
+
+    /// <summary>Gets the accessible label for the pagination navigation.</summary>
+    public string PaginationLabel { get; init; } = "Pagination";
+
+    /// <summary>Gets the label for the previous-page pagination link.</summary>
+    public string PaginationPrevious { get; init; } = "Previous";
+
+    /// <summary>Gets the label for the next-page pagination link.</summary>
+    public string PaginationNext { get; init; } = "Next";
+
+    // -- Table of Contents --
+
+    /// <summary>Gets the label for the table-of-contents heading.</summary>
+    public string TocLabel { get; init; } = "On this page";
+
+    // -- Footer --
+
+    /// <summary>Gets the prefix text for the footer attribution.</summary>
+    public string BuiltWithLabel { get; init; } = "Built with";
+
+    // -- Language picker --
+
+    /// <summary>Gets the accessible label for the language selector.</summary>
+    public string LanguageSelectLabel { get; init; } = "Select language";
+
+    /// <summary>English defaults.</summary>
+    public static UiTranslations Default { get; } = new();
+}

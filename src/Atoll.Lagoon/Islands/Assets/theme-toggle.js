@@ -20,7 +20,9 @@ function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     const btn = document.getElementById('theme-toggle');
     if (btn) {
-        btn.setAttribute('aria-label', theme === DARK ? 'Switch to light theme' : 'Switch to dark theme');
+        const labelLight = btn.dataset.labelLight || 'Switch to light theme';
+        const labelDark = btn.dataset.labelDark || 'Switch to dark theme';
+        btn.setAttribute('aria-label', theme === DARK ? labelLight : labelDark);
         btn.textContent = theme === DARK ? '☀' : '☾';
     }
 }
