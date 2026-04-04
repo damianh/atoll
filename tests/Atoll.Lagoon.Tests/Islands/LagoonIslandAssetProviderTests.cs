@@ -9,7 +9,7 @@ public sealed class LagoonIslandAssetProviderTests
     private static readonly string[] ExpectedOutputPaths =
     [
         "scripts/atoll-docs-search-dialog.js",
-        "scripts/atoll-docs-theme-toggle.js",
+        "scripts/atoll-theme-toggle.js",
         "scripts/atoll-docs-mobile-nav.js",
         "scripts/atoll-docs-mermaid-init.js",
     ];

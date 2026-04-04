@@ -147,7 +147,7 @@ internal sealed class DevAtollRequestHandler
     /// </summary>
     private static bool TryServeIslandAsset(HttpContext context, DevServerState state, string path)
     {
-        // Island component URLs start with "/" (e.g. "/scripts/atoll-docs-theme-toggle.js").
+        // Island component URLs start with "/" (e.g. "/scripts/atoll-theme-toggle.js").
         // Asset keys are stored without the leading slash.
         var assetKey = path.TrimStart('/');
         if (assetKey.Length == 0 || state.IslandAssets.Count == 0)

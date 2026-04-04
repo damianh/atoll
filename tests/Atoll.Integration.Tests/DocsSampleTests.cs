@@ -543,7 +543,7 @@ public sealed class DocsSampleTests : IDisposable
         result.FileCount.ShouldBe(4);
 
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-search-dialog.js")).ShouldBeTrue();
-        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-theme-toggle.js")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-theme-toggle.js")).ShouldBeTrue();
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-mobile-nav.js")).ShouldBeTrue();
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-mermaid-init.js")).ShouldBeTrue();
 
@@ -595,7 +595,7 @@ public sealed class DocsSampleTests : IDisposable
         // Assert island JS
         islandResult.FileCount.ShouldBe(4);
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-search-dialog.js")).ShouldBeTrue();
-        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-theme-toggle.js")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-theme-toggle.js")).ShouldBeTrue();
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-mobile-nav.js")).ShouldBeTrue();
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-mermaid-init.js")).ShouldBeTrue();
 

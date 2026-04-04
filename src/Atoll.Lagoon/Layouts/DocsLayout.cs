@@ -1,5 +1,6 @@
 using Atoll.Build.Content.Markdown;
 using Atoll.Components;
+using Atoll.Islands;
 using Atoll.Lagoon.Components;
 using Atoll.Lagoon.Configuration;
 using Atoll.Lagoon.Islands;
@@ -73,7 +74,11 @@ public sealed class DocsLayout : AtollComponent
         WriteHtml("<div class=\"docs-header-inner\">");
 
         // Mobile nav toggle island (only activates on mobile viewport)
-        await RenderAsync(ComponentRenderer.ToFragment<MobileNav>(new Dictionary<string, object?>()));
+        await IslandRenderer.RenderIslandAsync<MobileNav>(
+            context.Destination,
+            new MobileNav().CreateMetadata()!,
+            new Dictionary<string, object?>(),
+            Atoll.Slots.SlotCollection.Empty);
 
         // Logo / site title
         WriteHtml("<a href=\"/\" class=\"docs-brand\">");
@@ -89,7 +94,11 @@ public sealed class DocsLayout : AtollComponent
         WriteHtml("<div class=\"docs-header-actions\">");
 
         // Search dialog island
-        await RenderAsync(ComponentRenderer.ToFragment<SearchDialog>(new Dictionary<string, object?>()));
+        await IslandRenderer.RenderIslandAsync<SearchDialog>(
+            context.Destination,
+            new SearchDialog().CreateMetadata()!,
+            new Dictionary<string, object?>(),
+            Atoll.Slots.SlotCollection.Empty);
 
         // Social links
         foreach (var social in Config.Social)
@@ -100,7 +109,11 @@ public sealed class DocsLayout : AtollComponent
         }
 
         // Theme toggle island
-        await RenderAsync(ComponentRenderer.ToFragment<ThemeToggle>(new Dictionary<string, object?>()));
+        await IslandRenderer.RenderIslandAsync<ThemeToggle>(
+            context.Destination,
+            new ThemeToggle().CreateMetadata()!,
+            new Dictionary<string, object?>(),
+            Atoll.Slots.SlotCollection.Empty);
 
         WriteHtml("</div>"); // .docs-header-actions
         WriteHtml("</div>"); // .docs-header-inner

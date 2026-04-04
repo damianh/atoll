@@ -18,7 +18,7 @@ Renders a button that switches between light and dark themes.
 | Detail | Value |
 |---|---|
 | Directive | `client:load` |
-| Script | `atoll-docs-theme-toggle.js` |
+| Script | `atoll-theme-toggle.js` |
 
 `client:load` is chosen so the correct theme icon is shown as early as possible — before user interaction.
 

@@ -20,7 +20,7 @@ public sealed class LagoonIslandAssetProvider : IIslandAssetProvider
             ResourceAssembly);
 
         yield return new IslandAssetDescriptor(
-            "scripts/atoll-docs-theme-toggle.js",
+            "scripts/atoll-theme-toggle.js",
             "Atoll.Lagoon.Islands.Assets.theme-toggle.js",
             ResourceAssembly);
 

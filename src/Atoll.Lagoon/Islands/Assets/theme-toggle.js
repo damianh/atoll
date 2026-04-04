@@ -6,7 +6,7 @@
  * no preference has been stored.
  */
 
-const STORAGE_KEY = 'atoll-docs-theme';
+const STORAGE_KEY = 'atoll-theme';
 const DARK = 'dark';
 const LIGHT = 'light';
 

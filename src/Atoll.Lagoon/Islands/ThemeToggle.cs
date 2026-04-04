@@ -17,7 +17,7 @@ namespace Atoll.Lagoon.Islands;
 public sealed class ThemeToggle : VanillaJsIsland
 {
     /// <inheritdoc />
-    public override string ClientModuleUrl => "/scripts/atoll-docs-theme-toggle.js";
+    public override string ClientModuleUrl => "/scripts/atoll-theme-toggle.js";
 
     /// <inheritdoc />
     protected override Task RenderCoreAsync(RenderContext context)

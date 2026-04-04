@@ -352,7 +352,7 @@ public sealed class DocsLayoutTests
     {
         var html = await RenderLayoutAsync(MakeConfig());
 
-        html.ShouldContain("atoll-docs-theme");
+        html.ShouldContain("atoll-theme");
     }
 
     // --- HTML encoding ---

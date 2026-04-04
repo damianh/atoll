@@ -27,7 +27,7 @@ namespace Atoll.Cli.Commands.Dev;
 /// </param>
 /// <param name="IslandAssets">
 /// In-memory map of island JavaScript assets discovered from <see cref="Atoll.Islands.IIslandAssetProvider"/>
-/// implementations. Keys are URL paths (e.g. <c>scripts/atoll-docs-theme-toggle.js</c>), values
+/// implementations. Keys are URL paths (e.g. <c>scripts/atoll-theme-toggle.js</c>), values
 /// are the file content bytes read from embedded resources. Served directly by
 /// <see cref="DevAtollRequestHandler"/> when the browser requests the corresponding URL.
 /// </param>

@@ -47,7 +47,7 @@ public sealed class ThemeToggleTests
     {
         var island = new ThemeToggle();
 
-        island.ClientModuleUrl.ShouldBe("/scripts/atoll-docs-theme-toggle.js");
+        island.ClientModuleUrl.ShouldBe("/scripts/atoll-theme-toggle.js");
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public sealed class ThemeToggleTests
 
         html.ShouldContain("<atoll-island");
         html.ShouldContain("client=\"load\"");
-        html.ShouldContain("component-url=\"/scripts/atoll-docs-theme-toggle.js\"");
+        html.ShouldContain("component-url=\"/scripts/atoll-theme-toggle.js\"");
         html.ShouldContain("id=\"theme-toggle\"");
     }
 }

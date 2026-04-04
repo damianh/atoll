@@ -4,33 +4,37 @@
 // persisting the user's preference in localStorage.
 
 const STORAGE_KEY = "atoll-theme";
+const DARK = "dark";
+const LIGHT = "light";
 
-function getPreferredTheme() {
+function getPreferred() {
   const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored === "light" || stored === "dark") return stored;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  if (stored === DARK || stored === LIGHT) return stored;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? DARK : LIGHT;
 }
 
 function applyTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
-  localStorage.setItem(STORAGE_KEY, theme);
-}
-
-function init() {
-  applyTheme(getPreferredTheme());
-
   const btn = document.getElementById("theme-toggle");
-  if (!btn) return;
-
-  btn.addEventListener("click", () => {
-    const current = document.documentElement.getAttribute("data-theme") ?? "light";
-    applyTheme(current === "dark" ? "light" : "dark");
-  });
+  if (btn) {
+    btn.setAttribute("aria-label", theme === DARK ? "Switch to light theme" : "Switch to dark theme");
+    btn.textContent = theme === DARK ? "\u2600" : "\u263E";
+  }
 }
 
-// Run on page load
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
-} else {
-  init();
+function toggle() {
+  const current = document.documentElement.getAttribute("data-theme") || getPreferred();
+  const next = current === DARK ? LIGHT : DARK;
+  localStorage.setItem(STORAGE_KEY, next);
+  applyTheme(next);
+}
+
+// Apply theme immediately to avoid FOUC.
+applyTheme(getPreferred());
+
+export default function init(element) {
+  const btn = element.querySelector("#theme-toggle");
+  if (btn) {
+    btn.addEventListener("click", toggle);
+  }
 }
