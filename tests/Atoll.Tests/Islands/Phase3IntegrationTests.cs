@@ -569,8 +569,10 @@ public sealed class Phase3IntegrationTests
         // Tag name should be valid custom element
         WebComponentAdapter.IsValidCustomElementName("mobile-nav").ShouldBeTrue();
 
-        html.ShouldStartWith("<mobile-nav");
-        html.ShouldEndWith("</mobile-nav>");
+        // Island components rendered via ComponentRenderer get the <atoll-island> wrapper
+        html.ShouldContain("<atoll-island");
+        html.ShouldContain("<mobile-nav");
+        html.ShouldContain("</mobile-nav>");
     }
 
     // ─── Edge cases ──────────────────────────────────────

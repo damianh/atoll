@@ -136,4 +136,18 @@ public sealed class SearchDialogTests
         html.ShouldContain("id=\"search-close\"");
         html.ShouldContain("aria-label=\"Close search\"");
     }
+
+    [Fact]
+    public async Task ShouldRenderIslandWrapperViaComponentRenderer()
+    {
+        var dest = new StringRenderDestination();
+        await ComponentRenderer.RenderComponentAsync<SearchDialog>(dest, new Dictionary<string, object?>());
+        var html = dest.GetOutput();
+
+        // ComponentRenderer automatically wraps island components in <atoll-island>
+        html.ShouldContain("<atoll-island");
+        html.ShouldContain("</atoll-island>");
+        html.ShouldContain("client=\"idle\"");
+        html.ShouldContain("component-url=\"/scripts/atoll-docs-search-dialog.js\"");
+    }
 }

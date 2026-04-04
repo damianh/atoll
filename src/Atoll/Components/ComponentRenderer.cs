@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Reflection;
+using Atoll.Islands;
 using Atoll.Rendering;
 using Atoll.Slots;
 using RazorSlices;
@@ -34,6 +35,9 @@ public sealed class ComponentRenderer
 {
     /// <summary>
     /// Renders a component of the specified type to the given destination.
+    /// If the component implements <see cref="IClientComponent"/> and has a client
+    /// directive attribute, it is automatically wrapped in an <c>&lt;atoll-island&gt;</c>
+    /// element for client-side hydration.
     /// </summary>
     /// <typeparam name="TComponent">The component type. Must implement <see cref="IAtollComponent"/>
     /// and have a parameterless constructor.</typeparam>
@@ -51,6 +55,34 @@ public sealed class ComponentRenderer
         ArgumentNullException.ThrowIfNull(props);
         ArgumentNullException.ThrowIfNull(slots);
 
+        // Island detection: if TComponent is an island with a directive, wrap in <atoll-island>.
+        if (typeof(IClientComponent).IsAssignableFrom(typeof(TComponent)))
+        {
+            var probe = new TComponent();
+            if (probe is IClientComponent clientComponent)
+            {
+                var metadata = IslandMetadataFactory.Create(clientComponent);
+                if (metadata is not null)
+                {
+                    return IslandRenderer.RenderIslandAsync(destination, metadata, typeof(TComponent), props, slots);
+                }
+            }
+        }
+
+        return RenderComponentCoreAsync<TComponent>(destination, props, slots);
+    }
+
+    /// <summary>
+    /// Renders a component of the specified type to the given destination without island
+    /// detection. Used internally by <see cref="IslandRenderer"/> to render the SSR content
+    /// inside the <c>&lt;atoll-island&gt;</c> wrapper, avoiding infinite recursion.
+    /// </summary>
+    internal static Task RenderComponentCoreAsync<TComponent>(
+        IRenderDestination destination,
+        IReadOnlyDictionary<string, object?> props,
+        SlotCollection slots)
+        where TComponent : IAtollComponent, new()
+    {
         var component = new TComponent();
         BindParameters(component, props);
         var context = new RenderContext(destination, props, slots);
@@ -87,6 +119,9 @@ public sealed class ComponentRenderer
     /// <summary>
     /// Renders a pre-existing component instance to the given destination.
     /// Parameters are bound from the props dictionary before rendering.
+    /// If the component implements <see cref="IClientComponent"/> and has a client
+    /// directive attribute, it is automatically wrapped in an <c>&lt;atoll-island&gt;</c>
+    /// element for client-side hydration.
     /// </summary>
     /// <param name="component">The component instance.</param>
     /// <param name="destination">The render destination.</param>
@@ -104,6 +139,30 @@ public sealed class ComponentRenderer
         ArgumentNullException.ThrowIfNull(props);
         ArgumentNullException.ThrowIfNull(slots);
 
+        // Island detection: if the instance is an island with a directive, wrap in <atoll-island>.
+        if (component is IClientComponent clientComponent)
+        {
+            var metadata = IslandMetadataFactory.Create(clientComponent);
+            if (metadata is not null)
+            {
+                return IslandRenderer.RenderIslandAsync(destination, metadata, component.GetType(), props, slots);
+            }
+        }
+
+        return RenderComponentCoreAsync(component, destination, props, slots);
+    }
+
+    /// <summary>
+    /// Renders a pre-existing component instance to the given destination without island
+    /// detection. Used internally by <see cref="IslandRenderer"/> to render the SSR content
+    /// inside the <c>&lt;atoll-island&gt;</c> wrapper, avoiding infinite recursion.
+    /// </summary>
+    internal static Task RenderComponentCoreAsync(
+        IAtollComponent component,
+        IRenderDestination destination,
+        IReadOnlyDictionary<string, object?> props,
+        SlotCollection slots)
+    {
         BindParameters(component, props);
         var context = new RenderContext(destination, props, slots);
         return component.RenderAsync(context);

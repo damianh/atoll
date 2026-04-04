@@ -364,7 +364,7 @@ public sealed class VanillaJsIslandTests
     // ─── Regular component rendering (non-island) tests ─────────────────
 
     [Fact]
-    public async Task ShouldRenderAsRegularComponentViaComponentRenderer()
+    public async Task ShouldRenderWithIslandWrapperViaComponentRenderer()
     {
         var dest = new StringRenderDestination();
         var props = new Dictionary<string, object?> { ["InitialCount"] = 10 };
@@ -373,8 +373,11 @@ public sealed class VanillaJsIslandTests
             (IAtollComponent)new CounterIsland(), dest, props);
 
         var html = dest.GetOutput();
-        // When rendered as a regular component, no island wrapper
-        html.ShouldBe("<div class=\"counter\">10</div>");
+        // Island components rendered via ComponentRenderer are automatically wrapped
+        html.ShouldContain("<atoll-island");
+        html.ShouldContain("</atoll-island>");
+        html.ShouldContain("client=\"load\"");
+        html.ShouldContain("<div class=\"counter\">10</div>");
     }
 
     [Fact]

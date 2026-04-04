@@ -58,7 +58,7 @@ public static class IslandRenderer
             destination, metadata, props, slots,
             async (dest, p, s) =>
             {
-                await ComponentRenderer.RenderComponentAsync<TComponent>(dest, p, s);
+                await ComponentRenderer.RenderComponentCoreAsync<TComponent>(dest, p, s);
             });
     }
 
@@ -118,7 +118,7 @@ public static class IslandRenderer
                     var razorSlice = (RazorSlice)Activator.CreateInstance(componentType)!;
                     component = new SliceComponentAdapter(razorSlice);
                 }
-                await ComponentRenderer.RenderComponentAsync(component, dest, p, s);
+                await ComponentRenderer.RenderComponentCoreAsync(component, dest, p, s);
             });
     }
 
@@ -151,7 +151,7 @@ public static class IslandRenderer
             {
                 var razorSlice = TSlice.CreateSlice();
                 var component = new SliceComponentAdapter(razorSlice);
-                await ComponentRenderer.RenderComponentAsync(component, dest, p, s);
+                await ComponentRenderer.RenderComponentCoreAsync(component, dest, p, s);
             });
     }
 

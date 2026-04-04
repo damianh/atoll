@@ -298,8 +298,11 @@ public sealed class WebComponentIslandTests
             (IAtollComponent)new MyCounter(), dest, props);
 
         var html = dest.GetOutput();
-        html.ShouldStartWith("<my-counter");
-        html.ShouldEndWith("</my-counter>");
+        // Island components rendered via ComponentRenderer get the <atoll-island> wrapper
+        html.ShouldContain("<atoll-island");
+        html.ShouldContain("</atoll-island>");
+        html.ShouldContain("<my-counter");
+        html.ShouldContain("</my-counter>");
         html.ShouldContain("<span class=\"count\">7</span>");
     }
 
@@ -326,7 +329,9 @@ public sealed class WebComponentIslandTests
             (IAtollComponent)new LazyChart(), dest, props);
 
         var html = dest.GetOutput();
-        html.ShouldStartWith("<lazy-chart>");
+        // Island components rendered via ComponentRenderer get the <atoll-island> wrapper
+        html.ShouldContain("<atoll-island");
+        html.ShouldContain("<lazy-chart>");
         html.ShouldNotContain("DataUrl=");
     }
 
@@ -354,8 +359,11 @@ public sealed class WebComponentIslandTests
             (IAtollComponent)new AsyncWidget(), dest, props);
 
         var html = dest.GetOutput();
-        html.ShouldStartWith("<async-widget>");
-        html.ShouldEndWith("</async-widget>");
+        // Island components rendered via ComponentRenderer get the <atoll-island> wrapper
+        html.ShouldContain("<atoll-island");
+        html.ShouldContain("</atoll-island>");
+        html.ShouldContain("<async-widget>");
+        html.ShouldContain("</async-widget>");
         html.ShouldContain("<div>Async content</div>");
     }
 
