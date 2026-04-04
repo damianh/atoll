@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Net;
 using System.Net.WebSockets;
 using Atoll.Build.Content.Collections;
@@ -33,6 +34,9 @@ public sealed class DevHotReloadTests : IDisposable
     private static ILoggerFactory CreateLoggerFactory() =>
         LoggerFactory.Create(b => b.SetMinimumLevel(LogLevel.Warning));
 
+    private static readonly IReadOnlyDictionary<string, byte[]> EmptyAssets =
+        new ReadOnlyDictionary<string, byte[]>(new Dictionary<string, byte[]>());
+
     /// <summary>
     /// Creates a <see cref="DevServerState"/> with the given routes using
     /// blog sample page types (available at compile time without building a separate project).
@@ -43,7 +47,7 @@ public sealed class DevHotReloadTests : IDisposable
         var routeEntries = RouteDiscovery.DiscoverRoutesFromEntries(routes);
         var matcher = new RouteMatcher(routeEntries);
         var options = new AtollOptions();
-        return new DevServerState(matcher, options, null, null, "");
+        return new DevServerState(matcher, options, null, null, "", EmptyAssets, null);
     }
 
     /// <summary>
@@ -312,7 +316,7 @@ public sealed class DevHotReloadTests : IDisposable
 
         // Content-only new state reuses the same null ALC.
         var options = new AtollOptions();
-        var stateB = new DevServerState(new RouteMatcher([]), options, null, null, "");
+        var stateB = new DevServerState(new RouteMatcher([]), options, null, null, "", EmptyAssets, null);
 
         // Should not throw — must not try to unload null ALC.
         var exception = Record.Exception(() => handler.UpdateState(stateB));

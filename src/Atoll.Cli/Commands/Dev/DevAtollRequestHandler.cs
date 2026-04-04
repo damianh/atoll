@@ -85,6 +85,22 @@ internal sealed class DevAtollRequestHandler
         // Capture state once — all request processing uses this consistent snapshot.
         var state = _state;
 
+        var path = context.Request.Path.Value ?? "/";
+
+        // Serve island JavaScript assets from in-memory cache.
+        // Island components emit <atoll-island component-url="/scripts/..."> during SSR;
+        // the browser fetches these URLs to hydrate the islands.
+        if (TryServeIslandAsset(context, state, path))
+        {
+            return true;
+        }
+
+        // Serve the search index JSON when requested.
+        if (TryServeSearchIndex(context, state, path))
+        {
+            return true;
+        }
+
         var requestPath = ExtractRoutePath(context.Request.Path, state.Options.BasePath);
         if (requestPath is null)
         {
@@ -124,6 +140,56 @@ internal sealed class DevAtollRequestHandler
     }
 
     // ── Private helpers ─────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Checks whether the request path matches an in-memory island JavaScript asset.
+    /// If so, writes the asset bytes to the response and returns <c>true</c>.
+    /// </summary>
+    private static bool TryServeIslandAsset(HttpContext context, DevServerState state, string path)
+    {
+        // Island component URLs start with "/" (e.g. "/scripts/atoll-docs-theme-toggle.js").
+        // Asset keys are stored without the leading slash.
+        var assetKey = path.TrimStart('/');
+        if (assetKey.Length == 0 || state.IslandAssets.Count == 0)
+        {
+            return false;
+        }
+
+        if (!state.IslandAssets.TryGetValue(assetKey, out var bytes))
+        {
+            return false;
+        }
+
+        context.Response.StatusCode = 200;
+        context.Response.ContentType = "application/javascript; charset=utf-8";
+        context.Response.Headers["Cache-Control"] = "no-cache";
+        context.Response.Body.Write(bytes);
+        return true;
+    }
+
+    /// <summary>
+    /// Serves the pre-generated search index JSON when the request path is
+    /// <c>/search-index.json</c> (with or without base path prefix).
+    /// </summary>
+    private static bool TryServeSearchIndex(HttpContext context, DevServerState state, string path)
+    {
+        if (state.SearchIndexJson is null)
+        {
+            return false;
+        }
+
+        // Match "/search-index.json" or "/{basePath}/search-index.json".
+        if (!path.EndsWith("/search-index.json", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        context.Response.StatusCode = 200;
+        context.Response.ContentType = "application/json; charset=utf-8";
+        context.Response.Headers["Cache-Control"] = "no-cache";
+        context.Response.Body.Write(state.SearchIndexJson);
+        return true;
+    }
 
     private static string? ExtractRoutePath(PathString requestPath, string basePath)
     {

@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Runtime.Loader;
 using Atoll.Middleware.Server.Hosting;
@@ -24,17 +25,32 @@ namespace Atoll.Cli.Commands.Dev;
 /// assembly and its referenced assemblies. Injected as an inline <c>&lt;style&gt;</c> tag
 /// into every page response. Empty string when no global styles are found.
 /// </param>
+/// <param name="IslandAssets">
+/// In-memory map of island JavaScript assets discovered from <see cref="Atoll.Islands.IIslandAssetProvider"/>
+/// implementations. Keys are URL paths (e.g. <c>scripts/atoll-docs-theme-toggle.js</c>), values
+/// are the file content bytes read from embedded resources. Served directly by
+/// <see cref="DevAtollRequestHandler"/> when the browser requests the corresponding URL.
+/// </param>
+/// <param name="SearchIndexJson">
+/// Pre-generated search index JSON bytes, or <c>null</c> when no
+/// <c>ISearchIndexConfiguration</c> is found. Served at <c>/search-index.json</c>.
+/// </param>
 internal sealed record DevServerState(
     RouteMatcher RouteMatcher,
     AtollOptions Options,
     AssemblyLoadContext? LoadContext,
     Assembly? UserAssembly,
-    string GlobalCss)
+    string GlobalCss,
+    IReadOnlyDictionary<string, byte[]> IslandAssets,
+    byte[]? SearchIndexJson)
 {
+    private static readonly IReadOnlyDictionary<string, byte[]> EmptyAssets =
+        new ReadOnlyDictionary<string, byte[]>(new Dictionary<string, byte[]>());
+
     /// <summary>
     /// Gets an empty state with no routes and no loaded assembly.
     /// Used when no project file is present or the initial build fails.
     /// </summary>
     public static DevServerState Empty { get; } =
-        new DevServerState(new RouteMatcher([]), new AtollOptions(), null, null, "");
+        new DevServerState(new RouteMatcher([]), new AtollOptions(), null, null, "", EmptyAssets, null);
 }

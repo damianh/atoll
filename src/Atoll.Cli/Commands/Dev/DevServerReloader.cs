@@ -1,9 +1,11 @@
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.Loader;
 using Atoll.Build.Content.Collections;
 using Atoll.Configuration;
 using Atoll.Css;
+using Atoll.Islands;
 using Atoll.Middleware.Server.Hosting;
 using Atoll.Routing;
 using Atoll.Routing.FileSystem;
@@ -113,11 +115,16 @@ internal sealed class DevServerReloader
         var collectionQuery = CreateCollectionQueryFromAssembly(assembly, _projectRoot);
         var options = BuildOptions(collectionQuery);
         var globalCss = AggregateGlobalCss(assembly);
+        var islandAssets = DiscoverIslandAssets(assembly);
+        var searchIndex = collectionQuery is not null
+            ? GenerateSearchIndexBytes(assembly, collectionQuery)
+            : null;
 
         Console.WriteLine($"  Routes: {routes.Count} discovered");
+        Console.WriteLine($"  Islands: {islandAssets.Count} JS asset(s) loaded");
         Console.WriteLine($"  Reload complete ({sw.ElapsedMilliseconds}ms)");
 
-        return (new DevServerState(new RouteMatcher(routes), options, loadContext, assembly, globalCss), null);
+        return (new DevServerState(new RouteMatcher(routes), options, loadContext, assembly, globalCss, islandAssets, searchIndex), null);
     }
 
     // ── Private: content-only reload ───────────────────────────────────────────
@@ -136,8 +143,14 @@ internal sealed class DevServerReloader
 
         // Preserve existing routes — code hasn't changed.
         Console.WriteLine($"  Reload complete ({sw.ElapsedMilliseconds}ms)");
+
+        // Regenerate search index from updated content but reuse island assets (code unchanged).
+        var searchIndex = collectionQuery is not null && current.UserAssembly is not null
+            ? GenerateSearchIndexBytes(current.UserAssembly, collectionQuery)
+            : current.SearchIndexJson;
+
         return Task.FromResult(
-            new DevServerState(current.RouteMatcher, options, current.LoadContext, current.UserAssembly, current.GlobalCss));
+            new DevServerState(current.RouteMatcher, options, current.LoadContext, current.UserAssembly, current.GlobalCss, current.IslandAssets, searchIndex));
     }
 
     // ── Private: shared helpers ─────────────────────────────────────────────────
@@ -145,7 +158,7 @@ internal sealed class DevServerReloader
     private static DevServerState BuildEmptyState()
     {
         var options = new AtollOptions();
-        return new DevServerState(new RouteMatcher([]), options, null, null, "");
+        return new DevServerState(new RouteMatcher([]), options, null, null, "", new ReadOnlyDictionary<string, byte[]>(new Dictionary<string, byte[]>()), null);
     }
 
     private static AtollOptions BuildOptions(CollectionQuery? collectionQuery)
@@ -223,6 +236,229 @@ internal sealed class DevServerReloader
             }
 
             yield return referenced;
+        }
+    }
+
+    /// <summary>
+    /// Discovers all <see cref="IIslandAssetProvider"/> implementations from the user assembly
+    /// and its referenced assemblies, reads their embedded resources into memory, and returns
+    /// a dictionary keyed by URL-relative output path (no leading slash).
+    /// </summary>
+    private IReadOnlyDictionary<string, byte[]> DiscoverIslandAssets(Assembly userAssembly)
+    {
+        var assemblies = GetAssemblyWithReferences(userAssembly).ToList();
+        var allAssets = new List<IslandAssetDescriptor>();
+
+        foreach (var assembly in assemblies)
+        {
+            IEnumerable<Type> types;
+            try
+            {
+                types = assembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                types = ex.Types.Where(t => t is not null).Cast<Type>();
+            }
+
+            foreach (var type in types)
+            {
+                if (type.IsAbstract || type.IsInterface)
+                {
+                    continue;
+                }
+
+                if (!typeof(IIslandAssetProvider).IsAssignableFrom(type))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    var provider = (IIslandAssetProvider)Activator.CreateInstance(type)!;
+                    allAssets.AddRange(provider.GetAssets());
+                }
+                catch
+                {
+                    // Ignore providers that cannot be instantiated.
+                }
+            }
+        }
+
+        var result = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var descriptor in allAssets)
+        {
+            using var stream = descriptor.ResourceAssembly.GetManifestResourceStream(descriptor.ResourceName);
+            if (stream is null)
+            {
+                _logger.LogWarning(
+                    "Embedded resource '{ResourceName}' not found in assembly '{Assembly}'",
+                    descriptor.ResourceName,
+                    descriptor.ResourceAssembly.GetName().Name);
+                continue;
+            }
+
+            using var ms = new MemoryStream();
+            stream.CopyTo(ms);
+            result[descriptor.OutputPath] = ms.ToArray();
+        }
+
+        _logger.LogDebug("Discovered {Count} island asset(s)", result.Count);
+        return new ReadOnlyDictionary<string, byte[]>(result);
+    }
+
+    /// <summary>
+    /// Generates the search index JSON bytes by invoking <c>LagoonSearchIndexGenerator</c>
+    /// via reflection (mirroring <c>BuildCommandHandler.GenerateSearchIndexAsync</c> but
+    /// writing to a <see cref="MemoryStream"/> instead of disk). Returns <c>null</c> if no
+    /// <c>ISearchIndexConfiguration</c> implementation is found.
+    /// </summary>
+    private byte[]? GenerateSearchIndexBytes(Assembly userAssembly, CollectionQuery collectionQuery)
+    {
+        const string interfaceName = "Atoll.Lagoon.Search.ISearchIndexConfiguration";
+        const string generatorTypeName = "Atoll.Lagoon.Search.LagoonSearchIndexGenerator";
+
+        // Find ISearchIndexConfiguration implementation in the user assembly.
+        Type? configType = null;
+        try
+        {
+            foreach (var type in userAssembly.GetTypes())
+            {
+                if (type.IsAbstract || type.IsInterface)
+                {
+                    continue;
+                }
+
+                if (type.GetInterface(interfaceName) is not null)
+                {
+                    configType = type;
+                    break;
+                }
+            }
+        }
+        catch (ReflectionTypeLoadException)
+        {
+            return null;
+        }
+
+        if (configType is null)
+        {
+            return null;
+        }
+
+        // Resolve LagoonSearchIndexGenerator from loaded assemblies.
+        var loadContext = AssemblyLoadContext.GetLoadContext(userAssembly);
+        Type? generatorType = null;
+
+        if (loadContext is not null)
+        {
+            foreach (var asm in loadContext.Assemblies)
+            {
+                generatorType = asm.GetType(generatorTypeName);
+                if (generatorType is not null)
+                {
+                    break;
+                }
+            }
+        }
+
+        if (generatorType is null)
+        {
+            _logger.LogDebug("ISearchIndexConfiguration found but LagoonSearchIndexGenerator could not be resolved");
+            return null;
+        }
+
+        // Find the GenerateToStreamAsync(CollectionQuery, ISearchIndexConfiguration, Stream) method,
+        // or fall back to GenerateAsync and capture the output differently.
+        // First, try to find a stream-based generator method.
+        MethodInfo? generateMethod = null;
+        foreach (var method in generatorType.GetMethods())
+        {
+            if (method.Name != "GenerateToStreamAsync")
+            {
+                continue;
+            }
+
+            var parameters = method.GetParameters();
+            if (parameters.Length == 3
+                && parameters[0].ParameterType == typeof(CollectionQuery)
+                && parameters[2].ParameterType == typeof(Stream))
+            {
+                generateMethod = method;
+                break;
+            }
+        }
+
+        try
+        {
+            var configInstance = Activator.CreateInstance(configType)!;
+
+            if (generateMethod is not null)
+            {
+                // Use stream-based generation if available.
+                using var ms = new MemoryStream();
+                var generator = Activator.CreateInstance(generatorType)!;
+                var task = (Task)generateMethod.Invoke(generator, [collectionQuery, configInstance, ms])!;
+                task.GetAwaiter().GetResult();
+                var bytes = ms.ToArray();
+                _logger.LogDebug("Search index generated: {Bytes} bytes", bytes.Length);
+                return bytes;
+            }
+
+            // Fall back to the file-based generator: create a temp directory, generate, read, clean up.
+            var tempDir = Path.Combine(Path.GetTempPath(), "atoll-dev-search-" + Guid.NewGuid().ToString("N")[..8]);
+            Directory.CreateDirectory(tempDir);
+            try
+            {
+                MethodInfo? fileGenerateMethod = null;
+                foreach (var method in generatorType.GetMethods())
+                {
+                    if (method.Name != "GenerateAsync")
+                    {
+                        continue;
+                    }
+
+                    var parameters = method.GetParameters();
+                    if (parameters.Length == 2
+                        && parameters[0].ParameterType == typeof(CollectionQuery))
+                    {
+                        fileGenerateMethod = method;
+                        break;
+                    }
+                }
+
+                if (fileGenerateMethod is null)
+                {
+                    _logger.LogDebug("No suitable GenerateAsync method found on LagoonSearchIndexGenerator");
+                    return null;
+                }
+
+                var fileGenerator = Activator.CreateInstance(generatorType, tempDir)!;
+                var fileTask = (Task)fileGenerateMethod.Invoke(fileGenerator, [collectionQuery, configInstance])!;
+                fileTask.GetAwaiter().GetResult();
+
+                var indexPath = Path.Combine(tempDir, "search-index.json");
+                if (!File.Exists(indexPath))
+                {
+                    _logger.LogDebug("Search index file was not generated at expected path");
+                    return null;
+                }
+
+                var bytes = File.ReadAllBytes(indexPath);
+                _logger.LogDebug("Search index generated: {Bytes} bytes", bytes.Length);
+                return bytes;
+            }
+            finally
+            {
+                try { Directory.Delete(tempDir, recursive: true); }
+                catch { /* best-effort cleanup */ }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to generate search index");
+            return null;
         }
     }
 
