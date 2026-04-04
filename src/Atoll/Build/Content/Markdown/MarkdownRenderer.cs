@@ -2,6 +2,7 @@ using Markdig;
 using Markdig.Renderers.Html;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
+using System.Text.RegularExpressions;
 
 namespace Atoll.Build.Content.Markdown;
 
@@ -41,13 +42,13 @@ public sealed class MarkdownHeading
 }
 
 /// <summary>
-/// The result of rendering a Markdown document, containing the HTML output
-/// and extracted heading metadata.
+/// The result of rendering a Markdown document, containing the HTML output,
+/// extracted heading metadata, and optional content fragments for component embedding.
 /// </summary>
 public sealed class MarkdownRenderResult
 {
     /// <summary>
-    /// Initializes a new instance of <see cref="MarkdownRenderResult"/>.
+    /// Initializes a new instance of <see cref="MarkdownRenderResult"/> with plain HTML.
     /// </summary>
     /// <param name="html">The rendered HTML string.</param>
     /// <param name="headings">The extracted headings from the document.</param>
@@ -60,6 +61,30 @@ public sealed class MarkdownRenderResult
     }
 
     /// <summary>
+    /// Initializes a new instance of <see cref="MarkdownRenderResult"/> with fragment data
+    /// for documents containing embedded component directives.
+    /// </summary>
+    /// <param name="html">The rendered HTML string (with placeholder comments).</param>
+    /// <param name="headings">The extracted headings from the document.</param>
+    /// <param name="fragments">
+    /// The sequence of HTML and component fragments produced by splitting the HTML on
+    /// placeholder comments. When non-null, consumers should use fragments instead of
+    /// <see cref="Html"/> to render component content inline.
+    /// </param>
+    public MarkdownRenderResult(
+        string html,
+        IReadOnlyList<MarkdownHeading> headings,
+        IReadOnlyList<ContentFragment> fragments)
+    {
+        ArgumentNullException.ThrowIfNull(html);
+        ArgumentNullException.ThrowIfNull(headings);
+        ArgumentNullException.ThrowIfNull(fragments);
+        Html = html;
+        Headings = headings;
+        Fragments = fragments;
+    }
+
+    /// <summary>
     /// Gets the rendered HTML string.
     /// </summary>
     public string Html { get; }
@@ -68,6 +93,13 @@ public sealed class MarkdownRenderResult
     /// Gets the headings extracted from the document, in document order.
     /// </summary>
     public IReadOnlyList<MarkdownHeading> Headings { get; }
+
+    /// <summary>
+    /// Gets the content fragments produced when the Markdown contained embedded component
+    /// directives. When <c>null</c>, no directives were present and <see cref="Html"/>
+    /// contains the complete rendered output.
+    /// </summary>
+    public IReadOnlyList<ContentFragment>? Fragments { get; }
 }
 
 /// <summary>
@@ -84,6 +116,12 @@ public sealed class MarkdownRenderResult
 /// </remarks>
 public static class MarkdownRenderer
 {
+    // Matches placeholder comments emitted by ComponentDirectiveRenderer.
+    // Pattern: <!--atoll:0-->, <!--atoll:1-->, etc.
+    // Capture group 1 contains the numeric index.
+    private static readonly Regex PlaceholderPattern =
+        new(@"<!--atoll:(\d+)-->", RegexOptions.Compiled, TimeSpan.FromSeconds(5));
+
     /// <summary>
     /// Renders the specified Markdown content to HTML using default options.
     /// </summary>
@@ -109,11 +147,27 @@ public static class MarkdownRenderer
         ArgumentNullException.ThrowIfNull(markdown);
         ArgumentNullException.ThrowIfNull(options);
 
-        var pipeline = BuildPipeline(options);
+        ComponentDirectiveExtension? directiveExtension = null;
+
+        if (options.Components is not null)
+        {
+            directiveExtension = new ComponentDirectiveExtension(options.Components);
+        }
+
+        var pipeline = BuildPipeline(options, directiveExtension);
         var document = Markdig.Markdown.Parse(markdown, pipeline);
 
         var html = document.ToHtml(pipeline);
         var headings = ExtractHeadings(document);
+
+        // If the directive extension was active and collected any component references,
+        // split the HTML into fragments.
+        if (directiveExtension is not null &&
+            directiveExtension.CollectedReferences.Count > 0)
+        {
+            var fragments = BuildFragments(html, directiveExtension.CollectedReferences);
+            return new MarkdownRenderResult(html, headings, fragments);
+        }
 
         return new MarkdownRenderResult(html, headings);
     }
@@ -124,6 +178,13 @@ public static class MarkdownRenderer
     /// <param name="options">The options controlling which extensions are enabled.</param>
     /// <returns>A configured <see cref="MarkdownPipeline"/>.</returns>
     public static MarkdownPipeline BuildPipeline(MarkdownOptions options)
+    {
+        return BuildPipeline(options, directiveExtension: null);
+    }
+
+    private static MarkdownPipeline BuildPipeline(
+        MarkdownOptions options,
+        ComponentDirectiveExtension? directiveExtension)
     {
         ArgumentNullException.ThrowIfNull(options);
 
@@ -169,7 +230,50 @@ public static class MarkdownRenderer
             builder.Extensions.Add(new ExternalLinkExtension(externalLinks));
         }
 
+        if (directiveExtension is not null)
+        {
+            // UseCustomContainers and UseGenericAttributes must be registered on the builder
+            // directly (before Build() is called), not inside the extension's Setup method.
+            // Calling them inside Setup causes a "Collection was modified" error because
+            // Markdig iterates the Extensions list during Build() while Setup is being called.
+            builder.UseCustomContainers();
+            builder.UseGenericAttributes();
+            builder.Extensions.Add(directiveExtension);
+        }
+
         return builder.Build();
+    }
+
+    private static List<ContentFragment> BuildFragments(
+        string html,
+        IReadOnlyList<ComponentReference> references)
+    {
+        // Split HTML on <!--atoll:N--> placeholders.
+        // Regex.Split with a capture group interleaves: [html, index, html, index, html, ...]
+        var parts = PlaceholderPattern.Split(html);
+        var fragments = new List<ContentFragment>(parts.Length);
+
+        for (var i = 0; i < parts.Length; i++)
+        {
+            if (i % 2 == 0)
+            {
+                // Even positions are HTML chunks (may be empty).
+                if (parts[i].Length > 0)
+                {
+                    fragments.Add(new HtmlContentFragment(parts[i]));
+                }
+            }
+            else
+            {
+                // Odd positions are captured group values (the numeric index).
+                if (int.TryParse(parts[i], out var index) && index < references.Count)
+                {
+                    fragments.Add(new ComponentContentFragment(references[index]));
+                }
+            }
+        }
+
+        return fragments;
     }
 
     private static List<MarkdownHeading> ExtractHeadings(MarkdownDocument document)

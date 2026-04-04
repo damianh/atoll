@@ -1,6 +1,8 @@
 using Atoll.Build.Content.Markdown;
 using Atoll.Components;
+using Atoll.Islands;
 using Atoll.Rendering;
+using Atoll.Slots;
 
 namespace Atoll.Build.Content.Collections;
 
@@ -17,6 +19,11 @@ namespace Atoll.Build.Content.Collections;
 /// table-of-contents generation.
 /// </para>
 /// <para>
+/// When the Markdown content contains embedded component directives (<c>:::</c> syntax),
+/// the component iterates the fragment sequence, rendering HTML chunks directly and
+/// instantiating Atoll components (or islands) at directive sites.
+/// </para>
+/// <para>
 /// Usage:
 /// <code>
 /// var entry = query.GetEntry&lt;BlogPost&gt;("blog", "my-post");
@@ -29,11 +36,16 @@ namespace Atoll.Build.Content.Collections;
 public sealed class ContentComponent : IAtollComponent
 {
     private readonly string _html;
+    private readonly IReadOnlyList<ContentFragment>? _fragments;
 
-    private ContentComponent(string html, IReadOnlyList<MarkdownHeading> headings)
+    private ContentComponent(
+        string html,
+        IReadOnlyList<MarkdownHeading> headings,
+        IReadOnlyList<ContentFragment>? fragments)
     {
         _html = html;
         Headings = headings;
+        _fragments = fragments;
     }
 
     /// <summary>
@@ -50,7 +62,7 @@ public sealed class ContentComponent : IAtollComponent
     public static ContentComponent FromRenderedContent(RenderedContent renderedContent)
     {
         ArgumentNullException.ThrowIfNull(renderedContent);
-        return new ContentComponent(renderedContent.Html, renderedContent.Headings);
+        return new ContentComponent(renderedContent.Html, renderedContent.Headings, renderedContent.Fragments);
     }
 
     /// <summary>
@@ -66,7 +78,7 @@ public sealed class ContentComponent : IAtollComponent
     {
         ArgumentNullException.ThrowIfNull(html);
         ArgumentNullException.ThrowIfNull(headings);
-        return new ContentComponent(html, headings);
+        return new ContentComponent(html, headings, fragments: null);
     }
 
     /// <summary>
@@ -78,7 +90,7 @@ public sealed class ContentComponent : IAtollComponent
     public static ContentComponent FromHtml(string html)
     {
         ArgumentNullException.ThrowIfNull(html);
-        return new ContentComponent(html, []);
+        return new ContentComponent(html, [], fragments: null);
     }
 
     /// <summary>
@@ -92,10 +104,72 @@ public sealed class ContentComponent : IAtollComponent
     }
 
     /// <inheritdoc />
-    public Task RenderAsync(RenderContext context)
+    public async Task RenderAsync(RenderContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        context.WriteHtml(_html);
-        return Task.CompletedTask;
+
+        // Fast path: no component directives — write HTML directly.
+        if (_fragments is null)
+        {
+            context.WriteHtml(_html);
+            return;
+        }
+
+        // Fragment path: iterate HTML chunks and component references in order.
+        foreach (var fragment in _fragments)
+        {
+            switch (fragment)
+            {
+                case HtmlContentFragment htmlFragment:
+                    context.WriteHtml(htmlFragment.Html);
+                    break;
+
+                case ComponentContentFragment componentFragment:
+                    await RenderComponentFragmentAsync(
+                        context.Destination,
+                        componentFragment.Reference);
+                    break;
+            }
+        }
+    }
+
+    private static async Task RenderComponentFragmentAsync(
+        IRenderDestination destination,
+        ComponentReference reference)
+    {
+        var componentType = reference.ComponentType;
+
+        // Build props dictionary.
+        var props = reference.Props;
+
+        // Build slot collection from child HTML, if any.
+        var slots = reference.ChildHtml is not null
+            ? SlotCollection.FromDefault(RenderFragment.FromHtml(reference.ChildHtml))
+            : SlotCollection.Empty;
+
+        // Check if this component is an island (has a client directive attribute).
+        var directiveInfo = DirectiveExtractor.GetDirective(componentType);
+
+        if (directiveInfo is not null &&
+            typeof(IClientComponent).IsAssignableFrom(componentType))
+        {
+            // Island path: wrap in <atoll-island>.
+            var instance = (IClientComponent)Activator.CreateInstance(componentType)!;
+
+            var metadata = new IslandMetadata(instance.ClientModuleUrl, directiveInfo.DirectiveType)
+            {
+                ComponentExport = instance.ClientExportName,
+                DirectiveValue = directiveInfo.Value,
+                DisplayName = componentType.Name,
+            };
+
+            await IslandRenderer.RenderIslandAsync(destination, metadata, componentType, props, slots);
+        }
+        else
+        {
+            // Regular component path.
+            var instance = (IAtollComponent)Activator.CreateInstance(componentType)!;
+            await ComponentRenderer.RenderComponentAsync(instance, destination, props, slots);
+        }
     }
 }

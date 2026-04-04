@@ -95,6 +95,8 @@ public sealed class CollectionQuery
     {
         ArgumentNullException.ThrowIfNull(entry);
         var result = MarkdownRenderer.Render(entry.Body, _markdownOptions);
-        return new RenderedContent(result.Html, result.Headings);
+        return result.Fragments is not null
+            ? new RenderedContent(result.Html, result.Headings, result.Fragments)
+            : new RenderedContent(result.Html, result.Headings);
     }
 }

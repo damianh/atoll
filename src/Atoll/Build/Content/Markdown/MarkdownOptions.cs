@@ -64,4 +64,32 @@ public sealed class MarkdownOptions
     /// Default: <c>null</c>.
     /// </summary>
     public ExternalLinkOptions? ExternalLinks { get; set; }
+
+    /// <summary>
+    /// Gets or sets the component map that enables <c>:::</c> directive syntax for embedding
+    /// Atoll components inline within Markdown content.
+    /// When <c>null</c>, component directives are not processed and Markdown renders
+    /// identically to the current behavior.
+    /// Default: <c>null</c>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// When set, the Markdig pipeline is extended with <c>CustomContainers</c> and
+    /// <c>GenericAttributes</c> support. Any <c>:::name{key=value}</c> block whose
+    /// <c>name</c> is registered in the map is replaced with the corresponding
+    /// Atoll component during rendering.
+    /// </para>
+    /// <para>
+    /// Example:
+    /// <code>
+    /// var options = new MarkdownOptions
+    /// {
+    ///     Components = new ComponentMap()
+    ///         .Add&lt;Counter&gt;("counter")
+    ///         .Add&lt;Callout&gt;("callout"),
+    /// };
+    /// </code>
+    /// </para>
+    /// </remarks>
+    public ComponentMap? Components { get; set; }
 }
