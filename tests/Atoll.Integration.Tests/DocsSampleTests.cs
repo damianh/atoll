@@ -1,9 +1,14 @@
 using Atoll.Build.Content.Collections;
+using Atoll.Build.Pipeline;
 using Atoll.Build.Ssg;
 using Atoll.Components;
+using Atoll.Css;
+using Atoll.Islands;
 using Docs;
 using Docs.Pages;
+using Atoll.Lagoon.Islands;
 using Atoll.Lagoon.Search;
+using Atoll.Lagoon.Styles;
 using Atoll.Rendering;
 using Atoll.Routing;
 using Shouldly;
@@ -492,6 +497,111 @@ public sealed class DocsSampleTests : IDisposable
         json.ShouldContain("/docs/getting-started");
         json.ShouldContain("/docs/components");
         json.ShouldContain("/docs/content-collections");
+    }
+
+    // ── Global CSS discovery integration tests ──
+
+    [Fact]
+    public async Task AssetPipelineShouldIncludeDocsThemeCss()
+    {
+        var pipelineOptions = new AssetPipelineOptions(_outputDir)
+        {
+            Minify = false,
+            Fingerprint = false,
+        };
+        var outputWriter = new OutputWriter(_outputDir);
+        var pipeline = new AssetPipeline(pipelineOptions, outputWriter);
+
+        var result = await pipeline.RunAsync(new[] { typeof(DocsTheme) }, Array.Empty<string>());
+
+        result.Css.HasContent.ShouldBeTrue();
+        result.Css.Css.ShouldContain("--docs-bg");
+        result.Css.Css.ShouldContain("--docs-text");
+        result.Css.Css.ShouldContain(".docs-sidebar");
+        result.Css.Css.ShouldContain(".prose");
+    }
+
+    [Fact]
+    public void GlobalStyleDiscoveryShouldFindDocsTheme()
+    {
+        var result = GlobalStyleDiscovery.DiscoverGlobalStyles(typeof(DocsTheme).Assembly);
+
+        result.ShouldContain(typeof(DocsTheme));
+    }
+
+    // ── Island asset integration tests ──
+
+    [Fact]
+    public async Task IslandAssetsShouldBeWrittenToOutputDirectory()
+    {
+        var provider = new LagoonIslandAssetProvider();
+        var assets = provider.GetAssets().ToList();
+
+        var writer = new IslandAssetWriter(_outputDir);
+        var result = await writer.WriteAsync(assets);
+
+        result.FileCount.ShouldBe(4);
+
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-search-dialog.js")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-theme-toggle.js")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-mobile-nav.js")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-mermaid-init.js")).ShouldBeTrue();
+
+        // Verify one file has expected content
+        var searchDialogContent = await File.ReadAllTextAsync(
+            Path.Combine(_outputDir, "scripts", "atoll-docs-search-dialog.js"));
+        searchDialogContent.ShouldContain("Search Dialog");
+    }
+
+    // ── End-to-end build test ──
+
+    [Fact]
+    public async Task FullBuildShouldIncludeCssAndIslandAssets()
+    {
+        var query = CreateDefaultQuery();
+        var serviceProps = new Dictionary<string, object?> { ["Query"] = query };
+
+        // 1. SSG
+        var routes = new RouteEntry[]
+        {
+            new RouteEntry("/", typeof(IndexPage), "index.cs"),
+            new RouteEntry("/docs/[slug]", typeof(DocsPage), "docs/[slug].cs"),
+        };
+        var ssgOptions = new SsgOptions(_outputDir);
+        var generator = new StaticSiteGenerator(ssgOptions, serviceProps);
+        var ssgResult = await generator.GenerateAsync(routes);
+        ssgResult.IsSuccess.ShouldBeTrue();
+
+        // 2. Asset pipeline with DocsTheme CSS
+        var globalStyleTypes = GlobalStyleDiscovery.DiscoverGlobalStyles(typeof(DocsTheme).Assembly);
+        var pipelineOptions = new AssetPipelineOptions(_outputDir)
+        {
+            Minify = false,
+            Fingerprint = false,
+        };
+        var outputWriter = new OutputWriter(_outputDir);
+        var pipeline = new AssetPipeline(pipelineOptions, outputWriter);
+        var assetResult = await pipeline.RunAsync(globalStyleTypes, Array.Empty<string>());
+
+        // 3. Island assets
+        var islandProvider = new LagoonIslandAssetProvider();
+        var islandWriter = new IslandAssetWriter(_outputDir);
+        var islandResult = await islandWriter.WriteAsync(islandProvider.GetAssets());
+
+        // Assert CSS
+        assetResult.Css.HasContent.ShouldBeTrue();
+        assetResult.Css.Css.ShouldContain("--docs-bg");
+
+        // Assert island JS
+        islandResult.FileCount.ShouldBe(4);
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-search-dialog.js")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-theme-toggle.js")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-mobile-nav.js")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-mermaid-init.js")).ShouldBeTrue();
+
+        // Assert HTML pages (no regression)
+        File.Exists(Path.Combine(_outputDir, "index.html")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "docs", "getting-started", "index.html")).ShouldBeTrue();
     }
 }
 

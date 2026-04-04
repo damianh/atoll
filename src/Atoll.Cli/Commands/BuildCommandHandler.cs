@@ -5,6 +5,8 @@ using Atoll.Build.Content.Collections;
 using Atoll.Build.Pipeline;
 using Atoll.Build.Ssg;
 using Atoll.Configuration;
+using Atoll.Css;
+using Atoll.Islands;
 using Atoll.Routing;
 using Atoll.Routing.FileSystem;
 
@@ -72,7 +74,24 @@ public sealed class BuildCommandHandler
 
         var outputWriter = new OutputWriter(outputDir);
         var pipeline = new AssetPipeline(pipelineOptions, outputWriter);
-        var assetResult = await pipeline.RunAsync(Array.Empty<Type>(), Array.Empty<string>());
+
+        // Discover global CSS types from the user assembly and its referenced assemblies
+        var globalStyleTypes = assembly is not null
+            ? DiscoverGlobalStyleTypes(assembly)
+            : Array.Empty<Type>();
+
+        if (globalStyleTypes.Count > 0)
+        {
+            Console.WriteLine($"  CSS:     {globalStyleTypes.Count} global style type(s) discovered");
+        }
+
+        var assetResult = await pipeline.RunAsync(globalStyleTypes, Array.Empty<string>());
+
+        // Write island JS assets from library providers
+        if (assembly is not null)
+        {
+            await WriteIslandAssetsAsync(assembly, outputDir);
+        }
 
         // Post-process HTML
         var cssHref = assetResult.Css.HasContent
@@ -267,6 +286,120 @@ public sealed class BuildCommandHandler
         }
 
         return (routes, assembly);
+    }
+
+    /// <summary>
+    /// Discovers global CSS component types from the assembly and its referenced assemblies.
+    /// Scans the assembly's output directory for referenced DLLs and includes types decorated
+    /// with both <see cref="GlobalStyleAttribute"/> and <see cref="StylesAttribute"/>.
+    /// </summary>
+    private static IReadOnlyList<Type> DiscoverGlobalStyleTypes(Assembly assembly)
+    {
+        var assembliesToScan = new List<Assembly> { assembly };
+        var assemblyDir = Path.GetDirectoryName(assembly.Location);
+
+        if (assemblyDir is not null)
+        {
+            foreach (var referencedName in assembly.GetReferencedAssemblies())
+            {
+                var candidatePath = Path.Combine(assemblyDir, referencedName.Name + ".dll");
+                if (!File.Exists(candidatePath))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    var referenced = Assembly.LoadFrom(candidatePath);
+                    assembliesToScan.Add(referenced);
+                }
+                catch
+                {
+                    // Ignore load failures for individual assemblies
+                }
+            }
+        }
+
+        return GlobalStyleDiscovery.DiscoverGlobalStyles(assembliesToScan);
+    }
+
+    /// <summary>
+    /// Discovers <see cref="IIslandAssetProvider"/> implementations from the assembly and its
+    /// referenced assemblies, then writes all declared island JS assets to the output directory.
+    /// </summary>
+    private static async Task WriteIslandAssetsAsync(Assembly assembly, string outputDirectory)
+    {
+        var assembliesToScan = new List<Assembly> { assembly };
+        var assemblyDir = Path.GetDirectoryName(assembly.Location);
+
+        if (assemblyDir is not null)
+        {
+            foreach (var referencedName in assembly.GetReferencedAssemblies())
+            {
+                var candidatePath = Path.Combine(assemblyDir, referencedName.Name + ".dll");
+                if (!File.Exists(candidatePath))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    var referenced = Assembly.LoadFrom(candidatePath);
+                    assembliesToScan.Add(referenced);
+                }
+                catch
+                {
+                    // Ignore load failures for individual assemblies
+                }
+            }
+        }
+
+        var allAssets = new List<IslandAssetDescriptor>();
+
+        foreach (var scannedAssembly in assembliesToScan)
+        {
+            IEnumerable<Type> types;
+            try
+            {
+                types = scannedAssembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                types = ex.Types.Where(t => t is not null).Cast<Type>();
+            }
+
+            foreach (var type in types)
+            {
+                if (type.IsAbstract || type.IsInterface)
+                {
+                    continue;
+                }
+
+                if (!typeof(IIslandAssetProvider).IsAssignableFrom(type))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    var provider = (IIslandAssetProvider)Activator.CreateInstance(type)!;
+                    allAssets.AddRange(provider.GetAssets());
+                }
+                catch
+                {
+                    // Ignore providers that cannot be instantiated
+                }
+            }
+        }
+
+        if (allAssets.Count == 0)
+        {
+            return;
+        }
+
+        var writer = new IslandAssetWriter(outputDirectory);
+        var writeResult = await writer.WriteAsync(allAssets);
+        Console.WriteLine($"  Islands: {writeResult.FileCount} JS asset(s) written");
     }
 
     /// <summary>

@@ -2,4 +2,14 @@
   <ItemGroup>
     <ProjectReference Include="..\Atoll\Atoll.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Islands\Assets\search-dialog.js"
+      LogicalName="Atoll.Lagoon.Islands.Assets.search-dialog.js" />
+    <EmbeddedResource Include="Islands\Assets\theme-toggle.js"
+      LogicalName="Atoll.Lagoon.Islands.Assets.theme-toggle.js" />
+    <EmbeddedResource Include="Islands\Assets\mobile-nav.js"
+      LogicalName="Atoll.Lagoon.Islands.Assets.mobile-nav.js" />
+    <EmbeddedResource Include="Islands\Assets\mermaid-init.js"
+      LogicalName="Atoll.Lagoon.Islands.Assets.mermaid-init.js" />
+  </ItemGroup>
 </Project>
