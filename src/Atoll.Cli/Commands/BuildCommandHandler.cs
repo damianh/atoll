@@ -110,6 +110,12 @@ public sealed class BuildCommandHandler
         var manifest = BuildManifestWriter.BuildFrom(ssgResult, assetResult, ssgOptions);
         await manifestWriter.WriteAsync(manifest);
 
+        // Generate search index (if project implements ISearchIndexConfiguration from Atoll.Lagoon)
+        if (assembly is not null && serviceProps.TryGetValue("Query", out var queryObj) && queryObj is CollectionQuery collectionQuery)
+        {
+            await GenerateSearchIndexAsync(assembly, collectionQuery, outputDir);
+        }
+
         // Report results
         var elapsed = DateTime.UtcNow - startTime;
         Console.WriteLine();
@@ -261,6 +267,128 @@ public sealed class BuildCommandHandler
         }
 
         return (routes, assembly);
+    }
+
+    /// <summary>
+    /// Generates the search index if the user's assembly implements
+    /// <c>Atoll.Lagoon.Search.ISearchIndexConfiguration</c>.
+    /// Uses reflection to avoid a hard dependency on <c>Atoll.Lagoon</c>.
+    /// </summary>
+    private static async Task GenerateSearchIndexAsync(
+        Assembly assembly,
+        CollectionQuery collectionQuery,
+        string outputDirectory)
+    {
+        const string interfaceName = "Atoll.Lagoon.Search.ISearchIndexConfiguration";
+        const string generatorTypeName = "Atoll.Lagoon.Search.LagoonSearchIndexGenerator";
+
+        // Find an ISearchIndexConfiguration implementation in the user's assembly
+        Type? configType = null;
+        foreach (var type in assembly.GetTypes())
+        {
+            if (type.IsAbstract || type.IsInterface)
+            {
+                continue;
+            }
+
+            var iface = type.GetInterface(interfaceName);
+            if (iface is not null)
+            {
+                configType = type;
+                break;
+            }
+        }
+
+        if (configType is null)
+        {
+            return;
+        }
+
+        // Resolve LagoonSearchIndexGenerator from the assembly's dependencies
+        Type? generatorType = null;
+        foreach (var referencedAssembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            generatorType = referencedAssembly.GetType(generatorTypeName);
+            if (generatorType is not null)
+            {
+                break;
+            }
+        }
+
+        // Also try to find it via the assembly load context
+        if (generatorType is null)
+        {
+            var assemblyDir = Path.GetDirectoryName(assembly.Location);
+            if (assemblyDir is not null)
+            {
+                var lagoonDll = Path.Combine(assemblyDir, "Atoll.Lagoon.dll");
+                if (File.Exists(lagoonDll))
+                {
+                    try
+                    {
+                        var lagoonAssembly = Assembly.LoadFrom(lagoonDll);
+                        generatorType = lagoonAssembly.GetType(generatorTypeName);
+                    }
+                    catch
+                    {
+                        // Ignore load failures
+                    }
+                }
+            }
+        }
+
+        if (generatorType is null)
+        {
+            Console.WriteLine("  Warning: ISearchIndexConfiguration found but Atoll.Lagoon assembly could not be loaded.");
+            return;
+        }
+
+        // Create config instance
+        var configInstance = Activator.CreateInstance(configType)!;
+
+        // Create generator instance: new LagoonSearchIndexGenerator(outputDirectory)
+        var generator = Activator.CreateInstance(generatorType, outputDirectory)!;
+
+        // Find GenerateAsync(CollectionQuery, ISearchIndexConfiguration) by scanning methods
+        MethodInfo? generateMethod = null;
+        foreach (var method in generatorType.GetMethods())
+        {
+            if (method.Name != "GenerateAsync")
+            {
+                continue;
+            }
+
+            var parameters = method.GetParameters();
+            if (parameters.Length == 2
+                && parameters[0].ParameterType == typeof(CollectionQuery))
+            {
+                generateMethod = method;
+                break;
+            }
+        }
+
+        if (generateMethod is null)
+        {
+            Console.WriteLine("  Warning: Could not find GenerateAsync method on LagoonSearchIndexGenerator.");
+            return;
+        }
+
+        var task = (Task)generateMethod.Invoke(generator, [collectionQuery, configInstance])!;
+        await task;
+
+        // Get result stats via dynamic to avoid reflection on Task<T>.Result
+        dynamic taskResult = task;
+        int entryCount;
+        try
+        {
+            entryCount = (int)taskResult.Result.EntryCount;
+        }
+        catch
+        {
+            entryCount = 0;
+        }
+
+        Console.WriteLine($"  Search:  {entryCount} entries indexed");
     }
 
     /// <summary>

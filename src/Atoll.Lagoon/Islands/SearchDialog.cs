@@ -11,7 +11,7 @@ namespace Atoll.Lagoon.Islands;
 /// <remarks>
 /// Opens on click or Ctrl+K / ⌘K keyboard shortcut.
 /// Results support arrow-key navigation and Enter to navigate.
-/// Fetches <c>/search-index.json</c> on first open.
+/// Fetches the search index from <see cref="IndexUrl"/> on first open.
 /// </remarks>
 [ClientIdle]
 public sealed class SearchDialog : VanillaJsIsland
@@ -23,10 +23,20 @@ public sealed class SearchDialog : VanillaJsIsland
     [Parameter]
     public string Placeholder { get; set; } = "Search docs...";
 
+    /// <summary>
+    /// Gets or sets the URL to fetch the search index JSON from.
+    /// Defaults to <c>/search-index.json</c> (root-relative).
+    /// Set this when your site is hosted at a base path, e.g. <c>/docs/search-index.json</c>.
+    /// </summary>
+    [Parameter]
+    public string IndexUrl { get; set; } = "/search-index.json";
+
     /// <inheritdoc />
     protected override Task RenderCoreAsync(RenderContext context)
     {
-        WriteHtml("<div class=\"search-wrapper\">");
+        WriteHtml("<div class=\"search-wrapper\" data-index-url=\"");
+        WriteHtml(System.Net.WebUtility.HtmlEncode(IndexUrl));
+        WriteHtml("\">");
         WriteHtml("<button id=\"search-trigger\" type=\"button\" aria-label=\"Search\" aria-haspopup=\"dialog\">");
         WriteText(Placeholder);
         WriteHtml(" <kbd>Ctrl+K</kbd>");

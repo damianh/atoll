@@ -2,15 +2,20 @@
  * Atoll Docs — Search Dialog
  *
  * Opens a <dialog> on click or Ctrl+K / ⌘K.
- * Fetches /search-index.json lazily on first open and performs client-side
+ * Fetches the search index lazily on first open and performs client-side
  * full-text search with prefix + word-boundary matching and keyword highlighting.
+ *
+ * The search index URL is read from the wrapper element's `data-index-url` attribute,
+ * defaulting to `/search-index.json` if not set. Set `data-index-url` to support
+ * sites hosted at a base path (e.g. `/docs/search-index.json`).
  */
 
 let index = null;
 
-async function loadIndex() {
+async function loadIndex(element) {
     if (index) return index;
-    const resp = await fetch('/search-index.json');
+    const indexUrl = element.dataset.indexUrl || '/search-index.json';
+    const resp = await fetch(indexUrl);
     index = await resp.json();
     return index;
 }
@@ -130,7 +135,7 @@ export default function init(element) {
             results && (results.innerHTML = '');
             return;
         }
-        const data = await loadIndex();
+        const data = await loadIndex(element);
         const hits = search(data.entries || data, q);
         results && renderResults(results, hits, q);
     });

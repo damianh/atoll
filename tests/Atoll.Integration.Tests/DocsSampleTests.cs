@@ -3,6 +3,7 @@ using Atoll.Build.Ssg;
 using Atoll.Components;
 using Docs;
 using Docs.Pages;
+using Atoll.Lagoon.Search;
 using Atoll.Rendering;
 using Atoll.Routing;
 using Shouldly;
@@ -360,13 +361,14 @@ public sealed class DocsSampleTests : IDisposable
     }
 
     [Fact]
-    public async Task DocsSsgOutputShouldHaveNavigationOnAllDocPages()
+    public async Task DocsSsgShouldGenerateNavigationAcrossAllPages()
     {
         var query = CreateDefaultQuery();
         var serviceProps = new Dictionary<string, object?> { ["Query"] = query };
 
         var routes = new RouteEntry[]
         {
+            new RouteEntry("/", typeof(IndexPage), "index.cs"),
             new RouteEntry("/docs/[slug]", typeof(DocsPage), "docs/[slug].cs"),
         };
 
@@ -378,10 +380,118 @@ public sealed class DocsSampleTests : IDisposable
 
         foreach (var pageResult in result.PageResults)
         {
-            // Every doc page should have sidebar navigation links
             pageResult.Html.ShouldContain(
                 "href=\"/docs/getting-started\"",
-                customMessage: $"Page {pageResult.Route.UrlPath} missing sidebar nav");
+                customMessage: $"Page {pageResult.Route.UrlPath} missing navigation link");
         }
     }
+
+    // ── Search index integration tests ──
+
+    [Fact]
+    public async Task DocsSsgShouldGenerateSearchIndex()
+    {
+        var query = CreateDefaultQuery();
+        var serviceProps = new Dictionary<string, object?> { ["Query"] = query };
+
+        var routes = new RouteEntry[]
+        {
+            new RouteEntry("/", typeof(IndexPage), "index.cs"),
+            new RouteEntry("/docs/[slug]", typeof(DocsPage), "docs/[slug].cs"),
+        };
+
+        var ssgOptions = new SsgOptions(_outputDir);
+        var generator = new StaticSiteGenerator(ssgOptions, serviceProps);
+        await generator.GenerateAsync(routes);
+
+        // Run search index generation using the docs SearchConfig
+        var searchGenerator = new LagoonSearchIndexGenerator(_outputDir);
+        var config = new SearchConfig();
+        var result = await searchGenerator.GenerateAsync(query, config);
+
+        // Verify the file was written
+        var searchIndexPath = Path.Combine(_outputDir, "search-index.json");
+        File.Exists(searchIndexPath).ShouldBeTrue();
+
+        // Verify result stats
+        result.EntryCount.ShouldBe(3);
+        result.OutputPath.ShouldBe(searchIndexPath);
+        result.Elapsed.ShouldBeGreaterThanOrEqualTo(TimeSpan.Zero);
+    }
+
+    [Fact]
+    public async Task SearchIndexShouldContainAllDocEntries()
+    {
+        var query = CreateDefaultQuery();
+
+        var searchGenerator = new LagoonSearchIndexGenerator(_outputDir);
+        var config = new SearchConfig();
+        await searchGenerator.GenerateAsync(query, config);
+
+        var json = await File.ReadAllTextAsync(Path.Combine(_outputDir, "search-index.json"));
+
+        // All 3 doc titles should appear in the index
+        json.ShouldContain("Getting Started");
+        json.ShouldContain("Components");
+        json.ShouldContain("Content Collections");
+    }
+
+    [Fact]
+    public async Task SearchIndexShouldContainBodyWithNoHtmlTags()
+    {
+        var query = CreateDefaultQuery();
+
+        var searchGenerator = new LagoonSearchIndexGenerator(_outputDir);
+        var config = new SearchConfig();
+        await searchGenerator.GenerateAsync(query, config);
+
+        var json = await File.ReadAllTextAsync(Path.Combine(_outputDir, "search-index.json"));
+
+        // The body text should not contain HTML tags
+        json.ShouldNotContain("<p>");
+        json.ShouldNotContain("<h1>");
+        json.ShouldNotContain("<strong>");
+
+        // But should contain actual content words
+        json.ShouldContain("Welcome to");
+        json.ShouldContain("Atoll");
+    }
+
+    [Fact]
+    public async Task SearchIndexShouldHaveValidJsonSchema()
+    {
+        var query = CreateDefaultQuery();
+
+        var searchGenerator = new LagoonSearchIndexGenerator(_outputDir);
+        var config = new SearchConfig();
+        await searchGenerator.GenerateAsync(query, config);
+
+        var json = await File.ReadAllTextAsync(Path.Combine(_outputDir, "search-index.json"));
+
+        // Verify top-level schema matches client expectations
+        json.ShouldContain("\"entries\":");
+        json.ShouldContain("\"generatedAt\":");
+
+        // Verify entry property names are camelCase (checked by exact key:value pattern)
+        json.ShouldContain("\"title\":\"");
+        json.ShouldContain("\"href\":\"");
+    }
+
+    [Fact]
+    public async Task SearchIndexHrefsShouldMatchExpectedPattern()
+    {
+        var query = CreateDefaultQuery();
+
+        var searchGenerator = new LagoonSearchIndexGenerator(_outputDir);
+        var config = new SearchConfig();
+        await searchGenerator.GenerateAsync(query, config);
+
+        var json = await File.ReadAllTextAsync(Path.Combine(_outputDir, "search-index.json"));
+
+        // Hrefs should follow /docs/{slug} pattern
+        json.ShouldContain("/docs/getting-started");
+        json.ShouldContain("/docs/components");
+        json.ShouldContain("/docs/content-collections");
+    }
 }
+
