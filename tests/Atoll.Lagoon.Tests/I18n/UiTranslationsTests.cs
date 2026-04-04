@@ -236,7 +236,9 @@ public sealed class UiTranslationsTests
 
         // Custom Placeholder should take precedence over translations
         html.ShouldContain("Find articles...");
-        html.ShouldNotContain("Type here...");
+        // "Type here..." may appear in the serialized props attribute on the <atoll-island>
+        // wrapper, but it should NOT appear as the rendered placeholder value.
+        html.ShouldNotContain("placeholder=\"Type here...\"");
     }
 
     [Fact]

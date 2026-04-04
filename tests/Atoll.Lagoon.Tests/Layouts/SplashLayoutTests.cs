@@ -312,7 +312,7 @@ public sealed class SplashLayoutTests
     {
         var html = await RenderLayoutAsync(MakeConfig());
 
-        html.ShouldContain("atoll-docs-theme");
+        html.ShouldContain("atoll-theme");
     }
 
     // --- HTML encoding ---
