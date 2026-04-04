@@ -1,6 +1,7 @@
 using Atoll.Build.Content.Markdown;
 using Atoll.Components;
 using Atoll.Lagoon.Configuration;
+using Atoll.Lagoon.I18n;
 using Atoll.Lagoon.Layouts;
 using Atoll.Lagoon.Navigation;
 using Atoll.Rendering;
@@ -34,7 +35,8 @@ public sealed class DocsLayoutTests
         PaginationLink? previous = null,
         PaginationLink? next = null,
         IReadOnlyList<BreadcrumbItem>? breadcrumbItems = null,
-        ComponentDelegate? slotContent = null)
+        ComponentDelegate? slotContent = null,
+        string currentPath = "/")
     {
         return await RenderLayoutWithHeadContentAsync(
             config,
@@ -46,7 +48,8 @@ public sealed class DocsLayoutTests
             next,
             breadcrumbItems,
             slotContent,
-            pageHeadContent: null);
+            pageHeadContent: null,
+            currentPath: currentPath);
     }
 
     private static async Task<string> RenderLayoutWithHeadContentAsync(
@@ -59,7 +62,8 @@ public sealed class DocsLayoutTests
         PaginationLink? next = null,
         IReadOnlyList<BreadcrumbItem>? breadcrumbItems = null,
         ComponentDelegate? slotContent = null,
-        string? pageHeadContent = null)
+        string? pageHeadContent = null,
+        string currentPath = "/")
     {
         var destination = new StringRenderDestination();
         var props = new Dictionary<string, object?>
@@ -73,6 +77,7 @@ public sealed class DocsLayoutTests
             ["Next"] = next,
             ["BreadcrumbItems"] = breadcrumbItems ?? [],
             ["PageHeadContent"] = pageHeadContent,
+            ["CurrentPath"] = currentPath,
         };
 
         SlotCollection slots;
@@ -109,7 +114,7 @@ public sealed class DocsLayoutTests
     {
         var html = await RenderLayoutAsync(MakeConfig());
 
-        html.ShouldContain("<html lang=\"en\">");
+        html.ShouldContain("<html lang=\"en\" dir=\"ltr\">");
     }
 
     [Fact]
@@ -405,5 +410,111 @@ public sealed class DocsLayoutTests
         var headEnd = html.IndexOf("</head>", StringComparison.Ordinal);
         var headSection = html.Substring(headStart, headEnd - headStart + "</head>".Length);
         headSection.ShouldContain("<script src=\"/analytics.js\"></script>");
+    }
+
+    // --- Locale resolution ---
+
+    [Fact]
+    public async Task ShouldRenderDefaultLangAndDirWithoutLocales()
+    {
+        var html = await RenderLayoutAsync(MakeConfig());
+
+        html.ShouldContain("<html lang=\"en\" dir=\"ltr\">");
+    }
+
+    [Fact]
+    public async Task ShouldRenderResolvedLangForFrenchLocale()
+    {
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            Locales = new Dictionary<string, LocaleConfig>
+            {
+                ["root"] = new() { Label = "English", Lang = "en" },
+                ["fr"] = new() { Label = "French", Lang = "fr" },
+            },
+        };
+
+        var html = await RenderLayoutAsync(config, currentPath: "/fr/intro");
+
+        html.ShouldContain("<html lang=\"fr\" dir=\"ltr\">");
+    }
+
+    [Fact]
+    public async Task ShouldRenderRtlDirectionForArabicLocale()
+    {
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            Locales = new Dictionary<string, LocaleConfig>
+            {
+                ["root"] = new() { Label = "English", Lang = "en" },
+                ["ar"] = new() { Label = "Arabic", Lang = "ar", Dir = "rtl" },
+            },
+        };
+
+        var html = await RenderLayoutAsync(config, currentPath: "/ar/intro");
+
+        html.ShouldContain("<html lang=\"ar\" dir=\"rtl\">");
+    }
+
+    [Fact]
+    public async Task ShouldRenderRootLocaleForUnprefixedPath()
+    {
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            Locales = new Dictionary<string, LocaleConfig>
+            {
+                ["root"] = new() { Label = "English", Lang = "en" },
+                ["fr"] = new() { Label = "French", Lang = "fr" },
+            },
+        };
+
+        var html = await RenderLayoutAsync(config, currentPath: "/intro");
+
+        html.ShouldContain("<html lang=\"en\" dir=\"ltr\">");
+    }
+
+    [Fact]
+    public async Task ShouldUsePerLocaleTranslations()
+    {
+        var frenchTranslations = UiTranslations.Default with
+        {
+            SiteNavigationLabel = "Navigation du site",
+        };
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            Locales = new Dictionary<string, LocaleConfig>
+            {
+                ["root"] = new() { Label = "English", Lang = "en" },
+                ["fr"] = new() { Label = "French", Lang = "fr", Translations = frenchTranslations },
+            },
+        };
+
+        var html = await RenderLayoutAsync(config, currentPath: "/fr/intro");
+
+        html.ShouldContain("aria-label=\"Navigation du site\"");
+        html.ShouldNotContain("aria-label=\"Site navigation\"");
+    }
+
+    [Fact]
+    public async Task ShouldResolveLocaleWithBasePath()
+    {
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            BasePath = "/docs",
+            Locales = new Dictionary<string, LocaleConfig>
+            {
+                ["root"] = new() { Label = "English", Lang = "en" },
+                ["fr"] = new() { Label = "French", Lang = "fr" },
+            },
+        };
+
+        var html = await RenderLayoutAsync(config, currentPath: "/docs/fr/intro");
+
+        html.ShouldContain("<html lang=\"fr\" dir=\"ltr\">");
     }
 }

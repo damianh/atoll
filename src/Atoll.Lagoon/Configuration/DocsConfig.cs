@@ -72,4 +72,17 @@ public sealed class DocsConfig
     /// Defaults to <see cref="UiTranslations.Default"/> (English).
     /// </summary>
     public UiTranslations Translations { get; set; } = UiTranslations.Default;
+
+    /// <summary>
+    /// Gets or sets the locale configuration for multi-language sites.
+    /// Keys are URL path prefixes (e.g. <c>"fr"</c>, <c>"zh-cn"</c>) or <c>"root"</c> for the default locale.
+    /// When <c>null</c> or empty, the site operates in single-language mode (backward compatible).
+    /// </summary>
+    public IReadOnlyDictionary<string, LocaleConfig>? Locales { get; set; }
+
+    /// <summary>
+    /// Gets or sets the default BCP-47 language tag used when no locale configuration is present.
+    /// Defaults to <c>"en"</c>.
+    /// </summary>
+    public string DefaultLang { get; set; } = "en";
 }

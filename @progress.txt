@@ -36,3 +36,37 @@ Completed all 17 tasks in Slice 1 of the Lagoon i18n plan. Extracted all hardcod
 
 ### Next steps
 - Slice 2 (Tasks 18-23): Locale Configuration — `LocaleConfig` record, `LocaleResolver`, wire locale into `DocsLayout`
+
+## Slice 2: Locale Configuration — COMPLETED
+
+### Date: 2026-04-04
+
+### Summary
+Completed all 6 tasks in Slice 2 of the Lagoon i18n plan. Added locale configuration types, locale resolution from URL paths, and wired locale into `DocsLayout` for dynamic `lang`/`dir` attributes and per-locale translations.
+
+### What was done
+
+**New files:**
+- `src/Atoll.Lagoon/I18n/LocaleConfig.cs` — sealed record with `Label`, `Lang` (required), `Dir` (default "ltr"), `Translations` (default `UiTranslations.Default`)
+- `src/Atoll.Lagoon/I18n/LocaleResolver.cs` — static utility with `ResolvedLocale` record and `Resolve()` method. Handles: basePath stripping, locale prefix matching, root locale, case-insensitive matching, fallback to first locale, overload without basePath
+- `tests/Atoll.Lagoon.Tests/I18n/LocaleResolverTests.cs` — 16 comprehensive tests covering null/empty locales, root locale, prefixed locale, RTL, BCP-47 hyphens, basePath, case-insensitive, fallback
+
+**Modified source files:**
+- `Configuration/DocsConfig.cs` — Added `Locales` (`IReadOnlyDictionary<string, LocaleConfig>?`, default null) and `DefaultLang` (string, default "en")
+- `Layouts/DocsLayout.cs` — Added `CurrentPath` parameter; resolves locale via `LocaleResolver.Resolve()` at start of render; uses effective lang/dir/translations; always emits `dir` attribute on `<html>`
+
+**Modified test files:**
+- `Layouts/DocsLayoutTests.cs` — Updated `RenderLayoutAsync` helper to accept `currentPath`; updated assertion for `dir="ltr"` attribute; added 6 locale integration tests (default, French, RTL Arabic, root locale, per-locale translations, basePath)
+- `Configuration/DocsConfigTests.cs` — Added 4 tests: null locales default, locales configuration, custom translations, RTL locale, custom DefaultLang
+
+### Discoveries
+- Adding `dir="ltr"` to `<html>` is always rendered (even for single-language sites). This is valid HTML and helps assistive technologies. It required updating 1 existing test assertion.
+- `LocaleResolver.Resolve()` needs an overload without `basePath` to satisfy the coding standard of method overloads instead of optional parameters.
+
+### Verification
+- `dotnet build -c Release` — 0 warnings, 0 errors (MSB9008 is pre-existing)
+- `dotnet test tests/Atoll.Lagoon.Tests/` — 253 tests passed (224 existing + 29 new)
+- Backward compatible: single-language sites render `lang="en" dir="ltr"` (same content, valid HTML)
+
+### Next steps
+- Slice 3 (Tasks 24-31): Locale-Aware Routing — `LocalePathHelper`, locale-aware sidebar/breadcrumb/pagination, locale-prefixed URLs

@@ -1,4 +1,5 @@
 using Atoll.Lagoon.Configuration;
+using Atoll.Lagoon.I18n;
 using Shouldly;
 using Xunit;
 
@@ -180,5 +181,75 @@ public sealed class DocsConfigTests
         config.Sidebar[1].Collapsed.ShouldBeTrue();
         config.EnableMermaid.ShouldBeTrue();
         config.BasePath.ShouldBe("/docs");
+    }
+
+    // --- Locale configuration ---
+
+    [Fact]
+    public void DefaultConfigShouldHaveNullLocales()
+    {
+        var config = new DocsConfig();
+
+        config.Locales.ShouldBeNull();
+        config.DefaultLang.ShouldBe("en");
+    }
+
+    [Fact]
+    public void ShouldAcceptLocalesConfiguration()
+    {
+        var config = new DocsConfig
+        {
+            Locales = new Dictionary<string, LocaleConfig>
+            {
+                ["root"] = new() { Label = "English", Lang = "en" },
+                ["fr"] = new() { Label = "French", Lang = "fr" },
+            },
+        };
+
+        config.Locales.ShouldNotBeNull();
+        config.Locales.Count.ShouldBe(2);
+        config.Locales["root"].Lang.ShouldBe("en");
+        config.Locales["fr"].Label.ShouldBe("French");
+    }
+
+    [Fact]
+    public void ShouldAcceptLocalesWithCustomTranslations()
+    {
+        var frenchTranslations = UiTranslations.Default with { PaginationNext = "Suivant" };
+        var config = new DocsConfig
+        {
+            Locales = new Dictionary<string, LocaleConfig>
+            {
+                ["root"] = new() { Label = "English", Lang = "en" },
+                ["fr"] = new() { Label = "French", Lang = "fr", Translations = frenchTranslations },
+            },
+        };
+
+        config.Locales!["fr"].Translations.PaginationNext.ShouldBe("Suivant");
+        config.Locales["root"].Translations.ShouldBe(UiTranslations.Default);
+    }
+
+    [Fact]
+    public void ShouldAcceptRtlLocale()
+    {
+        var config = new DocsConfig
+        {
+            Locales = new Dictionary<string, LocaleConfig>
+            {
+                ["root"] = new() { Label = "English", Lang = "en" },
+                ["ar"] = new() { Label = "Arabic", Lang = "ar", Dir = "rtl" },
+            },
+        };
+
+        config.Locales!["ar"].Dir.ShouldBe("rtl");
+        config.Locales["root"].Dir.ShouldBe("ltr");
+    }
+
+    [Fact]
+    public void ShouldAllowCustomDefaultLang()
+    {
+        var config = new DocsConfig { DefaultLang = "de" };
+
+        config.DefaultLang.ShouldBe("de");
     }
 }
