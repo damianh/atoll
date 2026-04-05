@@ -227,6 +227,9 @@ public sealed class DocsTheme : AtollComponent
 
     private const string Prose = """
         /* ---- Prose (Markdown article content) ---- */
+        .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+            scroll-margin-top: calc(var(--docs-header-height) + 1rem);
+        }
         .prose h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.75rem; color: var(--docs-primary); }
         .prose h2 {
             font-size: 1.375rem;
