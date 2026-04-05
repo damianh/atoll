@@ -1,0 +1,30 @@
+<mxfile version="21.0.0">
+  <diagram name="Styled" id="page1">
+    <mxGraphModel>
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- Rectangle with fill color -->
+        <mxCell id="2" value="Blue Box" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="60" y="60" width="140" height="70" as="geometry" />
+        </mxCell>
+        <!-- Ellipse with color -->
+        <mxCell id="3" value="Green Oval" style="ellipse;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#006600;" vertex="1" parent="1">
+          <mxGeometry x="260" y="60" width="140" height="70" as="geometry" />
+        </mxCell>
+        <!-- Rhombus -->
+        <mxCell id="4" value="Diamond" style="rhombus;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="60" y="180" width="100" height="80" as="geometry" />
+        </mxCell>
+        <!-- Dashed edge -->
+        <mxCell id="5" value="dashed" style="dashed=1;endArrow=open;endFill=0;" edge="1" source="2" target="3" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Text label -->
+        <mxCell id="6" value="&lt;b&gt;Bold&lt;/b&gt; and &lt;i&gt;italic&lt;/i&gt; text" style="text;html=1;align=center;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="200" y="200" width="160" height="40" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
