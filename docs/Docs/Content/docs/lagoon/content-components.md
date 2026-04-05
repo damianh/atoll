@@ -56,6 +56,24 @@ await RenderAsync<Aside>(new { Type = AsideType.Danger }, slot =>
 </aside>
 ```
 
+### Live examples
+
+:::aside
+Aside defaults to the **Note** variant when no `type` is specified. Use notes for general supplementary information.
+:::
+
+:::aside{type="tip" title="Performance tip"}
+Use `client:idle` for non-critical islands to avoid blocking the main thread.
+:::
+
+:::aside{type="caution" title="Compatibility notice"}
+This API is stable but may change in the next major version. Pin your dependency version to avoid surprises.
+:::
+
+:::aside{type="danger"}
+This operation is destructive and cannot be undone. Make sure you have a backup before proceeding.
+:::
+
 ---
 
 ## Card
@@ -91,6 +109,12 @@ await RenderAsync<Card>(new { Title = "Getting Started", IconName = IconName.Roc
   </div>
 </div>
 ```
+
+### Live example
+
+:::card{title="Getting Started" iconName="Rocket"}
+Set up your first Atoll project in under 5 minutes. Atoll's CLI scaffolds everything you need — just add content.
+:::
 
 ---
 
@@ -129,6 +153,33 @@ await RenderAsync<CardGrid>(new { Stagger = false }, async slot =>
 </div>
 ```
 
+### Live example
+
+:::card-grid
+:::card{title="Fast"}
+Sub-millisecond component rendering powered by server-side C#.
+:::
+:::card{title="Type-safe"}
+Full C# type safety for all parameters — catch errors at compile time.
+:::
+:::card{title="Accessible"}
+Semantic HTML with ARIA attributes and keyboard navigation built in.
+:::
+
+:::
+
+### Live example — staggered layout
+
+:::card-grid{stagger}
+:::card{title="Write content" iconName="Pencil"}
+Author documentation in Markdown with full component support.
+:::
+:::card{title="Ship fast" iconName="Rocket"}
+Build and deploy static sites with zero JavaScript by default.
+:::
+
+:::
+
 ---
 
 ## Steps
@@ -164,6 +215,14 @@ await RenderAsync<Steps>(slot =>
   </ol>
 </div>
 ```
+
+### Live example
+
+:::steps
+1. **Install the CLI** — Run `dotnet tool install -g atoll` to install the Atoll CLI globally.
+2. **Create a project** — Run `atoll new docs` to scaffold a new documentation site.
+3. **Start developing** — Run `atoll dev` to launch the local dev server with hot reload.
+:::
 
 ---
 
@@ -319,6 +378,14 @@ await RenderAsync<LinkCard>(new
 </a>
 ```
 
+### Live example
+
+:::link-card{title="Read the Guide" href="/docs/getting-started" description="Learn how to set up your first Atoll project."}
+:::
+
+:::link-card{title="Component Reference" href="/docs/lagoon/content-components" description="Browse all available content components." iconName="Document"}
+:::
+
 ---
 
 ## LinkButton
@@ -355,6 +422,17 @@ await RenderAsync<LinkButton>(new
     IconPlacement = IconPlacement.End,
 });
 ```
+
+### Live example
+
+:::link-button{href="/docs/getting-started" label="Get Started" variant="Primary" iconName="Rocket"}
+:::
+
+:::link-button{href="https://github.com/damianh/atoll" label="View on GitHub" variant="Secondary" iconName="ExternalLink" iconPlacement="End"}
+:::
+
+:::link-button{href="/docs/lagoon/content-components" label="Browse Components" variant="Minimal"}
+:::
 
 ---
 
@@ -400,3 +478,14 @@ Renders an inline SVG icon from Lagoon's built-in icon set.
 ```csharp
 await RenderAsync<Icon>(new { Name = IconName.Rocket, Label = "Launch", Size = "1.5rem" });
 ```
+
+### Live example
+
+:::icon{name="Rocket" label="Launch" size="1.5rem"}
+:::
+:::icon{name="Star" label="Favourite" size="1.5rem" color="gold"}
+:::
+:::icon{name="Heart" label="Like" size="1.5rem" color="crimson"}
+:::
+:::icon{name="Check" label="Done" size="1.5rem" color="green"}
+:::
