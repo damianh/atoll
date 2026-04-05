@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <RootNamespace>Atoll.Samples.Articles</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Atoll.Reef\Atoll.Reef.csproj" />
+    <ProjectReference Include="..\..\src\Atoll.Middleware\Atoll.Middleware.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Atoll\Atoll.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Islands\Assets\article-filter.js"
+      LogicalName="Atoll.Reef.Islands.Assets.article-filter.js" />
+    <EmbeddedResource Include="Islands\Assets\view-toggle.js"
+      LogicalName="Atoll.Reef.Islands.Assets.view-toggle.js" />
+  </ItemGroup>
+</Project>

@@ -79,6 +79,20 @@ public static class DocsSetup
                     new SidebarItem { Label = "Starlight Comparison",  Link = "/docs/lagoon/starlight-comparison" },
                 ],
             },
+            new SidebarItem
+            {
+                Label = "Reef Theme",
+                Items =
+                [
+                    new SidebarItem { Label = "Overview",             Link = "/docs/reef/overview" },
+                    new SidebarItem { Label = "Configuration",        Link = "/docs/reef/configuration" },
+                    new SidebarItem { Label = "Components",           Link = "/docs/reef/components" },
+                    new SidebarItem { Label = "Islands",              Link = "/docs/reef/islands" },
+                    new SidebarItem { Label = "Views & Layouts",      Link = "/docs/reef/views-and-layouts" },
+                    new SidebarItem { Label = "Feeds & SEO",          Link = "/docs/reef/feeds-and-seo" },
+                    new SidebarItem { Label = "Series & Navigation",  Link = "/docs/reef/series-and-navigation" },
+                ],
+            },
         ],
     };
 }
