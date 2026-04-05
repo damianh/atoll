@@ -46,6 +46,19 @@ public sealed class LinkResolutionExtensionTests
     }
 
     [Fact]
+    public void ShouldRewriteMdaExtension()
+    {
+        var options = new MarkdownOptions
+        {
+            LinkResolution = new LinkResolutionOptions { BasePath = "/docs" }
+        };
+
+        var result = MarkdownRenderer.Render("[link](./sub/page.mda)", options);
+
+        result.Html.ShouldContain("href=\"/docs/sub/page/\"");
+    }
+
+    [Fact]
     public void ShouldNotRewriteAbsoluteHttpsLink()
     {
         var options = new MarkdownOptions

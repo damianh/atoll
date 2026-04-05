@@ -4,8 +4,9 @@ namespace Atoll.Build.Content.Collections;
 
 /// <summary>
 /// Loads content entries from the filesystem for a given collection.
-/// Scans the collection directory for Markdown files, parses frontmatter,
-/// validates data against the schema type, and produces <see cref="ContentEntry{TData}"/> instances.
+/// Scans the collection directory for Markdown files (<c>*.md</c> and <c>*.mda</c>),
+/// parses frontmatter, validates data against the schema type, and produces
+/// <see cref="ContentEntry{TData}"/> instances.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -196,14 +197,17 @@ public sealed class ContentFile
 public interface IFileProvider
 {
     /// <summary>
-    /// Gets all Markdown files (*.md) in the specified directory (non-recursive).
+    /// Gets all Markdown files (<c>*.md</c> and <c>*.mda</c>) in the specified directory (non-recursive).
+    /// When both <c>slug.md</c> and <c>slug.mda</c> exist, only the <c>.md</c> file is returned.
     /// </summary>
     /// <param name="directory">The directory path to scan.</param>
     /// <returns>A collection of content files.</returns>
     IReadOnlyList<ContentFile> GetMarkdownFiles(string directory);
 
     /// <summary>
-    /// Gets all Markdown files (*.md) in the specified directory, optionally scanning subdirectories.
+    /// Gets all Markdown files (<c>*.md</c> and <c>*.mda</c>) in the specified directory,
+    /// optionally scanning subdirectories.
+    /// When both <c>slug.md</c> and <c>slug.mda</c> exist, only the <c>.md</c> file is returned.
     /// </summary>
     /// <param name="directory">The directory path to scan.</param>
     /// <param name="recursive">
@@ -217,6 +221,7 @@ public interface IFileProvider
 
     /// <summary>
     /// Gets a single Markdown file by slug (file name without extension).
+    /// Checks for <c>.md</c> first, then <c>.mda</c> if no <c>.md</c> file is found.
     /// </summary>
     /// <param name="directory">The directory path to search.</param>
     /// <param name="slug">The file name without extension.</param>
@@ -226,6 +231,7 @@ public interface IFileProvider
 
 /// <summary>
 /// An <see cref="IFileProvider"/> that reads from the physical filesystem.
+/// Discovers both <c>*.md</c> and <c>*.mda</c> files.
 /// </summary>
 public sealed class PhysicalFileProvider : IFileProvider
 {
@@ -239,17 +245,19 @@ public sealed class PhysicalFileProvider : IFileProvider
             return [];
         }
 
-        var files = Directory.GetFiles(directory, "*.md", SearchOption.TopDirectoryOnly);
         var entries = new List<ContentFile>();
 
-        foreach (var file in files)
+        foreach (var pattern in ContentFileExtensions.SearchPatterns)
         {
-            var relativePath = Path.GetFileName(file);
-            var content = File.ReadAllText(file);
-            entries.Add(new ContentFile(relativePath, content));
+            foreach (var file in Directory.GetFiles(directory, pattern, SearchOption.TopDirectoryOnly))
+            {
+                var relativePath = Path.GetFileName(file);
+                var content = File.ReadAllText(file);
+                entries.Add(new ContentFile(relativePath, content));
+            }
         }
 
-        return entries;
+        return ContentFileExtensions.DeduplicateBySlug(entries);
     }
 
     /// <inheritdoc />
@@ -267,20 +275,21 @@ public sealed class PhysicalFileProvider : IFileProvider
             return [];
         }
 
-        var files = Directory.GetFiles(directory, "*.md", SearchOption.AllDirectories);
         var entries = new List<ContentFile>();
         var normalizedBase = directory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
-        foreach (var file in files)
+        foreach (var pattern in ContentFileExtensions.SearchPatterns)
         {
-            var fullPath = file;
-            var relativePath = fullPath[(normalizedBase.Length + 1)..]
-                .Replace(Path.DirectorySeparatorChar, '/');
-            var content = File.ReadAllText(file);
-            entries.Add(new ContentFile(relativePath, content));
+            foreach (var file in Directory.GetFiles(directory, pattern, SearchOption.AllDirectories))
+            {
+                var relativePath = file[(normalizedBase.Length + 1)..]
+                    .Replace(Path.DirectorySeparatorChar, '/');
+                var content = File.ReadAllText(file);
+                entries.Add(new ContentFile(relativePath, content));
+            }
         }
 
-        return entries;
+        return ContentFileExtensions.DeduplicateBySlug(entries);
     }
 
     /// <inheritdoc />
@@ -289,20 +298,24 @@ public sealed class PhysicalFileProvider : IFileProvider
         ArgumentNullException.ThrowIfNull(directory);
         ArgumentNullException.ThrowIfNull(slug);
 
-        var filePath = Path.Combine(directory, slug + ".md");
-        if (!File.Exists(filePath))
+        // Try .md first, then .mda — .md takes priority.
+        foreach (var ext in ContentFileExtensions.Extensions)
         {
-            return null;
+            var filePath = Path.Combine(directory, slug + ext);
+            if (File.Exists(filePath))
+            {
+                var content = File.ReadAllText(filePath);
+                return new ContentFile(slug + ext, content);
+            }
         }
 
-        var content = File.ReadAllText(filePath);
-        return new ContentFile(slug + ".md", content);
+        return null;
     }
 }
 
 /// <summary>
 /// An in-memory <see cref="IFileProvider"/> for testing content collections
-/// without filesystem access.
+/// without filesystem access. Supports both <c>*.md</c> and <c>*.mda</c> files.
 /// </summary>
 public sealed class InMemoryFileProvider : IFileProvider
 {
@@ -345,7 +358,8 @@ public sealed class InMemoryFileProvider : IFileProvider
             return [];
         }
 
-        return list.Where(f => f.RelativePath.EndsWith(".md", StringComparison.OrdinalIgnoreCase)).ToList();
+        return ContentFileExtensions.DeduplicateBySlug(
+            list.Where(f => ContentFileExtensions.IsContentFile(f.RelativePath)).ToList());
     }
 
     /// <inheritdoc />
@@ -370,7 +384,7 @@ public sealed class InMemoryFileProvider : IFileProvider
             {
                 foreach (var file in files)
                 {
-                    if (!file.RelativePath.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+                    if (!ContentFileExtensions.IsContentFile(file.RelativePath))
                     {
                         continue;
                     }
@@ -386,7 +400,7 @@ public sealed class InMemoryFileProvider : IFileProvider
             }
         }
 
-        return results;
+        return ContentFileExtensions.DeduplicateBySlug(results);
     }
 
     /// <inheritdoc />
@@ -401,13 +415,98 @@ public sealed class InMemoryFileProvider : IFileProvider
             return null;
         }
 
-        var fileName = slug + ".md";
-        return list.FirstOrDefault(f =>
-            string.Equals(f.RelativePath, fileName, StringComparison.OrdinalIgnoreCase));
+        // Try .md first, then .mda — .md takes priority.
+        foreach (var ext in ContentFileExtensions.Extensions)
+        {
+            var fileName = slug + ext;
+            var match = list.FirstOrDefault(f =>
+                string.Equals(f.RelativePath, fileName, StringComparison.OrdinalIgnoreCase));
+            if (match is not null)
+            {
+                return match;
+            }
+        }
+
+        return null;
     }
 
     private static string NormalizePath(string path)
     {
         return path.Replace('\\', '/').TrimEnd('/');
+    }
+}
+
+/// <summary>
+/// Defines the supported content file extensions for Atoll content collections.
+/// </summary>
+internal static class ContentFileExtensions
+{
+    /// <summary>
+    /// The ordered list of supported file extensions. <c>.md</c> is listed first to
+    /// ensure it takes priority over <c>.mda</c> when both exist for the same slug.
+    /// </summary>
+    internal static readonly string[] Extensions = [".md", ".mda"];
+
+    /// <summary>
+    /// Glob search patterns corresponding to <see cref="Extensions"/>.
+    /// </summary>
+    internal static readonly string[] SearchPatterns = ["*.md", "*.mda"];
+
+    /// <summary>
+    /// Returns <c>true</c> if the specified file path ends with a supported content extension
+    /// (<c>.md</c> or <c>.mda</c>), case-insensitively.
+    /// </summary>
+    internal static bool IsContentFile(string path)
+    {
+        foreach (var ext in Extensions)
+        {
+            if (path.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Deduplicates content files by slug, keeping <c>.md</c> over <c>.mda</c> when both exist.
+    /// The slug is derived from the relative path by stripping the file extension.
+    /// </summary>
+    internal static IReadOnlyList<ContentFile> DeduplicateBySlug(List<ContentFile> files)
+    {
+        if (files.Count <= 1)
+        {
+            return files;
+        }
+
+        var seen = new Dictionary<string, ContentFile>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var file in files)
+        {
+            var slug = GetSlug(file.RelativePath);
+
+            if (seen.TryGetValue(slug, out var existing))
+            {
+                // .md takes priority over .mda — only replace if current is .md and existing is not.
+                if (file.RelativePath.EndsWith(".md", StringComparison.OrdinalIgnoreCase) &&
+                    !existing.RelativePath.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+                {
+                    seen[slug] = file;
+                }
+            }
+            else
+            {
+                seen[slug] = file;
+            }
+        }
+
+        return seen.Values.ToList();
+    }
+
+    private static string GetSlug(string relativePath)
+    {
+        var lastDot = relativePath.LastIndexOf('.');
+        return lastDot > 0 ? relativePath[..lastDot] : relativePath;
     }
 }

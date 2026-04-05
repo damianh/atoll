@@ -9,7 +9,7 @@ namespace Atoll.Build.Content.Markdown;
 /// <summary>
 /// Markdig extension that rewrites relative Markdown file links to clean URL paths.
 /// For example, <c>[page](./other-page.md)</c> is rewritten to <c>&lt;a href="/docs/other-page/"&gt;page&lt;/a&gt;</c>.
-/// Only relative links ending in a configured extension (e.g., <c>.md</c>, <c>.mdx</c>) are rewritten.
+/// Only relative links ending in a configured extension (e.g., <c>.md</c>, <c>.mdx</c>, <c>.mda</c>) are rewritten.
 /// Absolute URLs (starting with <c>http://</c> or <c>https://</c>) and root-relative paths
 /// (starting with <c>/</c>) are left untouched.
 /// </summary>

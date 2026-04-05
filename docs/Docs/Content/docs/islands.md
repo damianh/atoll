@@ -1,7 +1,7 @@
 ---
 title: Islands (Partial Hydration)
 description: Add client-side interactivity with zero-JS-by-default islands architecture.
-order: 6
+order: 7
 section: Features
 ---
 

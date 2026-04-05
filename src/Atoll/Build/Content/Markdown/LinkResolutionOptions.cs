@@ -3,7 +3,7 @@ namespace Atoll.Build.Content.Markdown;
 /// <summary>
 /// Configuration options for resolving relative Markdown file links to clean URL paths.
 /// When set on <see cref="MarkdownOptions.LinkResolution"/>, the Markdown renderer will
-/// rewrite relative links ending in <c>.md</c> or <c>.mdx</c> to clean URL paths.
+/// rewrite relative links ending in <c>.md</c>, <c>.mdx</c>, or <c>.mda</c> to clean URL paths.
 /// </summary>
 public sealed class LinkResolutionOptions
 {
@@ -24,7 +24,7 @@ public sealed class LinkResolutionOptions
     /// <summary>
     /// Gets or sets the file extensions to strip from relative link URLs.
     /// Extensions are matched case-insensitively.
-    /// Default: <c>[".md", ".mdx"]</c>.
+    /// Default: <c>[".md", ".mdx", ".mda"]</c>.
     /// </summary>
-    public IReadOnlyList<string> ExtensionsToStrip { get; set; } = [".md", ".mdx"];
+    public IReadOnlyList<string> ExtensionsToStrip { get; set; } = [".md", ".mdx", ".mda"];
 }

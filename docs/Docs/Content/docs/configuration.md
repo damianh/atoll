@@ -1,7 +1,7 @@
 ---
 title: Configuration
 description: Configure Atoll with AtollConfig and AtollConfigLoader.
-order: 10
+order: 11
 section: Advanced
 ---
 

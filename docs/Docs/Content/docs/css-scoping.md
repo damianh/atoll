@@ -1,7 +1,7 @@
 ---
 title: CSS Scoping
 description: Scope CSS to components automatically with the Styles attribute.
-order: 7
+order: 8
 section: Features
 ---
 

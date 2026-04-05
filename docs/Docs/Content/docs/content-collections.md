@@ -1,7 +1,7 @@
 ---
 title: Content Collections
 description: Manage Markdown files with typed YAML frontmatter using CollectionQuery.
-order: 5
+order: 6
 section: Features
 ---
 

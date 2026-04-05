@@ -1,7 +1,7 @@
 ---
 title: Static Site Generation
 description: Generate a complete static HTML site with StaticSiteGenerator.
-order: 9
+order: 10
 section: Advanced
 ---
 
