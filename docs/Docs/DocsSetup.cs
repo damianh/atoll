@@ -45,6 +45,7 @@ public static class DocsSetup
                 Label = "Features",
                 Items =
                 [
+                    new SidebarItem { Label = "MDA Format",              Link = "/docs/mda-format" },
                     new SidebarItem { Label = "Content Collections",     Link = "/docs/content-collections" },
                     new SidebarItem { Label = "CSS Scoping",             Link = "/docs/css-scoping" },
                     new SidebarItem { Label = "Islands Architecture",    Link = "/docs/islands" },
