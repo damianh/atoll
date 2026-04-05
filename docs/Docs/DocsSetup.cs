@@ -1,4 +1,5 @@
 using Atoll.Lagoon.Configuration;
+using Atoll.Mermaid.Islands;
 
 namespace Docs;
 
@@ -8,6 +9,10 @@ namespace Docs;
 /// </summary>
 public static class DocsSetup
 {
+    // Ensure the Atoll.Mermaid assembly is referenced so the dev server's
+    // island asset discovery (which only scans direct assembly references)
+    // can find MermaidIslandAssetProvider.
+    private static readonly Type MermaidAssetProviderType = typeof(MermaidIslandAssetProvider);
     /// <summary>
     /// Gets the documentation site configuration, including title, sidebar items, and feature flags.
     /// </summary>
