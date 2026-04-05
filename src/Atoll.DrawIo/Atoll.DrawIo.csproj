@@ -8,7 +8,9 @@
     </AssemblyAttribute>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Islands\Assets\drawio-interactive.js"
-      LogicalName="Atoll.DrawIo.Islands.Assets.drawio-interactive.js" />
+    <EmbeddedResource Include="Islands\Assets\viewer-static.min.js"
+      LogicalName="Atoll.DrawIo.Islands.Assets.viewer-static.min.js" />
+    <EmbeddedResource Include="Islands\Assets\drawio-viewer-init.js"
+      LogicalName="Atoll.DrawIo.Islands.Assets.drawio-viewer-init.js" />
   </ItemGroup>
 </Project>

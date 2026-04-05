@@ -15,8 +15,13 @@ public sealed class DrawIoIslandAssetProvider : IIslandAssetProvider
     public IEnumerable<IslandAssetDescriptor> GetAssets()
     {
         yield return new IslandAssetDescriptor(
-            "scripts/atoll-drawio-interactive.js",
-            "Atoll.DrawIo.Islands.Assets.drawio-interactive.js",
+            "scripts/atoll-drawio-viewer.min.js",
+            "Atoll.DrawIo.Islands.Assets.viewer-static.min.js",
+            ResourceAssembly);
+
+        yield return new IslandAssetDescriptor(
+            "scripts/atoll-drawio-viewer-init.js",
+            "Atoll.DrawIo.Islands.Assets.drawio-viewer-init.js",
             ResourceAssembly);
     }
 }
