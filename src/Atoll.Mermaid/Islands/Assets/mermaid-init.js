@@ -11,15 +11,28 @@
 
 import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.esm.min.mjs';
 
-const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default';
+function getTheme() {
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default';
+}
 
-mermaid.initialize({ startOnLoad: true, theme });
+// Store the original diagram source before Mermaid replaces it with SVG.
+const diagrams = [];
+document.querySelectorAll('pre.mermaid').forEach(el => {
+    diagrams.push({ el, source: el.textContent });
+});
 
-// Re-initialize when the theme toggles so diagrams re-render with updated colours.
-const observer = new MutationObserver(() => {
-    const newTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default';
+mermaid.initialize({ startOnLoad: true, theme: getTheme() });
+
+// Re-render when the theme toggles: restore original source, reset processed
+// state, re-initialize with the new theme, and re-run.
+const observer = new MutationObserver(async () => {
+    const newTheme = getTheme();
+    diagrams.forEach(({ el, source }) => {
+        el.removeAttribute('data-processed');
+        el.textContent = source;
+    });
     mermaid.initialize({ startOnLoad: false, theme: newTheme });
-    mermaid.run();
+    await mermaid.run();
 });
 
 observer.observe(document.documentElement, {
