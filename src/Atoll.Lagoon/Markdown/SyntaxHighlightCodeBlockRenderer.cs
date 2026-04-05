@@ -63,8 +63,14 @@ internal sealed class SyntaxHighlightCodeBlockRenderer : HtmlObjectRenderer<Code
         static () => new Registry(new RegistryOptions(ThemeName.DarkPlus)),
         LazyThreadSafetyMode.ExecutionAndPublication);
 
-    // Grammar cache keyed by scope ID.
-    private static readonly ConcurrentDictionary<string, IGrammar?> GrammarCache = new();
+    // Grammar cache keyed by scope ID.  Lazy<T> ensures that only one thread ever
+    // invokes Registry.LoadGrammar for a given scope — the registry is not thread-safe.
+    private static readonly ConcurrentDictionary<string, Lazy<IGrammar?>> GrammarCache = new();
+
+    // Lock to serialize ALL grammar loads AND tokenization calls — the registry's
+    // internal SyncRegistry and Grammar.RegisterRule use non-concurrent Dictionary,
+    // making both LoadGrammar and TokenizeLine unsafe for concurrent access.
+    private static readonly object GrammarLoadLock = new();
 
     private readonly IMarkdownObjectRenderer _fallback;
 
@@ -89,9 +95,11 @@ internal sealed class SyntaxHighlightCodeBlockRenderer : HtmlObjectRenderer<Code
             fenced.Info is { Length: > 0 } lang &&
             LanguageScopes.TryGetValue(lang, out var scopeId))
         {
-            var grammar = GrammarCache.GetOrAdd(
-                scopeId,
-                static id => SharedRegistry.Value.LoadGrammar(id));
+            var grammar = GrammarCache
+                .GetOrAdd(scopeId, static id => new Lazy<IGrammar?>(
+                    () => LoadGrammarSafe(id),
+                    LazyThreadSafetyMode.ExecutionAndPublication))
+                .Value;
 
             if (grammar is not null)
             {
@@ -101,6 +109,28 @@ internal sealed class SyntaxHighlightCodeBlockRenderer : HtmlObjectRenderer<Code
         }
 
         _fallback.Write(renderer, block);
+    }
+
+    /// <summary>
+    /// Attempts to load a TextMate grammar by scope ID. Returns <c>null</c> instead
+    /// of throwing when the grammar definition cannot be located (e.g., missing
+    /// embedded resources in certain assembly-loading contexts).
+    /// </summary>
+    private static IGrammar? LoadGrammarSafe(string scopeId)
+    {
+        try
+        {
+            lock (GrammarLoadLock)
+            {
+                return SharedRegistry.Value.LoadGrammar(scopeId);
+            }
+        }
+        catch
+        {
+            // Grammar definition unavailable in this assembly-loading context — fall
+            // back to plain-text rendering for this language.
+            return null;
+        }
     }
 
     private static void WriteHighlightedBlock(
@@ -119,10 +149,15 @@ internal sealed class SyntaxHighlightCodeBlockRenderer : HtmlObjectRenderer<Code
         for (var i = 0; i < lines.Count; i++)
         {
             var line = lines[i];
-            var result = grammar.TokenizeLine(
-                new LineText(line),
-                ruleStack,
-                TimeSpan.FromSeconds(5));
+
+            ITokenizeLineResult result;
+            lock (GrammarLoadLock)
+            {
+                result = grammar.TokenizeLine(
+                    new LineText(line),
+                    ruleStack,
+                    TimeSpan.FromSeconds(5));
+            }
 
             ruleStack = result.RuleStack;
 

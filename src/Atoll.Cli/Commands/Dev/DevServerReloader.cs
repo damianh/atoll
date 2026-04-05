@@ -675,23 +675,12 @@ internal sealed class DevServerReloader
             // preventing memory leaks from accumulated assembly loads.
             var loadContext = new AssemblyLoadContext(contextName, isCollectible: true);
 
-            // Use AssemblyDependencyResolver to resolve transitive NuGet dependencies
-            // (e.g. TextMateSharp) from the user project's .deps.json file.
-            var resolver = new AssemblyDependencyResolver(absolutePath);
-            loadContext.Resolving += (context, assemblyName) =>
-            {
-                // First try the deps.json resolver (handles NuGet packages).
-                var resolvedPath = resolver.ResolveAssemblyToPath(assemblyName);
-                if (resolvedPath is not null)
-                {
-                    return context.LoadFromAssemblyPath(resolvedPath);
-                }
-
-                // Fallback: probe the assembly's directory for project references.
-                var dir = Path.GetDirectoryName(absolutePath)!;
-                var candidate = Path.Combine(dir, assemblyName.Name + ".dll");
-                return File.Exists(candidate) ? context.LoadFromAssemblyPath(candidate) : null;
-            };
+            // Resolve transitive NuGet dependencies (e.g. TextMateSharp) by
+            // parsing the user project's .deps.json and probing the NuGet cache.
+            // AssemblyDependencyResolver does not work for class library projects
+            // (no .runtimeconfig.json), so we use our own resolver.
+            var resolver = DepsJsonAssemblyResolver.Create(absolutePath);
+            resolver?.Attach(loadContext);
 
             var assembly = loadContext.LoadFromAssemblyPath(absolutePath);
             return (loadContext, assembly);
