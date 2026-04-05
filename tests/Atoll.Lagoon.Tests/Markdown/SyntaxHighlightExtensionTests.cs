@@ -1,4 +1,7 @@
+using Atoll.Build.Content.Markdown;
+using Atoll.Components;
 using Atoll.Lagoon.Markdown;
+using Atoll.Rendering;
 using Shouldly;
 using Xunit;
 
@@ -185,5 +188,41 @@ public sealed class SyntaxHighlightExtensionTests
         var html = RenderWithHighlighting(md);
 
         html.ShouldContain("tm-keyword");
+    }
+
+    // --- Syntax highlighting inside component directives ---
+
+    [Fact]
+    public void ShouldHighlightCodeBlocksInsideComponentDirective()
+    {
+        // Use core MarkdownRenderer directly so that fragment extraction occurs.
+        var options = new MarkdownOptions
+        {
+            Components = new ComponentMap().Add<SlotComponent>("wrapper"),
+            Extensions = [new SyntaxHighlightExtension()],
+        };
+
+        var md = ":::wrapper\n```csharp\nvar x = 1;\n```\n:::";
+        var result = MarkdownRenderer.Render(md, options);
+
+        // The component's child HTML should contain syntax-highlighted spans.
+        var compFragment = result.Fragments.ShouldNotBeNull()
+            .OfType<ComponentContentFragment>()
+            .Single();
+
+        compFragment.Reference.ChildHtml.ShouldNotBeNull();
+        compFragment.Reference.ChildHtml.ShouldContain("tm-keyword");
+    }
+
+    // ── Fixtures ──
+
+    private sealed class SlotComponent : IAtollComponent
+    {
+        public Task RenderAsync(RenderContext context)
+        {
+            context.WriteHtml("<div>");
+            context.WriteHtml("</div>");
+            return Task.CompletedTask;
+        }
     }
 }

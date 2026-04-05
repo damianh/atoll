@@ -97,6 +97,28 @@ internal sealed class ComponentDirectiveRenderer : HtmlObjectRenderer<CustomCont
         // Copy relevant renderer settings so child content renders consistently.
         childRenderer.ImplicitParagraph = false;
 
+        // Inherit custom object renderers from the parent so that extensions
+        // (e.g. syntax highlighting, mermaid) are applied to nested content.
+        foreach (var objectRenderer in parentRenderer.ObjectRenderers)
+        {
+            var type = objectRenderer.GetType();
+            var alreadyRegistered = false;
+
+            foreach (var existing in childRenderer.ObjectRenderers)
+            {
+                if (existing.GetType() == type)
+                {
+                    alreadyRegistered = true;
+                    break;
+                }
+            }
+
+            if (!alreadyRegistered)
+            {
+                childRenderer.ObjectRenderers.Insert(0, objectRenderer);
+            }
+        }
+
         foreach (var child in block)
         {
             childRenderer.Render(child);
