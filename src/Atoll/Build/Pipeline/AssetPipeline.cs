@@ -209,9 +209,9 @@ public sealed class AssetPipelineOptions
     public bool Fingerprint { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets the subdirectory for processed assets. Defaults to <c>_astro</c>.
+    /// Gets or sets the subdirectory for processed assets. Defaults to <c>_atoll</c>.
     /// </summary>
-    public string AssetSubdirectory { get; set; } = "_astro";
+    public string AssetSubdirectory { get; set; } = "_atoll";
 
     /// <summary>
     /// Gets or sets the CSS output filename (before fingerprinting). Defaults to <c>styles.css</c>.

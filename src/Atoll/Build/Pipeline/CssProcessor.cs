@@ -158,9 +158,9 @@ public sealed class CssProcessorOptions
 
     /// <summary>
     /// Gets or sets the subdirectory within the output directory to write CSS files to.
-    /// Defaults to <c>_astro</c> (following Astro convention).
+    /// Defaults to <c>_atoll</c>.
     /// </summary>
-    public string OutputSubdirectory { get; set; } = "_astro";
+    public string OutputSubdirectory { get; set; } = "_atoll";
 }
 
 /// <summary>
@@ -177,7 +177,7 @@ public sealed class CssProcessResult
     /// Initializes a new <see cref="CssProcessResult"/>.
     /// </summary>
     /// <param name="css">The processed CSS content.</param>
-    /// <param name="outputPath">The relative output path (e.g., <c>_astro/styles.a1b2c3d4.css</c>).</param>
+    /// <param name="outputPath">The relative output path (e.g., <c>_atoll/styles.a1b2c3d4.css</c>).</param>
     /// <param name="fileName">The output filename (e.g., <c>styles.a1b2c3d4.css</c>).</param>
     /// <param name="hash">The content hash, or <c>null</c> if fingerprinting was disabled.</param>
     public CssProcessResult(string css, string outputPath, string fileName, string? hash)
@@ -197,7 +197,7 @@ public sealed class CssProcessResult
     public string Css { get; }
 
     /// <summary>
-    /// Gets the relative output path including subdirectory (e.g., <c>_astro/styles.a1b2c3d4.css</c>).
+    /// Gets the relative output path including subdirectory (e.g., <c>_atoll/styles.a1b2c3d4.css</c>).
     /// </summary>
     public string OutputPath { get; }
 

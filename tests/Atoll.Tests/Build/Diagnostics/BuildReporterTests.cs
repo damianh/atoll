@@ -59,12 +59,12 @@ public sealed class BuildReporterTests
     {
         var css = new CssProcessResult(
             "body{color:red}",
-            "_astro/styles.abc123.css",
+            "_atoll/styles.abc123.css",
             "styles.abc123.css",
             "abc123");
         var js = new JsProcessResult(
             "console.log('hi')",
-            "_astro/scripts.def456.js",
+            "_atoll/scripts.def456.js",
             "scripts.def456.js",
             "def456");
         var copyResult = new CopyResult(
@@ -370,7 +370,7 @@ public sealed class BuildReporterTests
     public void CollectFromAssetResultShouldNotReportWhenCssPresent()
     {
         var reporter = new BuildReporter();
-        var cssResult = new CssProcessResult("body{}", "_astro/styles.css", "styles.css", null);
+        var cssResult = new CssProcessResult("body{}", "_atoll/styles.css", "styles.css", null);
         var assetResult = CreateAssetResult(cssResult, JsProcessResult.Empty, null, TimeSpan.FromMilliseconds(10));
 
         reporter.CollectFromAssetResult(assetResult);
@@ -382,7 +382,7 @@ public sealed class BuildReporterTests
     public void CollectFromAssetResultShouldNotReportWhenJsPresent()
     {
         var reporter = new BuildReporter();
-        var jsResult = new JsProcessResult("var x=1;", "_astro/scripts.js", "scripts.js", null);
+        var jsResult = new JsProcessResult("var x=1;", "_atoll/scripts.js", "scripts.js", null);
         var assetResult = CreateAssetResult(CssProcessResult.Empty, jsResult, null, TimeSpan.FromMilliseconds(10));
 
         reporter.CollectFromAssetResult(assetResult);

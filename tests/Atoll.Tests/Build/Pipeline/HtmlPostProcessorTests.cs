@@ -19,12 +19,12 @@ public sealed class HtmlPostProcessorTests
     {
         var processor = new HtmlPostProcessor(new HtmlPostProcessorOptions
         {
-            CssHref = "/_astro/styles.a1b2c3d4.css",
+            CssHref = "/_atoll/styles.a1b2c3d4.css",
         });
 
         var result = processor.Process(BasicHtml);
 
-        result.ShouldContain("/_astro/styles.a1b2c3d4.css");
+        result.ShouldContain("/_atoll/styles.a1b2c3d4.css");
         result.ShouldContain("rel=\"stylesheet\"");
         result.ShouldContain("<link");
     }
@@ -34,12 +34,12 @@ public sealed class HtmlPostProcessorTests
     {
         var processor = new HtmlPostProcessor(new HtmlPostProcessorOptions
         {
-            JsHref = "/_astro/scripts.a1b2c3d4.js",
+            JsHref = "/_atoll/scripts.a1b2c3d4.js",
         });
 
         var result = processor.Process(BasicHtml);
 
-        result.ShouldContain("/_astro/scripts.a1b2c3d4.js");
+        result.ShouldContain("/_atoll/scripts.a1b2c3d4.js");
         result.ShouldContain("<script");
         result.ShouldContain("defer");
     }
@@ -289,15 +289,15 @@ public sealed class HtmlPostProcessorTests
 
         var processor = new HtmlPostProcessor(new HtmlPostProcessorOptions
         {
-            CssHref = "/_astro/styles.abc123.css",
-            JsHref = "/_astro/scripts.def456.js",
+            CssHref = "/_atoll/styles.abc123.css",
+            JsHref = "/_atoll/scripts.def456.js",
             BasePath = "/docs",
         });
 
         var result = processor.Process(html);
 
-        result.ShouldContain("/_astro/styles.abc123.css");
-        result.ShouldContain("/_astro/scripts.def456.js");
+        result.ShouldContain("/_atoll/styles.abc123.css");
+        result.ShouldContain("/_atoll/scripts.def456.js");
         result.ShouldContain("/docs/about");
         result.ShouldContain("/docs/logo.png");
     }
@@ -463,7 +463,7 @@ public sealed class HtmlPostProcessorTests
     {
         var processor = new HtmlPostProcessor(new HtmlPostProcessorOptions
         {
-            CssHref = "/_astro/styles.css",
+            CssHref = "/_atoll/styles.css",
             RemoveInlineStyles = true,
         });
 
@@ -480,7 +480,7 @@ public sealed class HtmlPostProcessorTests
 
         var result = processor.Process(html);
 
-        result.ShouldContain("/_astro/styles.css");
+        result.ShouldContain("/_atoll/styles.css");
         result.ShouldNotContain("<style>");
     }
 }

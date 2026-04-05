@@ -261,7 +261,7 @@ public sealed class SsgOutputTests : IDisposable
         var jsHref = assetResult.Js.HasContent ? "/" + assetResult.Js.OutputPath.Replace('\\', '/') : "";
         var postProcessor = new HtmlPostProcessor(new HtmlPostProcessorOptions
         {
-            CssHref = "/_astro/styles.abc123.css",
+            CssHref = "/_atoll/styles.abc123.css",
             JsHref = jsHref,
             RemoveInlineStyles = true,
         });
@@ -298,7 +298,7 @@ public sealed class SsgOutputTests : IDisposable
         // Run post-processor
         var postProcessor = new HtmlPostProcessor(new HtmlPostProcessorOptions
         {
-            CssHref = "/_astro/styles.abc123.css",
+            CssHref = "/_atoll/styles.abc123.css",
             RemoveInlineStyles = true,
         });
 

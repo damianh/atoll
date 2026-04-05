@@ -75,7 +75,7 @@ public sealed class PreviewCommandHandler
     /// </summary>
     private static string ResolveCacheControl(string path)
     {
-        // Fingerprinted assets under /_astro/ are immutable — safe to cache for 1 year
+        // Fingerprinted assets under /_atoll/ are immutable — safe to cache for 1 year
         if (FingerprintDetector.IsFingerprintedAsset(path))
         {
             return "public, max-age=31536000, immutable";

@@ -127,13 +127,13 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
         // Assert: CSS was processed
         assetResult.Css.HasContent.ShouldBeTrue();
         assetResult.Css.Hash.ShouldNotBeNull();
-        assetResult.Css.OutputPath.ShouldContain("_astro");
+        assetResult.Css.OutputPath.ShouldContain("_atoll");
         assetResult.Css.OutputPath.ShouldEndWith(".css");
 
         // Assert: JS was processed
         assetResult.Js.HasContent.ShouldBeTrue();
         assetResult.Js.Hash.ShouldNotBeNull();
-        assetResult.Js.OutputPath.ShouldContain("_astro");
+        assetResult.Js.OutputPath.ShouldContain("_atoll");
         assetResult.Js.OutputPath.ShouldEndWith(".js");
 
         // Assert: processed CSS file exists on disk
@@ -704,7 +704,7 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
 
         var ssgResult = await generator.GenerateAsync(routes);
 
-        // Run pipeline to also create _astro/ subdirectory
+        // Run pipeline to also create _atoll/ subdirectory
         var pipelineOptions = new AssetPipelineOptions(_outputDir) { Minify = true, Fingerprint = true };
         var outputWriter = new OutputWriter(_outputDir);
         var pipeline = new AssetPipeline(pipelineOptions, outputWriter);
@@ -716,7 +716,7 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
         Directory.Exists(Path.Combine(_outputDir, "blog")).ShouldBeTrue();
         Directory.Exists(Path.Combine(_outputDir, "blog", "hello-world")).ShouldBeTrue();
         Directory.Exists(Path.Combine(_outputDir, "blog", "second-post")).ShouldBeTrue();
-        Directory.Exists(Path.Combine(_outputDir, "_astro")).ShouldBeTrue();
+        Directory.Exists(Path.Combine(_outputDir, "_atoll")).ShouldBeTrue();
     }
 
     [Fact]

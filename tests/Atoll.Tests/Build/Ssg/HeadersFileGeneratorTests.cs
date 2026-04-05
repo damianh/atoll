@@ -15,7 +15,7 @@ public sealed class HeadersFileGeneratorTests
         var generator = new HeadersFileGenerator();
         var content = generator.Generate();
 
-        content.ShouldContain("/_astro/*");
+        content.ShouldContain("/_atoll/*");
         content.ShouldContain("Cache-Control: public, max-age=31536000, immutable");
     }
 
@@ -73,11 +73,11 @@ public sealed class HeadersFileGeneratorTests
         content.ShouldContain("Cache-Control: no-store");
 
         // Default rules still present
-        content.ShouldContain("/_astro/*");
+        content.ShouldContain("/_atoll/*");
         content.ShouldContain("Cache-Control: public, max-age=31536000, immutable");
 
         // Custom rule appears after defaults
-        var defaultIndex = content.IndexOf("/_astro/*", StringComparison.Ordinal);
+        var defaultIndex = content.IndexOf("/_atoll/*", StringComparison.Ordinal);
         var customIndex = content.IndexOf("/api/*", StringComparison.Ordinal);
         customIndex.ShouldBeGreaterThan(defaultIndex);
     }
@@ -195,7 +195,7 @@ public sealed class HeadersFileGeneratorTests
             File.Exists(headersPath).ShouldBeTrue();
 
             var content = await File.ReadAllTextAsync(headersPath);
-            content.ShouldContain("/_astro/*");
+            content.ShouldContain("/_atoll/*");
             content.ShouldContain("Cache-Control: public, max-age=31536000, immutable");
         }
         finally

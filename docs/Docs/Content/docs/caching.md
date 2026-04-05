@@ -13,7 +13,7 @@ Atoll ships with a thoughtful, opinionated caching strategy designed to be optim
 
 Atoll's caching philosophy is:
 
-- **Fingerprinted assets are immutable.** Files in `_astro/` with a content hash in the filename (e.g., `styles.a1b2c3d4.css`) can be cached for one year. They never change — a new deploy produces a new filename.
+- **Fingerprinted assets are immutable.** Files in `_atoll/` with a content hash in the filename (e.g., `styles.a1b2c3d4.css`) can be cached for one year. They never change — a new deploy produces a new filename.
 - **HTML always revalidates.** HTML pages are stale as soon as a new deploy happens, so they are served with `Cache-Control: public, max-age=0, must-revalidate` (or `no-cache` on the live server). Browsers revalidate on every navigation but can serve from cache if the content hasn't changed (304 Not Modified).
 - **Dev server is never cached.** The dev server always sends `Cache-Control: no-cache` everywhere so you always see your latest changes.
 
@@ -21,14 +21,14 @@ Atoll's caching philosophy is:
 
 ## SSG Deployments
 
-When you run `atoll build`, Atoll generates a `_headers` file in the output directory alongside your static HTML, assets, and the `_astro/` folder.
+When you run `atoll build`, Atoll generates a `_headers` file in the output directory alongside your static HTML, assets, and the `_atoll/` folder.
 
 ### `_headers` file format
 
 The `_headers` file uses the [Netlify headers format](https://docs.netlify.com/routing/headers/), which is also supported by Cloudflare Pages. Example output:
 
 ```
-/_astro/*
+/_atoll/*
   Cache-Control: public, max-age=31536000, immutable
 
 /*.html
@@ -149,7 +149,7 @@ The `atoll preview` command serves the `dist/` directory with the following cach
 
 | Path pattern | Cache-Control |
 |---|---|
-| `/_astro/*` (fingerprinted assets) | `public, max-age=31536000, immutable` |
+| `/_atoll/*` (fingerprinted assets) | `public, max-age=31536000, immutable` |
 | `*.html` and directory indexes | `public, max-age=0, must-revalidate` |
 | All other files | `public, max-age=3600` |
 
@@ -198,7 +198,7 @@ Vercel does not use `_headers`. Configure headers in `vercel.json`:
 {
   "headers": [
     {
-      "source": "/_astro/(.*)",
+      "source": "/_atoll/(.*)",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
     },
     {
@@ -221,7 +221,7 @@ Configure headers in `staticwebapp.config.json`:
 {
   "routes": [
     {
-      "route": "/_astro/*",
+      "route": "/_atoll/*",
       "headers": { "Cache-Control": "public, max-age=31536000, immutable" }
     },
     {
@@ -235,7 +235,7 @@ Configure headers in `staticwebapp.config.json`:
 ### nginx
 
 ```nginx
-location /_astro/ {
+location /_atoll/ {
     add_header Cache-Control "public, max-age=31536000, immutable";
 }
 
@@ -248,7 +248,7 @@ location ~* \.html$ {
 
 ```xml
 <configuration>
-  <location path="_astro">
+  <location path="_atoll">
     <system.webServer>
       <staticContent>
         <clientCache cacheControlMode="UseMaxAge" cacheControlMaxAge="365.00:00:00" />

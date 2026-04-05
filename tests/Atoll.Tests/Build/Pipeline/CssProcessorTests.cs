@@ -65,11 +65,11 @@ public sealed class CssProcessorTests
         var processor = new CssProcessor(new CssProcessorOptions
         {
             Fingerprint = false,
-            OutputSubdirectory = "_astro",
+            OutputSubdirectory = "_atoll",
         });
         var result = processor.Process(new[] { typeof(StyledComponent) });
 
-        result.OutputPath.ShouldBe(Path.Combine("_astro", "styles.css"));
+        result.OutputPath.ShouldBe(Path.Combine("_atoll", "styles.css"));
     }
 
     [Fact]
@@ -189,7 +189,7 @@ public sealed class CssProcessorTests
         options.BasePath.ShouldBe("");
         options.Fingerprint.ShouldBeTrue();
         options.OutputFileName.ShouldBe("styles.css");
-        options.OutputSubdirectory.ShouldBe("_astro");
+        options.OutputSubdirectory.ShouldBe("_atoll");
     }
 
     [Fact]

@@ -248,7 +248,7 @@ public sealed class AssetPipelineTests : IDisposable
         options.PublicDirectory.ShouldBe("");
         options.Minify.ShouldBeTrue();
         options.Fingerprint.ShouldBeTrue();
-        options.AssetSubdirectory.ShouldBe("_astro");
+        options.AssetSubdirectory.ShouldBe("_atoll");
         options.CssOutputFileName.ShouldBe("styles.css");
         options.JsOutputFileName.ShouldBe("scripts.js");
     }

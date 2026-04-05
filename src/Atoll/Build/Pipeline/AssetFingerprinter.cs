@@ -92,9 +92,9 @@ public static class AssetFingerprinter
     /// <summary>
     /// Creates a fingerprinted path by replacing the filename portion with a fingerprinted version.
     /// </summary>
-    /// <param name="filePath">The original file path (e.g., <c>_astro/styles.css</c>).</param>
+    /// <param name="filePath">The original file path (e.g., <c>_atoll/styles.css</c>).</param>
     /// <param name="hash">The content hash string.</param>
-    /// <returns>The fingerprinted path (e.g., <c>_astro/styles.a1b2c3d4.css</c>).</returns>
+    /// <returns>The fingerprinted path (e.g., <c>_atoll/styles.a1b2c3d4.css</c>).</returns>
     public static string CreateFingerprintedPath(string filePath, string hash)
     {
         ArgumentNullException.ThrowIfNull(filePath);

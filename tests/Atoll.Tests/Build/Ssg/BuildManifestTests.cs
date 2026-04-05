@@ -76,21 +76,21 @@ public sealed class BuildManifestTests : IDisposable
     public void BuildFromShouldPopulateAssetsFromPipelineResult()
     {
         var ssgResult = new SsgResult([], TimeSpan.Zero);
-        var cssResult = new CssProcessResult("body{margin:0}", "_astro/styles.abc.css", "styles.abc.css", "abc12345");
-        var jsResult = new JsProcessResult("var x=1", "_astro/scripts.def.js", "scripts.def.js", "def67890");
+        var cssResult = new CssProcessResult("body{margin:0}", "_atoll/styles.abc.css", "styles.abc.css", "abc12345");
+        var jsResult = new JsProcessResult("var x=1", "_atoll/scripts.def.js", "scripts.def.js", "def67890");
         var assetResult = new AssetPipelineResult(cssResult, jsResult, null, TimeSpan.Zero);
         var options = new SsgOptions(_outputDir);
 
         var manifest = BuildManifestWriter.BuildFrom(ssgResult, assetResult, options);
 
         manifest.Assets.ContainsKey("css").ShouldBeTrue();
-        manifest.Assets["css"].OutputPath.ShouldBe("_astro/styles.abc.css");
+        manifest.Assets["css"].OutputPath.ShouldBe("_atoll/styles.abc.css");
         manifest.Assets["css"].Hash.ShouldBe("abc12345");
         manifest.Assets["css"].MimeType.ShouldBe("text/css");
         manifest.Assets["css"].SizeBytes.ShouldBeGreaterThan(0);
 
         manifest.Assets.ContainsKey("js").ShouldBeTrue();
-        manifest.Assets["js"].OutputPath.ShouldBe("_astro/scripts.def.js");
+        manifest.Assets["js"].OutputPath.ShouldBe("_atoll/scripts.def.js");
         manifest.Assets["js"].Hash.ShouldBe("def67890");
         manifest.Assets["js"].MimeType.ShouldBe("application/javascript");
     }

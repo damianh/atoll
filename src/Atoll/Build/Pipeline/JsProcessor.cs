@@ -140,9 +140,9 @@ public sealed class JsProcessorOptions
 
     /// <summary>
     /// Gets or sets the subdirectory within the output directory to write JS files to.
-    /// Defaults to <c>_astro</c> (following Astro convention).
+    /// Defaults to <c>_atoll</c>.
     /// </summary>
-    public string OutputSubdirectory { get; set; } = "_astro";
+    public string OutputSubdirectory { get; set; } = "_atoll";
 }
 
 /// <summary>
@@ -159,7 +159,7 @@ public sealed class JsProcessResult
     /// Initializes a new <see cref="JsProcessResult"/>.
     /// </summary>
     /// <param name="js">The processed JS content.</param>
-    /// <param name="outputPath">The relative output path (e.g., <c>_astro/scripts.a1b2c3d4.js</c>).</param>
+    /// <param name="outputPath">The relative output path (e.g., <c>_atoll/scripts.a1b2c3d4.js</c>).</param>
     /// <param name="fileName">The output filename (e.g., <c>scripts.a1b2c3d4.js</c>).</param>
     /// <param name="hash">The content hash, or <c>null</c> if fingerprinting was disabled.</param>
     public JsProcessResult(string js, string outputPath, string fileName, string? hash)
@@ -179,7 +179,7 @@ public sealed class JsProcessResult
     public string Js { get; }
 
     /// <summary>
-    /// Gets the relative output path including subdirectory (e.g., <c>_astro/scripts.a1b2c3d4.js</c>).
+    /// Gets the relative output path including subdirectory (e.g., <c>_atoll/scripts.a1b2c3d4.js</c>).
     /// </summary>
     public string OutputPath { get; }
 

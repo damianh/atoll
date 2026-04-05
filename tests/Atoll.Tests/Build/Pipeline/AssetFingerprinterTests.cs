@@ -118,9 +118,9 @@ public sealed class AssetFingerprinterTests
     public void CreateFingerprintedPathShouldPreserveDirectory()
     {
         var result = AssetFingerprinter.CreateFingerprintedPath(
-            Path.Combine("_astro", "styles.css"), "a1b2c3d4");
+            Path.Combine("_atoll", "styles.css"), "a1b2c3d4");
 
-        result.ShouldBe(Path.Combine("_astro", "styles.a1b2c3d4.css"));
+        result.ShouldBe(Path.Combine("_atoll", "styles.a1b2c3d4.css"));
     }
 
     [Fact]

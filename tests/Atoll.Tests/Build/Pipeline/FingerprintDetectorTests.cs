@@ -90,25 +90,25 @@ public sealed class FingerprintDetectorTests
     [Fact]
     public void ShouldDetectFingerprintedAssetUnderAstroDirectory()
     {
-        FingerprintDetector.IsFingerprintedAsset("/_astro/styles.a1b2c3d4.css").ShouldBeTrue();
+        FingerprintDetector.IsFingerprintedAsset("/_atoll/styles.a1b2c3d4.css").ShouldBeTrue();
     }
 
     [Fact]
     public void ShouldDetectFingerprintedAssetWithForwardSlashPrefix()
     {
-        FingerprintDetector.IsFingerprintedAsset("/_astro/scripts.00aabbcc.js").ShouldBeTrue();
+        FingerprintDetector.IsFingerprintedAsset("/_atoll/scripts.00aabbcc.js").ShouldBeTrue();
     }
 
     [Fact]
     public void ShouldDetectFingerprintedAssetWithoutLeadingSlash()
     {
-        FingerprintDetector.IsFingerprintedAsset("_astro/styles.a1b2c3d4.css").ShouldBeTrue();
+        FingerprintDetector.IsFingerprintedAsset("_atoll/styles.a1b2c3d4.css").ShouldBeTrue();
     }
 
     [Fact]
     public void ShouldRejectNonFingerprintedAssetUnderAstroDirectory()
     {
-        FingerprintDetector.IsFingerprintedAsset("/_astro/image.png").ShouldBeFalse();
+        FingerprintDetector.IsFingerprintedAsset("/_atoll/image.png").ShouldBeFalse();
     }
 
     [Fact]
@@ -120,7 +120,7 @@ public sealed class FingerprintDetectorTests
     [Fact]
     public void ShouldRejectHtmlFileUnderAstroDirectory()
     {
-        FingerprintDetector.IsFingerprintedAsset("/_astro/index.html").ShouldBeFalse();
+        FingerprintDetector.IsFingerprintedAsset("/_atoll/index.html").ShouldBeFalse();
     }
 
     [Fact]
@@ -139,7 +139,7 @@ public sealed class FingerprintDetectorTests
     public void ShouldHandleBackslashPathSeparator()
     {
         // Windows-style path separator should be normalised
-        FingerprintDetector.IsFingerprintedAsset(@"\_astro\styles.a1b2c3d4.css").ShouldBeTrue();
+        FingerprintDetector.IsFingerprintedAsset(@"\_atoll\styles.a1b2c3d4.css").ShouldBeTrue();
     }
 
     [Fact]

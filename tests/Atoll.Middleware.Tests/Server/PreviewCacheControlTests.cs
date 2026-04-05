@@ -24,8 +24,8 @@ public sealed class PreviewCacheControlTests : IDisposable
         _tempDir = Path.Combine(Path.GetTempPath(), "atoll-preview-tests-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_tempDir);
 
-        // Create _astro sub-directory with fingerprinted and non-fingerprinted assets
-        var astroDir = Path.Combine(_tempDir, "_astro");
+        // Create _atoll sub-directory with fingerprinted and non-fingerprinted assets
+        var astroDir = Path.Combine(_tempDir, "_atoll");
         Directory.CreateDirectory(astroDir);
         File.WriteAllText(Path.Combine(astroDir, "styles.a1b2c3d4.css"), "body { color: red; }");
         File.WriteAllText(Path.Combine(astroDir, "scripts.00aabbcc.js"), "console.log('hi');");
@@ -120,7 +120,7 @@ public sealed class PreviewCacheControlTests : IDisposable
     {
         using var client = CreatePreviewClient();
 
-        var response = await client.GetAsync("/_astro/styles.a1b2c3d4.css");
+        var response = await client.GetAsync("/_atoll/styles.a1b2c3d4.css");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         response.Headers.CacheControl.ShouldNotBeNull();
@@ -132,7 +132,7 @@ public sealed class PreviewCacheControlTests : IDisposable
     {
         using var client = CreatePreviewClient();
 
-        var response = await client.GetAsync("/_astro/scripts.00aabbcc.js");
+        var response = await client.GetAsync("/_atoll/scripts.00aabbcc.js");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         response.Headers.CacheControl!.ToString().ShouldBe("public, max-age=31536000, immutable");
@@ -143,7 +143,7 @@ public sealed class PreviewCacheControlTests : IDisposable
     {
         using var client = CreatePreviewClient();
 
-        var response = await client.GetAsync("/_astro/image.png");
+        var response = await client.GetAsync("/_atoll/image.png");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         response.Headers.CacheControl!.ToString().ShouldBe("public, max-age=3600");
@@ -217,7 +217,7 @@ public sealed class PreviewCacheControlTests : IDisposable
     {
         using var client = CreatePreviewClient();
 
-        var response = await client.GetAsync("/_astro/styles.a1b2c3d4.css");
+        var response = await client.GetAsync("/_atoll/styles.a1b2c3d4.css");
 
         response.Headers.Vary.ShouldContain("Accept-Encoding");
     }
@@ -227,7 +227,7 @@ public sealed class PreviewCacheControlTests : IDisposable
     {
         using var client = CreatePreviewClient();
 
-        var response = await client.GetAsync("/_astro/scripts.00aabbcc.js");
+        var response = await client.GetAsync("/_atoll/scripts.00aabbcc.js");
 
         response.Headers.Vary.ShouldContain("Accept-Encoding");
     }
@@ -247,7 +247,7 @@ public sealed class PreviewCacheControlTests : IDisposable
     {
         using var client = CreatePreviewClient();
 
-        var response = await client.GetAsync("/_astro/image.png");
+        var response = await client.GetAsync("/_atoll/image.png");
 
         response.Headers.Contains("Vary").ShouldBeFalse();
     }

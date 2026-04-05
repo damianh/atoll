@@ -66,11 +66,11 @@ public sealed class JsProcessorTests
         var processor = new JsProcessor(new JsProcessorOptions
         {
             Fingerprint = false,
-            OutputSubdirectory = "_astro",
+            OutputSubdirectory = "_atoll",
         });
         var result = processor.Process("var x = 1;");
 
-        result.OutputPath.ShouldBe(Path.Combine("_astro", "scripts.js"));
+        result.OutputPath.ShouldBe(Path.Combine("_atoll", "scripts.js"));
     }
 
     [Fact]
@@ -168,7 +168,7 @@ public sealed class JsProcessorTests
         options.Minify.ShouldBeTrue();
         options.Fingerprint.ShouldBeTrue();
         options.OutputFileName.ShouldBe("scripts.js");
-        options.OutputSubdirectory.ShouldBe("_astro");
+        options.OutputSubdirectory.ShouldBe("_atoll");
     }
 
     [Fact]

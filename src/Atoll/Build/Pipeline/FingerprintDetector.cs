@@ -10,7 +10,7 @@ namespace Atoll.Build.Pipeline;
 /// <para>
 /// <see cref="AssetFingerprinter"/> inserts an 8-character lowercase hex hash before
 /// the file extension, producing names such as <c>styles.a1b2c3d4.css</c>.
-/// Assets are placed under the <c>_astro/</c> subdirectory by default.
+/// Assets are placed under the <c>_atoll/</c> subdirectory by default.
 /// </para>
 /// </remarks>
 public static class FingerprintDetector
@@ -23,9 +23,9 @@ public static class FingerprintDetector
 
     /// <summary>
     /// Returns <c>true</c> when <paramref name="path"/> refers to a file inside the
-    /// <c>_astro/</c> subdirectory whose filename contains a fingerprint hash segment.
+    /// <c>_atoll/</c> subdirectory whose filename contains a fingerprint hash segment.
     /// </summary>
-    /// <param name="path">The URL or file path to test (e.g., <c>/_astro/styles.a1b2c3d4.css</c>).</param>
+    /// <param name="path">The URL or file path to test (e.g., <c>/_atoll/styles.a1b2c3d4.css</c>).</param>
     public static bool IsFingerprintedAsset(string path)
     {
         ArgumentNullException.ThrowIfNull(path);
@@ -33,8 +33,8 @@ public static class FingerprintDetector
         // Normalise to forward slashes for consistent matching regardless of OS path separator
         var normalised = path.Replace('\\', '/');
 
-        // Must be under the _astro/ directory
-        if (!normalised.Contains("/_astro/") && !normalised.StartsWith("_astro/", StringComparison.Ordinal))
+        // Must be under the _atoll/ directory
+        if (!normalised.Contains("/_atoll/") && !normalised.StartsWith("_atoll/", StringComparison.Ordinal))
         {
             return false;
         }

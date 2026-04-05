@@ -10,7 +10,7 @@ namespace Atoll.Build.Ssg;
 /// <remarks>
 /// The default rules set appropriate <c>Cache-Control</c> headers:
 /// <list type="bullet">
-///   <item><description><c>/_astro/*</c> — immutable (fingerprinted assets)</description></item>
+///   <item><description><c>/_atoll/*</c> — immutable (fingerprinted assets)</description></item>
 ///   <item><description><c>/*.html</c> — must-revalidate (HTML pages)</description></item>
 ///   <item><description><c>/</c> — must-revalidate (root)</description></item>
 ///   <item><description><c>/search-index.json</c> — must-revalidate (search index)</description></item>
@@ -50,7 +50,7 @@ public sealed class HeadersFileGenerator
         var sb = new StringBuilder();
 
         // Fingerprinted assets — immutable for 1 year
-        AppendRule(sb, "/_astro/*", "Cache-Control", ImmutableCacheControl);
+        AppendRule(sb, "/_atoll/*", "Cache-Control", ImmutableCacheControl);
 
         // HTML pages — always revalidate
         AppendRule(sb, "/*.html", "Cache-Control", MustRevalidateCacheControl);
