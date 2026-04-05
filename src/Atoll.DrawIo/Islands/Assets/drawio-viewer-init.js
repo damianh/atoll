@@ -7,8 +7,12 @@
  * Subsequent calls on the same page reuse the same loading promise so the
  * viewer script is only fetched once, even when multiple diagrams are present.
  *
- * After the viewer loads, GraphViewer.processElements() is called to render
- * the data-mxgraph element(s) inside the island container.
+ * After the viewer loads, GraphViewer.createViewerForElement() is called for
+ * each data-mxgraph element inside the island container.
+ *
+ * NOTE: GraphViewer.processElements() expects a CSS *class name*, not a DOM
+ * element. We call createViewerForElement() directly to target the exact
+ * element(s) within this island.
  */
 
 const VIEWER_SCRIPT_URL = '/scripts/atoll-drawio-viewer.min.js';
@@ -19,7 +23,10 @@ let viewerLoadPromise = null;
 
 /**
  * Ensures viewer-static.min.js is loaded exactly once.
- * Returns a Promise that resolves when the script is ready.
+ * Suppresses the viewer's built-in auto-init (which scans document.body for
+ * class="mxgraph") by setting window.onDrawioViewerLoad to a no-op before
+ * the script is injected. This prevents a redundant body scan and avoids
+ * double-processing if elements happen to have the mxgraph class.
  *
  * @returns {Promise<void>}
  */
@@ -33,6 +40,13 @@ function loadViewer() {
     viewerLoadPromise = Promise.resolve();
     return viewerLoadPromise;
   }
+
+  // Suppress the viewer's auto-init. The viewer script's tail calls:
+  //   if (window.onDrawioViewerLoad) window.onDrawioViewerLoad();
+  //   else GraphViewer.processElements();
+  // By setting a no-op callback, we skip the default processElements() call
+  // and instead render each diagram ourselves via createViewerForElement().
+  window.onDrawioViewerLoad = function () { /* handled per-island */ };
 
   viewerLoadPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script');
@@ -54,10 +68,14 @@ function loadViewer() {
  */
 export default function init(element) {
   loadViewer().then(() => {
-    // GraphViewer.processElements() scans for data-mxgraph elements and renders them.
-    // Pass the container so only diagrams inside this island are processed.
-    if (typeof GraphViewer !== 'undefined' && typeof GraphViewer.processElements === 'function') {
-      GraphViewer.processElements(element);
+    if (typeof GraphViewer === 'undefined' || typeof GraphViewer.createViewerForElement !== 'function') {
+      return;
+    }
+
+    // Find all data-mxgraph elements inside this island and render each one.
+    const targets = element.querySelectorAll('[data-mxgraph]');
+    for (const target of targets) {
+      GraphViewer.createViewerForElement(target);
     }
   }).catch((err) => {
     console.error('[atoll-drawio] Failed to load diagram viewer:', err);
