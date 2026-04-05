@@ -16,6 +16,20 @@ Two components are provided:
 | `DrawioDiagram` | `AtollComponent` | Static SVG — zero JavaScript |
 | `InteractiveDrawioDiagram` | `VanillaJsIsland` | Client-side pan, zoom, and layer toggling |
 
+## Live examples
+
+### Static diagram
+
+The following diagram is rendered at build time as inline SVG with no client-side JavaScript:
+
+<DrawioDiagram FilePath="Content/diagrams/sample.drawio" Alt="Atoll build pipeline — Markdown to static HTML" />
+
+### Interactive diagram
+
+This diagram includes pan, zoom, and layer toggle controls. Try dragging to pan, scrolling to zoom, and clicking the layer buttons below the diagram:
+
+<InteractiveDrawioDiagram FilePath="Content/diagrams/sample.drawio" PageName="Architecture" Alt="Atoll plugin architecture" />
+
 ## Installation
 
 Add a project reference to `Atoll.DrawIo`:
@@ -24,11 +38,40 @@ Add a project reference to `Atoll.DrawIo`:
 <ProjectReference Include="..\..\src\Atoll.DrawIo\Atoll.DrawIo.csproj" />
 ```
 
-No additional NuGet packages are required. The island JavaScript asset is embedded in the assembly and served automatically via the `IIslandAssetProvider` pipeline.
+Register the components in your `ContentConfig`:
+
+```csharp
+using Atoll.DrawIo.Components;
+using Atoll.DrawIo.Islands;
+
+markdownOptions.Components = new ComponentMap()
+    // ... other components ...
+    .Add<DrawioDiagram>("drawio-diagram")
+    .Add<InteractiveDrawioDiagram>("interactive-drawio-diagram");
+```
+
+No additional NuGet packages are required. The island JavaScript asset is embedded in the assembly and served automatically via the `IIslandAssetProvider` pipeline (auto-discovered from referenced assemblies).
 
 ## Static diagram
 
 `DrawioDiagram` renders a `.drawio` file as inline SVG with no client-side JavaScript.
+
+### Markdown usage
+
+Use the PascalCase tag syntax in your `.md` files:
+
+```html
+<DrawioDiagram FilePath="Content/diagrams/architecture.drawio" Alt="System architecture overview" />
+```
+
+Or the directive syntax:
+
+```markdown
+:::drawio-diagram{FilePath="Content/diagrams/architecture.drawio" Alt="System architecture overview"}
+:::
+```
+
+### C# usage
 
 ```csharp
 using Atoll.DrawIo.Components;
@@ -61,6 +104,14 @@ When `Alt` is set, the wrapper `<div>` receives `role="img"` and `aria-label` fo
 ## Interactive diagram
 
 `InteractiveDrawioDiagram` is an island that renders the diagram as static SVG on the server, then hydrates with JavaScript for pan, zoom, and layer toggling.
+
+### Markdown usage
+
+```html
+<InteractiveDrawioDiagram FilePath="Content/diagrams/architecture.drawio" Alt="Interactive architecture diagram" />
+```
+
+### C# usage
 
 ```csharp
 using Atoll.DrawIo.Islands;
@@ -101,20 +152,12 @@ All parameters from `DrawioDiagram` are supported, plus:
 
 draw.io files can contain multiple pages (tabs). By default, the first page (index `0`) is rendered. Select a different page by index or name:
 
-```csharp
-// By index
-var props = new Dictionary<string, object?>
-{
-    ["FilePath"] = "Content/diagrams/multi-page.drawio",
-    ["Page"] = 2, // third page
-};
+```html
+<!-- By name -->
+<DrawioDiagram FilePath="Content/diagrams/multi-page.drawio" PageName="Deployment" />
 
-// By name
-var props = new Dictionary<string, object?>
-{
-    ["FilePath"] = "Content/diagrams/multi-page.drawio",
-    ["PageName"] = "Deployment",
-};
+<!-- By index -->
+<DrawioDiagram FilePath="Content/diagrams/multi-page.drawio" Page="2" />
 ```
 
 ## Layer visibility
