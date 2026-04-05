@@ -64,8 +64,8 @@ public sealed class DocsTheme : AtollComponent
             --docs-sidebar-link-active-bg: #eff6ff;
             --docs-sidebar-link-active-text: #0f3460;
             /* Code */
-            --docs-code-bg: #1e293b;
-            --docs-code-text: #e2e8f0;
+            --docs-code-bg: #f5f5f5;
+            --docs-code-text: #1f2328;
             --docs-code-inline-bg: #f3f4f6;
             --docs-code-inline-text: #be123c;
             /* Aside variants */
@@ -327,17 +327,19 @@ public sealed class DocsTheme : AtollComponent
 
     private const string SyntaxHighlightTokens = """
         /* ---- Syntax Highlighting Tokens ---- */
-        .highlight code .tm-keyword { color: #c792ea; }
-        .highlight code .tm-string { color: #c3e88d; }
-        .highlight code .tm-comment { color: #637777; font-style: italic; }
-        .highlight code .tm-type { color: #ffcb6b; }
-        .highlight code .tm-number { color: #f78c6c; }
-        .highlight code .tm-function { color: #82aaff; }
-        .highlight code .tm-variable { color: #f07178; }
-        .highlight code .tm-constant { color: #f78c6c; }
-        .highlight code .tm-punctuation { color: #89ddff; }
-        .highlight code .tm-namespace { color: #ffcb6b; }
-        .highlight code .tm-preprocessor { color: #637777; }
+        /* Light theme — VS Code Light+ inspired */
+        .highlight code .tm-keyword { color: #0000ff; }
+        .highlight code .tm-string { color: #a31515; }
+        .highlight code .tm-comment { color: #008000; font-style: italic; }
+        .highlight code .tm-type { color: #267f99; }
+        .highlight code .tm-number { color: #098658; }
+        .highlight code .tm-function { color: #795e26; }
+        .highlight code .tm-variable { color: #001080; }
+        .highlight code .tm-constant { color: #0070c1; }
+        .highlight code .tm-punctuation { color: #383a42; }
+        .highlight code .tm-namespace { color: #267f99; }
+        .highlight code .tm-preprocessor { color: #808080; }
+        /* Dark theme — Material Palenight inspired */
         [data-theme="dark"] .highlight code .tm-keyword { color: #c792ea; }
         [data-theme="dark"] .highlight code .tm-string { color: #c3e88d; }
         [data-theme="dark"] .highlight code .tm-comment { color: #546e7a; font-style: italic; }
