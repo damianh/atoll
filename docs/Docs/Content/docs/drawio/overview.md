@@ -22,13 +22,13 @@ Two components are provided:
 
 The following diagram is rendered at build time as inline SVG with no client-side JavaScript:
 
-<DrawioDiagram FilePath="Content/diagrams/sample.drawio" Alt="Atoll build pipeline — Markdown to static HTML" />
+<DrawioDiagram FilePath="docs/Docs/Content/diagrams/sample.drawio" Alt="Atoll build pipeline — Markdown to static HTML" />
 
 ### Interactive diagram
 
 This diagram includes pan, zoom, and layer toggle controls. Try dragging to pan, scrolling to zoom, and clicking the layer buttons below the diagram:
 
-<InteractiveDrawioDiagram FilePath="Content/diagrams/sample.drawio" PageName="Architecture" Alt="Atoll plugin architecture" />
+<InteractiveDrawioDiagram FilePath="docs/Docs/Content/diagrams/sample.drawio" PageName="Architecture" Alt="Atoll plugin architecture" />
 
 ## Installation
 
