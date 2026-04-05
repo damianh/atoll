@@ -70,6 +70,8 @@ public static class DocsSetup
                     new SidebarItem { Label = "Components & Layout",   Link = "/docs/lagoon/components" },
                     new SidebarItem { Label = "Site Search",           Link = "/docs/lagoon/search" },
                     new SidebarItem { Label = "Islands & Mermaid",     Link = "/docs/lagoon/islands-and-mermaid" },
+                    new SidebarItem { Label = "Content Components",   Link = "/docs/lagoon/content-components" },
+                    new SidebarItem { Label = "Internationalisation",  Link = "/docs/lagoon/i18n" },
                     new SidebarItem { Label = "Starlight Comparison",  Link = "/docs/lagoon/starlight-comparison" },
                 ],
             },

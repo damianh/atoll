@@ -29,6 +29,8 @@ These features exist in Lagoon and are fully documented in this section.
 | Social links | `SocialLink` + `SocialIcon` | 8 platform icons in the header |
 | Splash / landing page template | `SplashLayout` | Full-width, sidebar-free layout for landing pages |
 | Per-page head injection | `DocsBaseHead.PageHeadContent` | Raw HTML injection from frontmatter `head:` field |
+| Internationalisation (i18n) | `LocaleConfig`, `UiTranslations`, `BuiltInTranslations`, `LanguagePicker` | 8 built-in languages, locale routing, UI string translation, RTL support |
+| Content components | `Aside`, `Card`, `CardGrid`, `Steps`, `Tabs`, `FileTree`, `LinkCard`, `LinkButton`, `Icon` | 10 content components for rich documentation authoring |
 
 ## Minor gaps
 
@@ -49,15 +51,14 @@ Significant features that Starlight has but Lagoon does not currently support. T
 
 | Feature | Starlight | Lagoon | Notes |
 |---|---|---|---|
-| Internationalisation (i18n) | 30+ languages, locale routing, UI string translation, RTL support | No i18n support | Single-language sites only |
 | Component overrides | Replace any built-in UI component by path | No override mechanism | Layout and UI are not customisable without forking |
 | Plugin system | Plugin API for extending Starlight at build and runtime | No plugin architecture | — |
-| Rich content components | Cards, Tabs, Asides/Callouts, Steps, FileTree, LinkCards, CardGrids, LinkButtons, Icons, expressive Code blocks | `Hero` only — structural components are layout, not content authoring | Inline components must be written from scratch as Atoll components |
+| Expressive Code blocks | Syntax highlighting with frames, markers, diffs, and collapsible sections | Standard code blocks only | — |
 | Versioned documentation | Version selector for multiple doc versions simultaneously | Not implemented | — |
 | Route data API | Typed `StarlightPage` route data accessible in components | No equivalent API | — |
 
 ## Summary
 
-Lagoon covers the core of what you need to build a single-language .NET documentation site: layout, navigation, search, dark mode, and a responsive design. If your project requires i18n, component customisation, or a rich content component library, you will hit the notable gaps above.
+Lagoon covers the core of what you need to build a .NET documentation site: layout, navigation, search, dark mode, i18n, content components, and a responsive design. If your project requires component customisation or a plugin architecture, you will hit the notable gaps above.
 
 Use the [GitHub issues](https://github.com/damianh/atoll/issues) page to request features or track progress.
