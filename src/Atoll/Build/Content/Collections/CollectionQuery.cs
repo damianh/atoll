@@ -42,7 +42,7 @@ public sealed class CollectionQuery
     }
 
     /// <summary>
-    /// Gets all entries in the specified collection.
+    /// Gets all entries in the specified collection, scanning subdirectories recursively.
     /// </summary>
     /// <typeparam name="TData">The schema type for frontmatter data.</typeparam>
     /// <param name="collectionName">The collection name.</param>
@@ -50,11 +50,12 @@ public sealed class CollectionQuery
     public IReadOnlyList<ContentEntry<TData>> GetCollection<TData>(string collectionName)
         where TData : class, new()
     {
-        return _loader.LoadCollection<TData>(collectionName);
+        return _loader.LoadCollection<TData>(collectionName, recursive: true);
     }
 
     /// <summary>
-    /// Gets all entries in the specified collection that match the given predicate.
+    /// Gets all entries in the specified collection that match the given predicate,
+    /// scanning subdirectories recursively.
     /// </summary>
     /// <typeparam name="TData">The schema type for frontmatter data.</typeparam>
     /// <param name="collectionName">The collection name.</param>
@@ -66,7 +67,7 @@ public sealed class CollectionQuery
         where TData : class, new()
     {
         ArgumentNullException.ThrowIfNull(predicate);
-        return _loader.LoadCollection<TData>(collectionName)
+        return _loader.LoadCollection<TData>(collectionName, recursive: true)
             .Where(predicate)
             .ToList();
     }

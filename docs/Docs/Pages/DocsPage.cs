@@ -10,10 +10,10 @@ namespace Docs.Pages;
 /// <summary>
 /// The individual documentation page. Renders a Markdown doc entry identified
 /// by the URL slug and wraps it in a prose layout with the sidebar.
-/// Route: /docs/[slug]
+/// Route: /docs/[...slug]
 /// </summary>
 [Layout(typeof(SiteLayout))]
-[PageRoute("/docs/[slug]")]
+[PageRoute("/docs/[...slug]")]
 public sealed class DocsPage : AtollComponent, IAtollPage, IStaticPathsProvider
 {
     /// <summary>
