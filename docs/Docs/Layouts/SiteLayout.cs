@@ -31,10 +31,6 @@ public sealed class SiteLayout : AtollComponent
     [Parameter]
     public string? PageDescription { get; set; }
 
-    /// <summary>Gets or sets the headings from the rendered markdown for the TOC.</summary>
-    [Parameter]
-    public IReadOnlyList<MarkdownHeading> Headings { get; set; } = [];
-
     /// <inheritdoc />
     protected override async Task RenderCoreAsync(RenderContext context)
     {
@@ -45,6 +41,13 @@ public sealed class SiteLayout : AtollComponent
         var currentEntry = !string.IsNullOrEmpty(Slug)
             ? Query.GetEntry<DocSchema>("docs", Slug)
             : null;
+
+        // Extract headings from the markdown entry for the table of contents.
+        // We must resolve these here because the page renders as a slot inside
+        // DocsLayout, and the layout needs headings before the ToC renders.
+        var headings = currentEntry is not null
+            ? Query.Render(currentEntry).Headings
+            : (IReadOnlyList<MarkdownHeading>)[];
 
         // Build sidebar entries from the docs collection
         var entries = Query.GetCollection<DocSchema>("docs")
@@ -63,16 +66,16 @@ public sealed class SiteLayout : AtollComponent
         var breadcrumbBuilder = new BreadcrumbBuilder(sidebarItems);
         var breadcrumbs = breadcrumbBuilder.Build(currentHref);
 
-        // Pass the default slot (page content) through to the addon layout
+        // Pass the default slot (page content) through to the addon layout.
         var pageSlot = context.Slots.GetSlotFragment(SlotCollection.DefaultSlotName);
 
         // Render via addon layout
         var addonProps = new Dictionary<string, object?>
         {
             ["Config"] = config,
-            ["PageTitle"] = PageTitle,
-            ["PageDescription"] = PageDescription,
-            ["Headings"] = Headings,
+            ["PageTitle"] = currentEntry?.Data.Title ?? PageTitle,
+            ["PageDescription"] = currentEntry?.Data.Description ?? PageDescription,
+            ["Headings"] = headings,
             ["SidebarItems"] = sidebarItems,
             ["Previous"] = pagination.Previous,
             ["Next"] = pagination.Next,
