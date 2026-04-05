@@ -190,6 +190,7 @@ public sealed class DocsLayout : AtollComponent
         {
             ["Items"] = SidebarItems,
             ["Translations"] = translations,
+            ["ChevronPosition"] = Config.SidebarChevronPosition,
         }));
         WriteHtml("</aside>");
 

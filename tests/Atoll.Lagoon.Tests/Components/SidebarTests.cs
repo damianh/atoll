@@ -1,5 +1,6 @@
 using Atoll.Components;
 using Atoll.Lagoon.Components;
+using Atoll.Lagoon.Configuration;
 using Atoll.Lagoon.Navigation;
 using Atoll.Rendering;
 using Shouldly;
@@ -23,6 +24,20 @@ public sealed class SidebarTests
     {
         var destination = new StringRenderDestination();
         var props = new Dictionary<string, object?> { ["Items"] = items };
+        await ComponentRenderer.RenderComponentAsync<Sidebar>(destination, props);
+        return destination.GetOutput();
+    }
+
+    private static async Task<string> RenderSidebarAsync(
+        IReadOnlyList<ResolvedSidebarItem> items,
+        SidebarChevronPosition chevronPosition)
+    {
+        var destination = new StringRenderDestination();
+        var props = new Dictionary<string, object?>
+        {
+            ["Items"] = items,
+            ["ChevronPosition"] = chevronPosition,
+        };
         await ComponentRenderer.RenderComponentAsync<Sidebar>(destination, props);
         return destination.GetOutput();
     }
@@ -128,7 +143,7 @@ public sealed class SidebarTests
             Group("Guides", [Link("Start", "/guides/start")])
         ]);
 
-        html.ShouldContain("<details open>");
+        html.ShouldContain(" open>");
     }
 
     [Fact]
@@ -138,8 +153,7 @@ public sealed class SidebarTests
             Group("Guides", [Link("Start", "/guides/start")], collapsed: true)
         ]);
 
-        html.ShouldNotContain("<details open>");
-        html.ShouldContain("<details>");
+        html.ShouldNotContain(" open>");
     }
 
     [Fact]
@@ -149,7 +163,7 @@ public sealed class SidebarTests
             Group("Guides", [Link("Start", "/guides/start", isCurrent: true)], isActive: true, collapsed: true)
         ]);
 
-        html.ShouldContain("<details open>");
+        html.ShouldContain(" open>");
     }
 
     [Fact]
@@ -183,5 +197,49 @@ public sealed class SidebarTests
         var html = await RenderSidebarAsync([Link("Page", "/path?a=1&b=2")]);
 
         html.ShouldContain("href=\"/path?a=1&amp;b=2\"");
+    }
+
+    // --- Chevron ---
+
+    [Fact]
+    public async Task ShouldRenderChevronSpanInGroup()
+    {
+        var html = await RenderSidebarAsync([
+            Group("Guides", [Link("Start", "/guides/start")])
+        ]);
+
+        html.ShouldContain("<span class=\"sidebar-chevron\" aria-hidden=\"true\">&#x203A;</span>");
+    }
+
+    [Fact]
+    public async Task ShouldRenderEndChevronPositionClassByDefault()
+    {
+        var html = await RenderSidebarAsync([
+            Group("Guides", [Link("Start", "/guides/start")])
+        ]);
+
+        html.ShouldContain("class=\"sidebar-chevron-end\"");
+    }
+
+    [Fact]
+    public async Task ShouldRenderStartChevronPositionClassWhenConfigured()
+    {
+        var html = await RenderSidebarAsync(
+            [Group("Guides", [Link("Start", "/guides/start")])],
+            SidebarChevronPosition.Start);
+
+        html.ShouldContain("class=\"sidebar-chevron-start\"");
+    }
+
+    [Fact]
+    public async Task ShouldPropagateChevronPositionToNestedGroups()
+    {
+        var html = await RenderSidebarAsync(
+            [Group("Docs", [Group("Guides", [Link("Start", "/guides/start")])])],
+            SidebarChevronPosition.Start);
+
+        // Both the outer and inner group should use start position
+        var count = html.Split("sidebar-chevron-start").Length - 1;
+        count.ShouldBe(2);
     }
 }

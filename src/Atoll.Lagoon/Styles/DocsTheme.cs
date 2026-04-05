@@ -366,8 +366,40 @@ public sealed class DocsTheme : AtollComponent
             margin-left: 0.4rem;
             vertical-align: middle;
         }
-        details > summary { list-style: none; cursor: pointer; }
-        details > summary::-webkit-details-marker { display: none; }
+        /* Collapsible group chevron */
+        .docs-sidebar details > summary {
+            list-style: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--docs-text-muted);
+            padding: 0.75rem 0.75rem 0.25rem;
+            gap: 0.35rem;
+        }
+        .docs-sidebar details > summary::-webkit-details-marker { display: none; }
+        .docs-sidebar details > summary .sidebar-chevron {
+            display: inline-block;
+            font-size: 0.75rem;
+            line-height: 1;
+            transition: transform 0.2s ease-in-out;
+            flex-shrink: 0;
+        }
+        .docs-sidebar details[open] > summary .sidebar-chevron {
+            transform: rotate(90deg);
+        }
+        /* Chevron at end (right in LTR) — default Starlight style */
+        .docs-sidebar .sidebar-chevron-end > summary {
+            justify-content: space-between;
+        }
+        /* Chevron at start (left in LTR) — Duende style */
+        .docs-sidebar .sidebar-chevron-start > summary {
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+        }
         """;
 
     private const string TocNav = """

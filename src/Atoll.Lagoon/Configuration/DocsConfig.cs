@@ -100,4 +100,12 @@ public sealed class DocsConfig
     /// Defaults to <c>"en"</c>.
     /// </summary>
     public string DefaultLang { get; set; } = "en";
+
+    /// <summary>
+    /// Gets or sets the position of the collapse/expand chevron on sidebar group headings.
+    /// <see cref="SidebarChevronPosition.End"/> places the chevron after the label (Astro Starlight style).
+    /// <see cref="SidebarChevronPosition.Start"/> places the chevron before the label (Duende docs style).
+    /// Default: <see cref="SidebarChevronPosition.End"/>.
+    /// </summary>
+    public SidebarChevronPosition SidebarChevronPosition { get; set; } = SidebarChevronPosition.End;
 }

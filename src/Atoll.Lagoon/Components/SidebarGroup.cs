@@ -1,4 +1,5 @@
 using Atoll.Components;
+using Atoll.Lagoon.Configuration;
 using Atoll.Lagoon.Navigation;
 
 namespace Atoll.Lagoon.Components;
@@ -7,6 +8,8 @@ namespace Atoll.Lagoon.Components;
 /// Renders a collapsible sidebar group with a heading and child items.
 /// Uses an HTML <c>&lt;details&gt;</c> / <c>&lt;summary&gt;</c> element for
 /// CSS-only collapse/expand — no JavaScript required.
+/// A chevron indicator is rendered whose position is controlled by
+/// <see cref="ChevronPosition"/>.
 /// </summary>
 public sealed class SidebarGroup : AtollComponent
 {
@@ -14,17 +17,29 @@ public sealed class SidebarGroup : AtollComponent
     [Parameter(Required = true)]
     public ResolvedSidebarItem Group { get; set; } = null!;
 
+    /// <summary>
+    /// Gets or sets the chevron position for this group's collapse indicator.
+    /// Default: <see cref="SidebarChevronPosition.End"/>.
+    /// </summary>
+    [Parameter]
+    public SidebarChevronPosition ChevronPosition { get; set; } = SidebarChevronPosition.End;
+
     /// <inheritdoc />
     protected override async Task RenderCoreAsync(RenderContext context)
     {
         var open = (!Group.Collapsed || Group.IsActive) ? " open" : "";
-        WriteHtml($"<details{open}><summary>");
+        var positionClass = ChevronPosition == SidebarChevronPosition.Start
+            ? "sidebar-chevron-start"
+            : "sidebar-chevron-end";
+
+        WriteHtml($"<details class=\"{positionClass}\"{open}><summary>");
         WriteText(Group.Label);
         if (Group.Badge is not null)
         {
             WriteHtml($" <span class=\"badge\">{System.Net.WebUtility.HtmlEncode(Group.Badge)}</span>");
         }
 
+        WriteHtml("<span class=\"sidebar-chevron\" aria-hidden=\"true\">&#x203A;</span>");
         WriteHtml("</summary><ul>");
 
         foreach (var child in Group.Items)
@@ -33,7 +48,11 @@ public sealed class SidebarGroup : AtollComponent
             {
                 WriteHtml("<li class=\"sidebar-group-item\">");
                 var groupFragment = ComponentRenderer.ToFragment<SidebarGroup>(
-                    new Dictionary<string, object?> { ["Group"] = child });
+                    new Dictionary<string, object?>
+                    {
+                        ["Group"] = child,
+                        ["ChevronPosition"] = ChevronPosition,
+                    });
                 await RenderAsync(groupFragment);
                 WriteHtml("</li>");
             }

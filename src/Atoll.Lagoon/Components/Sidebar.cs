@@ -1,4 +1,5 @@
 using Atoll.Components;
+using Atoll.Lagoon.Configuration;
 using Atoll.Lagoon.I18n;
 using Atoll.Lagoon.Navigation;
 
@@ -19,6 +20,13 @@ public sealed class Sidebar : AtollComponent
     [Parameter]
     public UiTranslations Translations { get; set; } = UiTranslations.Default;
 
+    /// <summary>
+    /// Gets or sets the chevron position for collapsible group indicators.
+    /// Default: <see cref="SidebarChevronPosition.End"/>.
+    /// </summary>
+    [Parameter]
+    public SidebarChevronPosition ChevronPosition { get; set; } = SidebarChevronPosition.End;
+
     /// <inheritdoc />
     protected override async Task RenderCoreAsync(RenderContext context)
     {
@@ -30,7 +38,11 @@ public sealed class Sidebar : AtollComponent
             {
                 WriteHtml("<li class=\"sidebar-group-item\">");
                 var groupFragment = ComponentRenderer.ToFragment<SidebarGroup>(
-                    new Dictionary<string, object?> { ["Group"] = item });
+                    new Dictionary<string, object?>
+                    {
+                        ["Group"] = item,
+                        ["ChevronPosition"] = ChevronPosition,
+                    });
                 await RenderAsync(groupFragment);
                 WriteHtml("</li>");
             }
