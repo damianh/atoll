@@ -183,6 +183,80 @@ public sealed class ComponentMapTests
         map.RegisteredNames.ShouldBeEmpty();
     }
 
+    // ── PascalCase auto-alias ──
+
+    [Fact]
+    public void ShouldResolvePascalCaseTypeNameAlias()
+    {
+        // Add<SimpleComponent>("simple") auto-registers "SimpleComponent" as alias
+        var map = new ComponentMap().Add<SimpleComponent>("simple");
+
+        var found = map.TryResolve("SimpleComponent", out var type);
+
+        found.ShouldBeTrue();
+        type.ShouldBe(typeof(SimpleComponent));
+    }
+
+    [Fact]
+    public void ShouldResolvePascalCaseAliasForKebabCaseName()
+    {
+        // Add<GreetingComponent>("greeting-component") auto-registers "GreetingComponent"
+        var map = new ComponentMap().Add<GreetingComponent>("greeting-component");
+
+        var found = map.TryResolve("GreetingComponent", out var type);
+
+        found.ShouldBeTrue();
+        type.ShouldBe(typeof(GreetingComponent));
+    }
+
+    [Fact]
+    public void ShouldStillResolveExplicitNameWhenAliasExists()
+    {
+        var map = new ComponentMap().Add<SimpleComponent>("simple");
+
+        // Explicit name must still work
+        map.Resolve("simple").ShouldBe(typeof(SimpleComponent));
+    }
+
+    [Fact]
+    public void ShouldNotThrowWhenExplicitNameMatchesTypeName()
+    {
+        // Add<SimpleComponent>("SimpleComponent") — alias same as explicit name → silent skip
+        var map = new ComponentMap();
+
+        Should.NotThrow(() => map.Add<SimpleComponent>("SimpleComponent"));
+
+        map.Resolve("SimpleComponent").ShouldBe(typeof(SimpleComponent));
+    }
+
+    [Fact]
+    public void ShouldNotExposeAliasesInRegisteredNames()
+    {
+        var map = new ComponentMap()
+            .Add<SimpleComponent>("alpha")
+            .Add<GreetingComponent>("beta");
+
+        // Aliases ("SimpleComponent", "GreetingComponent") must not appear in RegisteredNames
+        map.RegisteredNames.ShouldContain("alpha");
+        map.RegisteredNames.ShouldContain("beta");
+        map.RegisteredNames.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void ShouldSilentlySkipAliasWhenTypeNameCollidesWithExplicitRegistration()
+    {
+        // If type name "GreetingComponent" is already an explicit key in _map,
+        // the alias registration must be skipped silently (no exception).
+        var map = new ComponentMap()
+            .Add<SimpleComponent>("GreetingComponent") // explicit: "GreetingComponent" → SimpleComponent
+            .Add<GreetingComponent>("greeting");        // alias "GreetingComponent" already taken → skip
+
+        // Explicit name wins
+        map.Resolve("GreetingComponent").ShouldBe(typeof(SimpleComponent));
+        // The greeting explicit name resolves GreetingComponent type
+        map.Resolve("greeting").ShouldBe(typeof(GreetingComponent));
+    }
+
     // ── Fixtures ──
 
     private sealed class SimpleComponent : IAtollComponent

@@ -74,8 +74,8 @@ public sealed class DocsPage : AtollComponent, IAtollPage, IStaticPathsProvider
         // The addon DocsLayout wraps content in <article class="docs-article prose">,
         // so render the content directly without extra wrappers.
         // Use RenderAsync on the ContentComponent directly (not ToRenderFragment) so that
-        // embedded component directives (:::aside, :::card-grid, etc.) are resolved from
-        // the fragment list rather than left as <!--atoll:N--> placeholder comments.
+        // embedded component directives (:::aside, :::card-grid, etc.) and <PascalCaseName>
+        // tags are resolved from the fragment list rather than left as placeholder comments.
         var contentComponent = ContentComponent.FromRenderedContent(rendered);
         await contentComponent.RenderAsync(context);
     }

@@ -22,7 +22,7 @@ public sealed class ContentConfig : IContentConfiguration
         var markdownOptions = DocsMarkdownRenderer.CreateMarkdownOptions(DocsSetup.Config)
             ?? new MarkdownOptions();
 
-        // Register Lagoon content components so :::directive syntax works in .md/.mda files.
+        // Register Lagoon content components so :::directive and <PascalCaseName> tag syntax works in .md/.mda files.
         markdownOptions.Components = new ComponentMap()
             .Add<Aside>("aside")
             .Add<Card>("card")
