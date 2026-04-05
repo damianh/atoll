@@ -94,4 +94,27 @@ public sealed class DocsBaseHeadTests
         var scriptIndex = html.IndexOf("<script>analytics()</script>", StringComparison.Ordinal);
         cssIndex.ShouldBeLessThan(scriptIndex);
     }
+
+    // --- Favicon ---
+
+    [Fact]
+    public async Task ShouldRenderCustomFaviconHref()
+    {
+        var config = new DocsConfig { Title = "My Docs", FaviconHref = "/icons/custom-favicon.ico" };
+
+        var html = await RenderHeadAsync(config);
+
+        html.ShouldContain("rel=\"icon\"");
+        html.ShouldContain("/icons/custom-favicon.ico");
+    }
+
+    [Fact]
+    public async Task ShouldRenderDefaultFaviconWhenFaviconHrefIsNull()
+    {
+        var html = await RenderHeadAsync(MakeConfig());
+
+        html.ShouldContain("rel=\"icon\"");
+        // Default favicon path from LagoonAssets
+        html.ShouldContain("/_atoll/logo.png");
+    }
 }

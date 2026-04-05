@@ -1,4 +1,5 @@
 using Atoll.Components;
+using Atoll.Lagoon.Configuration;
 using Atoll.Lagoon.Navigation;
 
 namespace Atoll.Lagoon.Components;
@@ -23,12 +24,19 @@ public sealed class SidebarLink : AtollComponent
         WriteText(Item.Label);
         if (Item.Badge is not null)
         {
-            WriteHtml($" <span class=\"badge\">{HtmlEncode(Item.Badge)}</span>");
+            var badgeClass = BadgeCssClass(Item.Badge.Variant);
+            WriteHtml($" <span class=\"{badgeClass}\">{HtmlEncode(Item.Badge.Text)}</span>");
         }
 
         WriteHtml("</a></li>");
         return Task.CompletedTask;
     }
+
+    internal static string BadgeCssClass(BadgeVariant variant) => variant switch
+    {
+        BadgeVariant.Default => "sidebar-badge",
+        _ => $"sidebar-badge sidebar-badge-{variant.ToString().ToLowerInvariant()}",
+    };
 
     private static string HtmlEncode(string value) =>
         System.Net.WebUtility.HtmlEncode(value);

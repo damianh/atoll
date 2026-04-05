@@ -74,6 +74,14 @@ public sealed class DocsLayout : AtollComponent
     [Parameter]
     public bool IsUntranslatedContent { get; set; }
 
+    /// <summary>Gets or sets the page slug appended to <see cref="DocsConfig.EditUrl"/> to form the edit link. Defaults to <c>null</c> (no edit link).</summary>
+    [Parameter]
+    public string? PageSlug { get; set; }
+
+    /// <summary>Gets or sets the last-modified timestamp for the page. When set, a "Last updated" date is rendered below the article. Defaults to <c>null</c>.</summary>
+    [Parameter]
+    public DateTimeOffset? LastUpdated { get; set; }
+
     /// <inheritdoc />
     protected override async Task RenderCoreAsync(RenderContext context)
     {
@@ -220,6 +228,31 @@ public sealed class DocsLayout : AtollComponent
         await RenderSlotAsync();
         WriteHtml("</article>");
 
+        // Content footer: edit link + last updated
+        var hasEditLink = Config.EditUrl is not null && PageSlug is not null;
+        var hasLastUpdated = LastUpdated is not null;
+        if (hasEditLink || hasLastUpdated)
+        {
+            WriteHtml("<div class=\"docs-content-footer\">");
+            if (hasEditLink)
+            {
+                var editHref = Config.EditUrl!.TrimEnd('/') + "/" + PageSlug!.TrimStart('/');
+                WriteHtml($"<a href=\"{HtmlEncode(editHref)}\" class=\"docs-edit-link\" target=\"_blank\" rel=\"noopener noreferrer\">");
+                WriteText(translations.EditPageLabel);
+                WriteHtml("</a>");
+            }
+            if (hasLastUpdated)
+            {
+                var isoDate = LastUpdated!.Value.ToString("O");
+                var displayDate = LastUpdated!.Value.ToString("yyyy-MM-dd");
+                WriteHtml("<p class=\"docs-last-updated\">");
+                WriteHtml($"<span>{HtmlEncode(translations.LastUpdatedLabel)}:</span> ");
+                WriteHtml($"<time datetime=\"{HtmlEncode(isoDate)}\">{HtmlEncode(displayDate)}</time>");
+                WriteHtml("</p>");
+            }
+            WriteHtml("</div>");
+        }
+
         // Pagination
         if (Previous is not null || Next is not null)
         {
@@ -252,9 +285,34 @@ public sealed class DocsLayout : AtollComponent
 
         // Footer
         WriteHtml("<footer class=\"docs-footer\">");
-        WriteHtml("<p>");
-        WriteText(translations.BuiltWithLabel);
-        WriteHtml(" <a href=\"https://github.com/damianh/atoll\">Atoll</a> &mdash; a .NET-native framework inspired by Astro.</p>");
+        if (Config.Footer is not null)
+        {
+            // Custom footer: render text and/or links
+            if (!string.IsNullOrEmpty(Config.Footer.Text))
+            {
+                WriteHtml(Config.Footer.Text);
+            }
+            if (Config.Footer.Links.Count > 0)
+            {
+                WriteHtml("<ul class=\"docs-footer-links\">");
+                foreach (var link in Config.Footer.Links)
+                {
+                    WriteHtml("<li>");
+                    WriteHtml($"<a href=\"{HtmlEncode(link.Href)}\">");
+                    WriteText(link.Label);
+                    WriteHtml("</a>");
+                    WriteHtml("</li>");
+                }
+                WriteHtml("</ul>");
+            }
+        }
+        else
+        {
+            // Default footer
+            WriteHtml("<p>");
+            WriteText(translations.BuiltWithLabel);
+            WriteHtml(" <a href=\"https://github.com/damianh/atoll\">Atoll</a> &mdash; a .NET-native framework inspired by Astro.</p>");
+        }
         WriteHtml("</footer>");
 
         // Mermaid support (conditionally injected)

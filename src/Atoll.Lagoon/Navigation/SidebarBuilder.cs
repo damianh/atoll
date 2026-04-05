@@ -153,6 +153,7 @@ public sealed class SidebarBuilder
         // Find all entries whose slug starts with the given directory prefix.
         // When a localeKey is specified, use locale-aware slug matching.
         var matching = _entries
+            .Where(e => !e.Draft)
             .Where(e => SlugMatchesDirectory(e.Slug, normalizedDir, localeKey))
             .OrderBy(e => e.Order)
             .ThenBy(e => e.Label, StringComparer.OrdinalIgnoreCase)

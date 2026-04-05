@@ -5,7 +5,6 @@ using Atoll.Lagoon.Navigation;
 using Atoll.Rendering;
 using Shouldly;
 using Xunit;
-
 namespace Atoll.Lagoon.Tests.Components;
 
 public sealed class SidebarTests
@@ -137,10 +136,40 @@ public sealed class SidebarTests
     [Fact]
     public async Task ShouldRenderBadgeOnLinkItem()
     {
-        var item = new ResolvedSidebarItem("New Feature", "/feature", false, "New");
+        var item = new ResolvedSidebarItem("New Feature", "/feature", false, new SidebarBadge("New"));
         var html = await RenderSidebarAsync([item]);
 
-        html.ShouldContain("<span class=\"badge\">New</span>");
+        html.ShouldContain("<span class=\"sidebar-badge\">New</span>");
+    }
+
+    [Fact]
+    public async Task ShouldRenderBadgeWithSuccessVariantClass()
+    {
+        var item = new ResolvedSidebarItem("New Feature", "/feature", false, new SidebarBadge("New", BadgeVariant.Success));
+        var html = await RenderSidebarAsync([item]);
+
+        html.ShouldContain("class=\"sidebar-badge sidebar-badge-success\"");
+        html.ShouldContain("New");
+    }
+
+    [Fact]
+    public async Task ShouldRenderBadgeWithDefaultVariantWithoutVariantSuffix()
+    {
+        var item = new ResolvedSidebarItem("New Feature", "/feature", false, new SidebarBadge("New", BadgeVariant.Default));
+        var html = await RenderSidebarAsync([item]);
+
+        html.ShouldContain("class=\"sidebar-badge\"");
+        html.ShouldNotContain("sidebar-badge-default");
+    }
+
+    [Fact]
+    public async Task ShouldRenderBadgeViaImplicitStringConversion()
+    {
+        SidebarBadge badge = "OSS";
+        var item = new ResolvedSidebarItem("Feature", "/feature", false, badge);
+        var html = await RenderSidebarAsync([item]);
+
+        html.ShouldContain("<span class=\"sidebar-badge\">OSS</span>");
     }
 
     // --- Groups ---

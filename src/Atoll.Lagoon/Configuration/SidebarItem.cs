@@ -18,9 +18,10 @@ public sealed class SidebarItem
     public string? Link { get; set; }
 
     /// <summary>
-    /// Gets or sets an optional badge text to display next to the label (e.g., "New", "OSS").
+    /// Gets or sets an optional badge to display next to the label (e.g., "New", "OSS").
+    /// Can be assigned from a plain <see cref="string"/> via implicit conversion.
     /// </summary>
-    public string? Badge { get; set; }
+    public SidebarBadge? Badge { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether this group is collapsed by default.

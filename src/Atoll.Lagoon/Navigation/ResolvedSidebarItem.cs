@@ -1,3 +1,5 @@
+using Atoll.Lagoon.Configuration;
+
 namespace Atoll.Lagoon.Navigation;
 
 /// <summary>
@@ -12,8 +14,8 @@ public sealed class ResolvedSidebarItem
     /// <param name="label">The display label.</param>
     /// <param name="href">The URL this link points to.</param>
     /// <param name="isCurrent">Whether this is the current page.</param>
-    /// <param name="badge">Optional badge text.</param>
-    public ResolvedSidebarItem(string label, string href, bool isCurrent, string? badge)
+    /// <param name="badge">Optional badge.</param>
+    public ResolvedSidebarItem(string label, string href, bool isCurrent, SidebarBadge? badge)
     {
         ArgumentNullException.ThrowIfNull(label);
         ArgumentNullException.ThrowIfNull(href);
@@ -31,13 +33,13 @@ public sealed class ResolvedSidebarItem
     /// </summary>
     /// <param name="label">The group heading label.</param>
     /// <param name="isActive">Whether any descendant of this group is the current page.</param>
-    /// <param name="badge">Optional badge text.</param>
+    /// <param name="badge">Optional badge.</param>
     /// <param name="collapsed">Whether this group is collapsed by default.</param>
     /// <param name="items">The resolved child items.</param>
     public ResolvedSidebarItem(
         string label,
         bool isActive,
-        string? badge,
+        SidebarBadge? badge,
         bool collapsed,
         IReadOnlyList<ResolvedSidebarItem> items)
     {
@@ -72,8 +74,8 @@ public sealed class ResolvedSidebarItem
     /// </summary>
     public bool IsActive { get; }
 
-    /// <summary>Gets optional badge text.</summary>
-    public string? Badge { get; }
+    /// <summary>Gets optional badge.</summary>
+    public SidebarBadge? Badge { get; }
 
     /// <summary>Gets whether this item is a group header rather than a link.</summary>
     public bool IsGroup { get; }

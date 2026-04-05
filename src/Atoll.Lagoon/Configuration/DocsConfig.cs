@@ -108,4 +108,19 @@ public sealed class DocsConfig
     /// Default: <see cref="SidebarChevronPosition.End"/>.
     /// </summary>
     public SidebarChevronPosition SidebarChevronPosition { get; set; } = SidebarChevronPosition.End;
+
+    /// <summary>
+    /// Gets or sets the base URL for "Edit this page" links.
+    /// When set, a link to edit the current page on the source repository is rendered below the content.
+    /// Example: <c>"https://github.com/org/repo/edit/main/docs/"</c>.
+    /// The page slug is appended to this URL at render time.
+    /// Default: <c>null</c> (no edit link).
+    /// </summary>
+    public string? EditUrl { get; set; }
+
+    /// <summary>
+    /// Gets or sets optional custom footer configuration.
+    /// When <c>null</c>, the default "Built with Atoll" footer is rendered.
+    /// </summary>
+    public FooterConfig? Footer { get; set; }
 }

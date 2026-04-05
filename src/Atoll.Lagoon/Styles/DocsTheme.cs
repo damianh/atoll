@@ -18,7 +18,7 @@ namespace Atoll.Lagoon.Styles;
 [GlobalStyle]
 [Styles(Reset + LightTokens + DarkTokens + Layout + Typography + Prose + CodeBlocks + SyntaxHighlightTokens +
         SidebarNav + TocNav + PaginationStyles + BreadcrumbStyles + HeroStyles + SplashStyles + SearchStyles +
-        LanguagePickerStyles + UntranslatedNoticeStyles + AsideStyles)]
+        LanguagePickerStyles + UntranslatedNoticeStyles + AsideStyles + ContentFooterStyles + FooterLinkStyles)]
 public sealed class DocsTheme : AtollComponent
 {
     // -------------------------------------------------------------------------
@@ -392,6 +392,26 @@ public sealed class DocsTheme : AtollComponent
             color: #fff;
             margin-left: 0.4rem;
             vertical-align: middle;
+        }
+        .sidebar-badge-note {
+            background: var(--aside-note-bg);
+            color: var(--aside-note-text);
+        }
+        .sidebar-badge-tip {
+            background: var(--aside-tip-bg);
+            color: var(--aside-tip-text);
+        }
+        .sidebar-badge-success {
+            background: var(--aside-tip-bg);
+            color: var(--aside-tip-text);
+        }
+        .sidebar-badge-caution {
+            background: var(--aside-caution-bg);
+            color: var(--aside-caution-text);
+        }
+        .sidebar-badge-danger {
+            background: var(--aside-danger-bg);
+            color: var(--aside-danger-text);
         }
         /* Collapsible group chevron */
         .docs-sidebar details > summary {
@@ -990,6 +1010,52 @@ public sealed class DocsTheme : AtollComponent
             color: var(--docs-text);
         }
         .aside-content p:last-child { margin-bottom: 0; }
+        """;
+
+    private const string ContentFooterStyles = """
+        /* ---- Content footer (edit link + last updated) ---- */
+        .docs-content-footer {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-top: 2rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--docs-border);
+            font-size: 0.875rem;
+            color: var(--docs-text-muted);
+        }
+        .docs-edit-link {
+            color: var(--docs-text-muted);
+            text-decoration: underline;
+            transition: color 0.1s;
+        }
+        .docs-edit-link:hover { color: var(--docs-link-hover); }
+        .docs-last-updated {
+            margin: 0;
+            font-size: 0.875rem;
+            color: var(--docs-text-muted);
+        }
+        .docs-last-updated span { font-weight: 500; }
+        """;
+
+    private const string FooterLinkStyles = """
+        /* ---- Custom footer links ---- */
+        .docs-footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0 1.25rem;
+            list-style: none;
+            margin: 0.25rem 0 0;
+            padding: 0;
+        }
+        .docs-footer a {
+            color: var(--docs-text-muted);
+            transition: color 0.1s;
+        }
+        .docs-footer a:hover { color: var(--docs-link-hover); text-decoration: none; }
         """;
 
     /// <inheritdoc />

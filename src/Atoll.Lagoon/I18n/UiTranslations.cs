@@ -70,6 +70,14 @@ public sealed record UiTranslations
     /// <summary>Gets the label for the table-of-contents heading.</summary>
     public string TocLabel { get; init; } = "On this page";
 
+    // -- Content footer --
+
+    /// <summary>Gets the display text for the edit-page link.</summary>
+    public string EditPageLabel { get; init; } = "Edit page";
+
+    /// <summary>Gets the label shown before the last-updated date.</summary>
+    public string LastUpdatedLabel { get; init; } = "Last updated";
+
     // -- Footer --
 
     /// <summary>Gets the prefix text for the footer attribution.</summary>

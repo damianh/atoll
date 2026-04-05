@@ -46,6 +46,13 @@ public sealed class SearchDocumentInput
 
     /// <summary>Gets or sets the maximum plain-text body length. Defaults to 500 characters.</summary>
     public int MaxBodyLength { get; set; } = 500;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether this document is a draft.
+    /// When <c>true</c>, this document should be excluded from the search index.
+    /// Callers are responsible for filtering draft documents before passing them to the generator.
+    /// </summary>
+    public bool Draft { get; set; }
 }
 
 /// <summary>

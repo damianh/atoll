@@ -24,6 +24,8 @@ public sealed class DocsConfigTests
         config.TableOfContents.ShouldNotBeNull();
         config.TableOfContents.MinHeadingLevel.ShouldBe(2);
         config.TableOfContents.MaxHeadingLevel.ShouldBe(3);
+        config.EditUrl.ShouldBeNull();
+        config.Footer.ShouldBeNull();
     }
 
     [Fact]
@@ -81,10 +83,26 @@ public sealed class DocsConfigTests
         {
             Label = "New Feature",
             Link = "/docs/new/",
-            Badge = "New"
+            Badge = "New"  // implicit string conversion
         };
 
-        item.Badge.ShouldBe("New");
+        item.Badge.ShouldNotBeNull();
+        item.Badge!.Text.ShouldBe("New");
+        item.Badge.Variant.ShouldBe(BadgeVariant.Default);
+    }
+
+    [Fact]
+    public void SidebarItemShouldSupportBadgeWithVariant()
+    {
+        var item = new SidebarItem
+        {
+            Label = "New Feature",
+            Link = "/docs/new/",
+            Badge = new SidebarBadge("OSS", BadgeVariant.Success),
+        };
+
+        item.Badge!.Text.ShouldBe("OSS");
+        item.Badge.Variant.ShouldBe(BadgeVariant.Success);
     }
 
     [Fact]
@@ -251,5 +269,32 @@ public sealed class DocsConfigTests
         var config = new DocsConfig { DefaultLang = "de" };
 
         config.DefaultLang.ShouldBe("de");
+    }
+
+    // --- New gap-closing properties ---
+
+    [Fact]
+    public void ShouldAcceptEditUrl()
+    {
+        var config = new DocsConfig { EditUrl = "https://github.com/org/repo/edit/main/docs" };
+
+        config.EditUrl.ShouldBe("https://github.com/org/repo/edit/main/docs");
+    }
+
+    [Fact]
+    public void ShouldAcceptFooterConfig()
+    {
+        var footer = new FooterConfig
+        {
+            Text = "<p>My footer</p>",
+            Links = [new FooterLink("Privacy", "/privacy")],
+        };
+        var config = new DocsConfig { Footer = footer };
+
+        config.Footer.ShouldNotBeNull();
+        config.Footer.Text.ShouldBe("<p>My footer</p>");
+        config.Footer.Links.Count.ShouldBe(1);
+        config.Footer.Links[0].Label.ShouldBe("Privacy");
+        config.Footer.Links[0].Href.ShouldBe("/privacy");
     }
 }

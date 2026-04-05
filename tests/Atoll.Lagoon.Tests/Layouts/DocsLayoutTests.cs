@@ -41,7 +41,8 @@ public sealed class DocsLayoutTests
         return await RenderLayoutCoreAsync(
             config, pageTitle, pageDescription, headings, sidebarItems,
             previous, next, breadcrumbItems, slotContent, currentPath,
-            isUntranslatedContent: false, pageHeadContent: null);
+            isUntranslatedContent: false, pageHeadContent: null,
+            pageSlug: null, lastUpdated: null);
     }
 
     private static async Task<string> RenderLayoutWithHeadContentAsync(
@@ -60,7 +61,8 @@ public sealed class DocsLayoutTests
         return await RenderLayoutCoreAsync(
             config, pageTitle, pageDescription, headings, sidebarItems,
             previous, next, breadcrumbItems, slotContent, currentPath,
-            isUntranslatedContent: false, pageHeadContent: pageHeadContent);
+            isUntranslatedContent: false, pageHeadContent: pageHeadContent,
+            pageSlug: null, lastUpdated: null);
     }
 
     private static async Task<string> RenderLayoutCoreAsync(
@@ -75,7 +77,9 @@ public sealed class DocsLayoutTests
         ComponentDelegate? slotContent,
         string currentPath,
         bool isUntranslatedContent,
-        string? pageHeadContent = null)
+        string? pageHeadContent = null,
+        string? pageSlug = null,
+        DateTimeOffset? lastUpdated = null)
     {
         var destination = new StringRenderDestination();
         var props = new Dictionary<string, object?>
@@ -91,6 +95,8 @@ public sealed class DocsLayoutTests
             ["PageHeadContent"] = pageHeadContent,
             ["CurrentPath"] = currentPath,
             ["IsUntranslatedContent"] = isUntranslatedContent,
+            ["PageSlug"] = pageSlug,
+            ["LastUpdated"] = lastUpdated,
         };
 
         SlotCollection slots;
@@ -694,5 +700,177 @@ public sealed class DocsLayoutTests
         var html = await RenderLayoutAsync(config);
 
         html.ShouldContain("atoll-sidebar-state.js");
+    }
+
+    // --- Content footer: edit link ---
+
+    [Fact]
+    public async Task ShouldRenderEditLinkWhenEditUrlAndPageSlugAreSet()
+    {
+        var config = new DocsConfig { Title = "Docs", EditUrl = "https://github.com/org/repo/edit/main/docs" };
+
+        var html = await RenderLayoutCoreAsync(
+            config, "", null, null, null, null, null, null, null, "/",
+            isUntranslatedContent: false, pageSlug: "guides/getting-started");
+
+        html.ShouldContain("class=\"docs-edit-link\"");
+        html.ShouldContain("https://github.com/org/repo/edit/main/docs/guides/getting-started");
+        html.ShouldContain("Edit page");
+    }
+
+    [Fact]
+    public async Task ShouldNotRenderEditLinkWhenEditUrlIsNull()
+    {
+        var config = MakeConfig();
+
+        var html = await RenderLayoutCoreAsync(
+            config, "", null, null, null, null, null, null, null, "/",
+            isUntranslatedContent: false, pageSlug: "guides/getting-started");
+
+        html.ShouldNotContain("docs-edit-link");
+    }
+
+    [Fact]
+    public async Task ShouldNotRenderEditLinkWhenPageSlugIsNull()
+    {
+        var config = new DocsConfig { Title = "Docs", EditUrl = "https://github.com/org/repo/edit/main/docs" };
+
+        var html = await RenderLayoutAsync(config);
+
+        html.ShouldNotContain("docs-edit-link");
+    }
+
+    [Fact]
+    public async Task ShouldComposEditUrlWithTrailingSlashNormalized()
+    {
+        var config = new DocsConfig { Title = "Docs", EditUrl = "https://github.com/org/repo/edit/main/docs/" };
+
+        var html = await RenderLayoutCoreAsync(
+            config, "", null, null, null, null, null, null, null, "/",
+            isUntranslatedContent: false, pageSlug: "/guides/intro");
+
+        html.ShouldContain("https://github.com/org/repo/edit/main/docs/guides/intro");
+    }
+
+    // --- Content footer: last updated ---
+
+    [Fact]
+    public async Task ShouldRenderLastUpdatedWhenSet()
+    {
+        var config = MakeConfig();
+        var date = new DateTimeOffset(2025, 3, 15, 0, 0, 0, TimeSpan.Zero);
+
+        var html = await RenderLayoutCoreAsync(
+            config, "", null, null, null, null, null, null, null, "/",
+            isUntranslatedContent: false, lastUpdated: date);
+
+        html.ShouldContain("class=\"docs-last-updated\"");
+        html.ShouldContain("<time");
+        html.ShouldContain("2025-03-15");
+        html.ShouldContain("Last updated");
+    }
+
+    [Fact]
+    public async Task ShouldNotRenderLastUpdatedWhenNull()
+    {
+        var html = await RenderLayoutAsync(MakeConfig());
+
+        html.ShouldNotContain("docs-last-updated");
+    }
+
+    // --- Content footer: combined / absent ---
+
+    [Fact]
+    public async Task ShouldNotRenderContentFooterDivWhenNeitherEditNorLastUpdatedSet()
+    {
+        var html = await RenderLayoutAsync(MakeConfig());
+
+        html.ShouldNotContain("docs-content-footer");
+    }
+
+    [Fact]
+    public async Task ShouldRenderBothEditLinkAndLastUpdatedTogether()
+    {
+        var config = new DocsConfig { Title = "Docs", EditUrl = "https://github.com/org/repo/edit/main/docs" };
+        var date = new DateTimeOffset(2024, 6, 1, 0, 0, 0, TimeSpan.Zero);
+
+        var html = await RenderLayoutCoreAsync(
+            config, "", null, null, null, null, null, null, null, "/",
+            isUntranslatedContent: false, pageSlug: "intro", lastUpdated: date);
+
+        html.ShouldContain("docs-content-footer");
+        html.ShouldContain("docs-edit-link");
+        html.ShouldContain("docs-last-updated");
+    }
+
+    // --- Custom footer ---
+
+    // The default footer renders a paragraph with an Atoll attribution link.
+    // This constant matches the unique HTML that only the default footer produces.
+    private const string DefaultFooterMarker = "<a href=\"https://github.com/damianh/atoll\">Atoll</a>";
+
+    [Fact]
+    public async Task ShouldRenderDefaultFooterWhenFooterConfigIsNull()
+    {
+        var html = await RenderLayoutAsync(MakeConfig());
+
+        html.ShouldContain(DefaultFooterMarker);
+    }
+
+    [Fact]
+    public async Task ShouldRenderCustomTextWhenFooterTextIsSet()
+    {
+        var config = new DocsConfig { Title = "Docs", Footer = new FooterConfig { Text = "<p>My company footer</p>" } };
+
+        var html = await RenderLayoutAsync(config);
+
+        html.ShouldContain("My company footer");
+        html.ShouldNotContain(DefaultFooterMarker);
+    }
+
+    [Fact]
+    public async Task ShouldRenderCustomLinksWhenFooterLinksAreSet()
+    {
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            Footer = new FooterConfig
+            {
+                Links = [new FooterLink("Privacy", "/privacy"), new FooterLink("Terms", "/terms")],
+            },
+        };
+
+        var html = await RenderLayoutAsync(config);
+
+        html.ShouldContain("href=\"/privacy\"");
+        html.ShouldContain("Privacy");
+        html.ShouldContain("href=\"/terms\"");
+        html.ShouldContain("Terms");
+        html.ShouldNotContain(DefaultFooterMarker);
+    }
+
+    [Fact]
+    public async Task ShouldReplaceDefaultFooterWhenCustomFooterConfigIsSet()
+    {
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            Footer = new FooterConfig { Text = "<p>Custom footer</p>" },
+        };
+
+        var html = await RenderLayoutAsync(config);
+
+        html.ShouldNotContain(DefaultFooterMarker);
+    }
+
+    [Fact]
+    public async Task ShouldRenderEmptyFooterElementWhenFooterConfigHasNoTextOrLinks()
+    {
+        var config = new DocsConfig { Title = "Docs", Footer = new FooterConfig() };
+
+        var html = await RenderLayoutAsync(config);
+
+        html.ShouldContain("<footer class=\"docs-footer\">");
+        html.ShouldNotContain(DefaultFooterMarker);
     }
 }
