@@ -158,8 +158,8 @@ public sealed class SplashLayoutTests
     {
         var html = await RenderLayoutAsync(MakeConfig());
 
-        // When LogoSrc is null, the default Atoll icon is rendered instead.
-        html.ShouldContain("<img src=\"/_atoll/favicon.svg\"");
+        // When LogoSrc is null, the default Atoll logo is rendered instead.
+        html.ShouldContain("<img src=\"/_atoll/logo.png\"");
     }
 
     [Fact]

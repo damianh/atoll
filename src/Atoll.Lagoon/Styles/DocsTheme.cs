@@ -18,7 +18,7 @@ namespace Atoll.Lagoon.Styles;
 [GlobalStyle]
 [Styles(Reset + LightTokens + DarkTokens + Layout + Typography + Prose + CodeBlocks + SyntaxHighlightTokens +
         SidebarNav + TocNav + PaginationStyles + BreadcrumbStyles + HeroStyles + SplashStyles + SearchStyles +
-        LanguagePickerStyles + UntranslatedNoticeStyles)]
+        LanguagePickerStyles + UntranslatedNoticeStyles + AsideStyles)]
 public sealed class DocsTheme : AtollComponent
 {
     // -------------------------------------------------------------------------
@@ -68,6 +68,19 @@ public sealed class DocsTheme : AtollComponent
             --docs-code-text: #e2e8f0;
             --docs-code-inline-bg: #f3f4f6;
             --docs-code-inline-text: #be123c;
+            /* Aside variants */
+            --aside-note-border: #3b82f6;
+            --aside-note-bg: #eff6ff;
+            --aside-note-text: #1e40af;
+            --aside-tip-border: #10b981;
+            --aside-tip-bg: #ecfdf5;
+            --aside-tip-text: #065f46;
+            --aside-caution-border: #f59e0b;
+            --aside-caution-bg: #fffbeb;
+            --aside-caution-text: #92400e;
+            --aside-danger-border: #ef4444;
+            --aside-danger-bg: #fef2f2;
+            --aside-danger-text: #991b1b;
             /* Dimensions */
             --docs-sidebar-width: 16rem;
             --docs-toc-width: 14rem;
@@ -103,6 +116,19 @@ public sealed class DocsTheme : AtollComponent
             --docs-code-text: #e6edf3;
             --docs-code-inline-bg: #343942;
             --docs-code-inline-text: #f78166;
+            /* Aside variants */
+            --aside-note-border: #58a6ff;
+            --aside-note-bg: #161b22;
+            --aside-note-text: #79c0ff;
+            --aside-tip-border: #3fb950;
+            --aside-tip-bg: #161b22;
+            --aside-tip-text: #56d364;
+            --aside-caution-border: #d29922;
+            --aside-caution-bg: #161b22;
+            --aside-caution-text: #e3b341;
+            --aside-danger-border: #f85149;
+            --aside-danger-bg: #161b22;
+            --aside-danger-text: #ff7b72;
         }
         """;
 
@@ -925,6 +951,43 @@ public sealed class DocsTheme : AtollComponent
             font-size: 0.875rem;
             color: var(--docs-text-muted);
         }
+        """;
+
+    private const string AsideStyles = """
+        /* ---- Aside / callout boxes ---- */
+        .aside {
+            border-left: 3px solid var(--aside-note-border);
+            background: var(--aside-note-bg);
+            border-radius: 0.375rem;
+            padding: 0.875rem 1rem;
+            margin-bottom: 1.25rem;
+        }
+        .aside-note  { border-left-color: var(--aside-note-border);  background: var(--aside-note-bg); }
+        .aside-tip   { border-left-color: var(--aside-tip-border);   background: var(--aside-tip-bg); }
+        .aside-caution { border-left-color: var(--aside-caution-border); background: var(--aside-caution-bg); }
+        .aside-danger  { border-left-color: var(--aside-danger-border);  background: var(--aside-danger-bg); }
+        .aside-title {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            margin-bottom: 0.375rem;
+        }
+        .aside-note  .aside-title { color: var(--aside-note-text); }
+        .aside-tip   .aside-title { color: var(--aside-tip-text); }
+        .aside-caution .aside-title { color: var(--aside-caution-text); }
+        .aside-danger  .aside-title { color: var(--aside-danger-text); }
+        .aside-title svg {
+            width: 1.125rem;
+            height: 1.125rem;
+            flex-shrink: 0;
+        }
+        .aside-content {
+            font-size: 0.9rem;
+            color: var(--docs-text);
+        }
+        .aside-content p:last-child { margin-bottom: 0; }
         """;
 
     /// <inheritdoc />

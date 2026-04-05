@@ -15,7 +15,7 @@
       LogicalName="Atoll.Lagoon.Islands.Assets.mobile-nav.js" />
     <EmbeddedResource Include="Islands\Assets\sidebar-state.js"
       LogicalName="Atoll.Lagoon.Islands.Assets.sidebar-state.js" />
-    <EmbeddedResource Include="Assets\atoll-icon.svg"
-      LogicalName="Atoll.Lagoon.Assets.atoll-icon.svg" />
+    <EmbeddedResource Include="Assets\logo.png"
+      LogicalName="Atoll.Lagoon.Assets.logo.png" />
   </ItemGroup>
 </Project>

@@ -182,15 +182,15 @@ internal sealed class DevAtollRequestHandler
     /// </summary>
     private static bool TryServeAtollScript(HttpContext context, string path)
     {
-        if (path == "/_atoll/favicon.svg")
+        if (path == "/_atoll/logo.png")
         {
-            var svg = GetLagoonIconSvg();
-            if (svg is not null)
+            var png = GetLagoonLogoPng();
+            if (png is not null)
             {
                 context.Response.StatusCode = 200;
-                context.Response.ContentType = "image/svg+xml";
+                context.Response.ContentType = "image/png";
                 context.Response.Headers["Cache-Control"] = "no-cache";
-                context.Response.WriteAsync(svg).GetAwaiter().GetResult();
+                context.Response.Body.WriteAsync(png).GetAwaiter().GetResult();
                 return true;
             }
 
@@ -368,18 +368,18 @@ internal sealed class DevAtollRequestHandler
         }
     }
 
-    private static string? _cachedIconSvg;
+    private static byte[]? _cachedLogoPng;
 
     /// <summary>
-    /// Loads the Atoll icon SVG from the <c>Atoll.Lagoon</c> assembly via reflection,
+    /// Loads the Atoll logo PNG from the <c>Atoll.Lagoon</c> assembly via reflection,
     /// avoiding a hard project reference. Returns <see langword="null"/> if the assembly
     /// or resource is not available.
     /// </summary>
-    private static string? GetLagoonIconSvg()
+    private static byte[]? GetLagoonLogoPng()
     {
-        if (_cachedIconSvg is not null)
+        if (_cachedLogoPng is not null)
         {
-            return _cachedIconSvg;
+            return _cachedLogoPng;
         }
 
         try
@@ -392,16 +392,17 @@ internal sealed class DevAtollRequestHandler
                 return null;
             }
 
-            const string resourceName = "Atoll.Lagoon.Assets.atoll-icon.svg";
+            const string resourceName = "Atoll.Lagoon.Assets.logo.png";
             using var stream = lagoonAssembly.GetManifestResourceStream(resourceName);
             if (stream is null)
             {
                 return null;
             }
 
-            using var reader = new StreamReader(stream);
-            _cachedIconSvg = reader.ReadToEnd();
-            return _cachedIconSvg;
+            using var ms = new MemoryStream();
+            stream.CopyTo(ms);
+            _cachedLogoPng = ms.ToArray();
+            return _cachedLogoPng;
         }
         catch (Exception)
         {

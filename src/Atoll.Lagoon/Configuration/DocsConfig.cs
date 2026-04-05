@@ -31,8 +31,8 @@ public sealed class DocsConfig
 
     /// <summary>
     /// Gets or sets the URL or path to the site favicon.
-    /// When <c>null</c>, the built-in Atoll icon SVG is used
-    /// (served at <c>/_atoll/favicon.svg</c>).
+    /// When <c>null</c>, the built-in Atoll logo PNG is used
+    /// (served at <c>/_atoll/logo.png</c>).
     /// </summary>
     public string? FaviconHref { get; set; }
 

@@ -4,33 +4,33 @@ namespace Atoll.Lagoon.Assets;
 
 /// <summary>
 /// Provides access to the embedded static assets shipped with <c>Atoll.Lagoon</c>,
-/// such as the default Atoll icon SVG used as favicon and header logo.
+/// such as the default Atoll logo PNG used as favicon and header logo.
 /// </summary>
 public static class LagoonAssets
 {
     private static readonly Assembly ResourceAssembly = typeof(LagoonAssets).Assembly;
 
-    /// <summary>The logical resource name for the Atoll icon SVG.</summary>
-    public const string IconSvgResourceName = "Atoll.Lagoon.Assets.atoll-icon.svg";
+    /// <summary>The logical resource name for the Atoll logo PNG.</summary>
+    public const string LogoPngResourceName = "Atoll.Lagoon.Assets.logo.png";
 
     /// <summary>The URL path used to serve the default favicon in dev mode and SSG output.</summary>
-    public const string DefaultFaviconPath = "/_atoll/favicon.svg";
+    public const string DefaultFaviconPath = "/_atoll/logo.png";
 
-    private static string? _iconSvg;
+    private static byte[]? _logoPng;
 
     /// <summary>
-    /// Gets the content of the embedded Atoll icon SVG.
+    /// Gets the content of the embedded Atoll logo PNG as a byte array.
     /// </summary>
-    /// <returns>The SVG markup.</returns>
+    /// <returns>The PNG image bytes.</returns>
     /// <exception cref="InvalidOperationException">
     /// Thrown when the embedded resource cannot be found.
     /// </exception>
-    public static string GetIconSvg()
+    public static byte[] GetLogoPng()
     {
-        return _iconSvg ??= ReadResource(IconSvgResourceName);
+        return _logoPng ??= ReadBinaryResource(LogoPngResourceName);
     }
 
-    private static string ReadResource(string resourceName)
+    private static byte[] ReadBinaryResource(string resourceName)
     {
         using var stream = ResourceAssembly.GetManifestResourceStream(resourceName);
         if (stream is null)
@@ -42,7 +42,8 @@ public static class LagoonAssets
                 $"Available resources: [{string.Join(", ", available)}].");
         }
 
-        using var reader = new StreamReader(stream);
-        return reader.ReadToEnd();
+        using var ms = new MemoryStream();
+        stream.CopyTo(ms);
+        return ms.ToArray();
     }
 }
