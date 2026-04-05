@@ -1,5 +1,6 @@
 using Atoll.Build.Content.Markdown;
 using Atoll.Lagoon.Configuration;
+using Atoll.Mermaid;
 using Markdig;
 
 namespace Atoll.Lagoon.Markdown;

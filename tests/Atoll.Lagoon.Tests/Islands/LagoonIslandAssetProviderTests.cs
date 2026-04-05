@@ -11,17 +11,16 @@ public sealed class LagoonIslandAssetProviderTests
         "scripts/atoll-docs-search-dialog.js",
         "scripts/atoll-theme-toggle.js",
         "scripts/atoll-docs-mobile-nav.js",
-        "scripts/atoll-docs-mermaid-init.js",
     ];
 
     [Fact]
-    public void GetAssetsShouldReturnFourDescriptors()
+    public void GetAssetsShouldReturnThreeDescriptors()
     {
         var provider = new LagoonIslandAssetProvider();
 
         var assets = provider.GetAssets().ToList();
 
-        assets.Count.ShouldBe(4);
+        assets.Count.ShouldBe(3);
     }
 
     [Fact]

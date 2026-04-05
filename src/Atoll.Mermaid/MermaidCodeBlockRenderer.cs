@@ -2,7 +2,7 @@ using Markdig.Renderers;
 using Markdig.Renderers.Html;
 using Markdig.Syntax;
 
-namespace Atoll.Lagoon.Markdown;
+namespace Atoll.Mermaid;
 
 /// <summary>
 /// HTML renderer for code blocks that handles <c>mermaid</c> language blocks specially.

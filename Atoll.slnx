@@ -5,6 +5,7 @@
     <Project Path="src/Atoll.DrawIo/Atoll.DrawIo.csproj" />
     <Project Path="src/Atoll.Giscus/Atoll.Giscus.csproj" />
     <Project Path="src/Atoll.Lagoon/Atoll.Lagoon.csproj" />
+    <Project Path="src/Atoll.Mermaid/Atoll.Mermaid.csproj" />
     <Project Path="src/Atoll.Middleware/Atoll.Middleware.csproj" />
     <Project Path="src/Atoll.Reef/Atoll.Reef.csproj" />
   </Folder>
@@ -21,6 +22,7 @@
     <Project Path="tests/Atoll.Tests/Atoll.Tests.csproj" />
     <Project Path="tests/Atoll.DrawIo.Tests/Atoll.DrawIo.Tests.csproj" />
     <Project Path="tests/Atoll.Lagoon.Tests/Atoll.Lagoon.Tests.csproj" />
+    <Project Path="tests/Atoll.Mermaid.Tests/Atoll.Mermaid.Tests.csproj" />
     <Project Path="tests/Atoll.Integration.Tests/Atoll.Integration.Tests.csproj" />
     <Project Path="tests/Atoll.Middleware.Tests/Atoll.Middleware.Tests.csproj" />
     <Project Path="tests/Atoll.Reef.Tests/Atoll.Reef.Tests.csproj" />

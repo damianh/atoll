@@ -4,7 +4,7 @@ using Markdig.Renderers;
 using Markdig.Renderers.Html;
 using Markdig.Syntax;
 
-namespace Atoll.Lagoon.Markdown;
+namespace Atoll.Mermaid;
 
 /// <summary>
 /// Markdig extension that intercepts fenced code blocks with language identifier

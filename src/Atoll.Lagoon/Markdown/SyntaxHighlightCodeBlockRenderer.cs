@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Atoll.Mermaid;
 using Markdig.Renderers;
 using Markdig.Renderers.Html;
 using Markdig.Syntax;

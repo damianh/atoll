@@ -1,3 +1,4 @@
+using Atoll.Mermaid;
 using Markdig;
 using Markdig.Parsers;
 using Markdig.Renderers;

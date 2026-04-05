@@ -1,24 +1,20 @@
-using Atoll.Build.Content.Markdown;
-using Atoll.Lagoon.Markdown;
+using Markdig;
 using Shouldly;
 using Xunit;
 
-namespace Atoll.Lagoon.Tests.Markdown;
+namespace Atoll.Mermaid.Tests;
 
 public sealed class MermaidExtensionTests
 {
-    private static string RenderWithMermaid(string markdown)
+    private static string RenderDirect(string markdown, bool enableMermaid = true)
     {
-        var options = new DocsMarkdownOptions { EnableMermaid = true };
-        var result = DocsMarkdownRenderer.Render(markdown, options);
-        return result.Html;
-    }
-
-    private static string RenderWithoutMermaid(string markdown)
-    {
-        var options = new DocsMarkdownOptions { EnableMermaid = false };
-        var result = DocsMarkdownRenderer.Render(markdown, options);
-        return result.Html;
+        var builder = new MarkdownPipelineBuilder();
+        if (enableMermaid)
+        {
+            builder.Use<MermaidExtension>();
+        }
+        var pipeline = builder.Build();
+        return Markdig.Markdown.ToHtml(markdown, pipeline);
     }
 
     // --- Mermaid blocks ---
@@ -27,7 +23,7 @@ public sealed class MermaidExtensionTests
     public void ShouldRenderMermaidBlockAsMermaidPre()
     {
         var md = "```mermaid\ngraph TD;\nA-->B;\n```";
-        var html = RenderWithMermaid(md);
+        var html = RenderDirect(md);
 
         html.ShouldContain("<pre class=\"mermaid\">");
         html.ShouldContain("graph TD;");
@@ -40,7 +36,7 @@ public sealed class MermaidExtensionTests
     public void ShouldNotContainCodeTagForMermaidBlock()
     {
         var md = "```mermaid\ngraph TD;\nA-->B;\n```";
-        var html = RenderWithMermaid(md);
+        var html = RenderDirect(md);
 
         html.ShouldNotContain("<code");
         html.ShouldNotContain("language-mermaid");
@@ -50,7 +46,7 @@ public sealed class MermaidExtensionTests
     public void ShouldRenderMermaidBlockCaseInsensitive()
     {
         var md = "```Mermaid\ngraph TD;\nA-->B;\n```";
-        var html = RenderWithMermaid(md);
+        var html = RenderDirect(md);
 
         html.ShouldContain("<pre class=\"mermaid\">");
     }
@@ -61,7 +57,7 @@ public sealed class MermaidExtensionTests
     public void ShouldRenderNonMermaidCodeBlockNormally()
     {
         var md = "```csharp\nvar x = 1;\n```";
-        var html = RenderWithMermaid(md);
+        var html = RenderDirect(md);
 
         html.ShouldNotContain("class=\"mermaid\"");
         html.ShouldContain("<code");
@@ -72,7 +68,7 @@ public sealed class MermaidExtensionTests
     public void ShouldRenderCodeBlockWithoutLanguageNormally()
     {
         var md = "```\nplain code\n```";
-        var html = RenderWithMermaid(md);
+        var html = RenderDirect(md);
 
         html.ShouldNotContain("class=\"mermaid\"");
         html.ShouldContain("plain code");
@@ -84,7 +80,7 @@ public sealed class MermaidExtensionTests
     public void ShouldRenderMermaidAsRegularCodeWhenExtensionDisabled()
     {
         var md = "```mermaid\ngraph TD;\nA-->B;\n```";
-        var html = RenderWithoutMermaid(md);
+        var html = RenderDirect(md, enableMermaid: false);
 
         html.ShouldNotContain("<pre class=\"mermaid\">");
         html.ShouldContain("<code");
@@ -96,11 +92,47 @@ public sealed class MermaidExtensionTests
     public void ShouldHandleMixedMermaidAndCodeBlocks()
     {
         var md = "```mermaid\ngraph TD;\nA-->B;\n```\n\n```csharp\nvar x = 1;\n```";
-        var html = RenderWithMermaid(md);
+        var html = RenderDirect(md);
 
         html.ShouldContain("<pre class=\"mermaid\">");
         html.ShouldContain("<code");
         html.ShouldContain("graph TD;");
         html.ShouldContain("var x = 1;");
+    }
+
+    // --- Extension standalone usage ---
+
+    [Fact]
+    public void ShouldBeUsableAsStandalonePipelineExtension()
+    {
+        var pipeline = new MarkdownPipelineBuilder()
+            .Use<MermaidExtension>()
+            .Build();
+
+        var md = "```mermaid\ngraph TD;\nA-->B;\n```";
+        var html = Markdig.Markdown.ToHtml(md, pipeline);
+
+        html.ShouldContain("<pre class=\"mermaid\">");
+    }
+
+    // --- XSS safety ---
+
+    [Fact]
+    public void ShouldHtmlEncodeMermaidContent()
+    {
+        var md = "```mermaid\ngraph TD;\nA-->\">B;\n```";
+        var html = RenderDirect(md);
+
+        // Both " and > in diagram source must be HTML-encoded for XSS safety.
+        // Mermaid JS reads textContent, so entities are decoded before rendering.
+        html.ShouldContain("&quot;");
+        html.ShouldContain("&gt;");
+        // The raw unencoded characters must not appear inside the mermaid pre content.
+        // Extract content between the pre tags to avoid matching HTML attribute syntax.
+        var preStart = html.IndexOf("<pre class=\"mermaid\">", StringComparison.Ordinal) + "<pre class=\"mermaid\">".Length;
+        var preEnd = html.IndexOf("</pre>", preStart, StringComparison.Ordinal);
+        var preContent = html[preStart..preEnd];
+        preContent.ShouldNotContain("\"");
+        preContent.ShouldNotContain(">");
     }
 }
