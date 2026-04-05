@@ -77,32 +77,32 @@ public sealed class DocsTheme : AtollComponent
 
     private const string DarkTokens = """
         [data-theme="dark"] {
-            /* Backgrounds */
-            --docs-bg: #0f172a;
-            --docs-bg-raised: #1e293b;
-            --docs-bg-subtle: #1e293b;
+            /* Backgrounds — GitHub Dark */
+            --docs-bg: #0d1117;
+            --docs-bg-raised: #161b22;
+            --docs-bg-subtle: #21262d;
             /* Text */
-            --docs-text: #f1f5f9;
-            --docs-text-muted: #94a3b8;
-            --docs-text-faint: #64748b;
+            --docs-text: #e6edf3;
+            --docs-text-muted: #8d96a0;
+            --docs-text-faint: #6e7681;
             /* Accent */
-            --docs-primary: #7dd3fc;
-            --docs-primary-hover: #bae6fd;
-            --docs-accent: #f472b6;
+            --docs-primary: #58a6ff;
+            --docs-primary-hover: #79c0ff;
+            --docs-accent: #f78166;
             /* Links */
-            --docs-link: #7dd3fc;
-            --docs-link-hover: #f472b6;
+            --docs-link: #58a6ff;
+            --docs-link-hover: #79c0ff;
             /* Borders */
-            --docs-border: #334155;
+            --docs-border: #30363d;
             /* Sidebar */
-            --docs-sidebar-bg: #1e293b;
-            --docs-sidebar-link-active-bg: #0f172a;
-            --docs-sidebar-link-active-text: #7dd3fc;
+            --docs-sidebar-bg: #161b22;
+            --docs-sidebar-link-active-bg: #1f2428;
+            --docs-sidebar-link-active-text: #58a6ff;
             /* Code */
-            --docs-code-bg: #020617;
-            --docs-code-text: #e2e8f0;
-            --docs-code-inline-bg: #1e293b;
-            --docs-code-inline-text: #f9a8d4;
+            --docs-code-bg: #161b22;
+            --docs-code-text: #e6edf3;
+            --docs-code-inline-bg: #343942;
+            --docs-code-inline-text: #f78166;
         }
         """;
 
