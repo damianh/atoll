@@ -5,6 +5,10 @@
  * Fetches the search index lazily on first open and performs client-side
  * full-text search with prefix + word-boundary matching and keyword highlighting.
  *
+ * Results are grouped by page in a tree view: a parent node showing the page
+ * title (with a document icon) and child nodes for each matching heading
+ * within that page (connected by tree-diagram lines).
+ *
  * The search index URL is read from the wrapper element's `data-index-url` attribute,
  * defaulting to `/search-index.json` if not set. Set `data-index-url` to support
  * sites hosted at a base path (e.g. `/docs/search-index.json`).
@@ -36,6 +40,20 @@ function highlight(encodedText, query) {
     return encodedText.replace(re, '<mark>$1</mark>');
 }
 
+/** Generates a URL-safe slug from heading text (matches Markdig AutoIdentifiers output). */
+function slugify(text) {
+    return text
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+}
+
+/**
+ * Searches the index and returns results grouped by page.
+ * Each result includes the page entry and which headings matched the query.
+ */
 function search(entries, query) {
     const q = query.trim().toLowerCase();
     if (!q) return [];
@@ -43,9 +61,32 @@ function search(entries, query) {
         .filter(e =>
             e.title.toLowerCase().includes(q) ||
             (e.description && e.description.toLowerCase().includes(q)) ||
-            (e.body && e.body.toLowerCase().includes(q))
+            (e.body && e.body.toLowerCase().includes(q)) ||
+            (e.headings && e.headings.some(h => h.toLowerCase().includes(q)))
         )
-        .slice(0, 10);
+        .slice(0, 8)
+        .map(e => {
+            const matchedHeadings = (e.headings || []).filter(h =>
+                h.toLowerCase().includes(q)
+            );
+            // If the query matches the body/description but no headings,
+            // still show the page (just without sub-results).
+            return { ...e, matchedHeadings };
+        });
+}
+
+/** Finds a body snippet containing the query, returning a ~120 char window with the match highlighted. */
+function getSnippet(body, query) {
+    if (!body) return '';
+    const q = query.trim().toLowerCase();
+    const idx = body.toLowerCase().indexOf(q);
+    if (idx < 0) return '';
+    const start = Math.max(0, idx - 40);
+    const end = Math.min(body.length, idx + q.length + 80);
+    let snippet = body.slice(start, end);
+    if (start > 0) snippet = '…' + snippet;
+    if (end < body.length) snippet += '…';
+    return highlight(escapeHtml(snippet), query);
 }
 
 function renderResults(container, results, query, noResultsText) {
@@ -54,26 +95,60 @@ function renderResults(container, results, query, noResultsText) {
         container.innerHTML = '<p class="search-no-results">' + escapeHtml(noResultsText) + '</p>';
         return;
     }
-    const list = document.createElement('ul');
-    list.className = 'search-results-list';
-    list.setAttribute('role', 'listbox');
-    results.forEach((r, i) => {
-        const li = document.createElement('li');
-        li.className = 'search-result-item';
-        li.setAttribute('role', 'option');
-        li.setAttribute('tabindex', '-1');
-        li.dataset.href = r.href;
+
+    const countEl = document.createElement('p');
+    countEl.className = 'search-result-count';
+    countEl.textContent = results.length + ' result' + (results.length !== 1 ? 's' : '') + ' for ' + query;
+    container.appendChild(countEl);
+
+    results.forEach((r) => {
+        const group = document.createElement('div');
+        group.className = 'search-result-group';
+
+        // -- Page-level parent result --
+        const pageEl = document.createElement('div');
+        pageEl.className = 'search-result-page';
+        pageEl.setAttribute('role', 'option');
+        pageEl.setAttribute('tabindex', '-1');
+        pageEl.dataset.href = r.href;
         const encodedHref = escapeHtml(r.href);
         const encodedTitle = highlight(escapeHtml(r.title), query);
-        const encodedDesc = r.description ? highlight(escapeHtml(r.description), query) : '';
-        li.innerHTML = `
-            <a href="${encodedHref}" class="search-result-link">
+        const snippet = getSnippet(r.body || r.description || '', query);
+        pageEl.innerHTML = `<a href="${encodedHref}" class="search-result-link">
                 <span class="search-result-title">${encodedTitle}</span>
-                ${encodedDesc ? `<span class="search-result-desc">${encodedDesc}</span>` : ''}
+                ${snippet ? `<span class="search-result-desc">${snippet}</span>` : ''}
             </a>`;
-        list.appendChild(li);
+        group.appendChild(pageEl);
+
+        // -- Matched heading sub-results (tree children) --
+        r.matchedHeadings.forEach((heading, i) => {
+            const headingEl = document.createElement('div');
+            headingEl.className = 'search-result-nested';
+            if (i === r.matchedHeadings.length - 1) {
+                headingEl.classList.add('search-result-nested-last');
+            }
+            headingEl.setAttribute('role', 'option');
+            headingEl.setAttribute('tabindex', '-1');
+            const slug = slugify(heading);
+            const headingHref = escapeHtml(r.href + '#' + slug);
+            headingEl.dataset.href = r.href + '#' + slug;
+            const encodedHeading = highlight(escapeHtml(heading), query);
+            headingEl.innerHTML = `<a href="${headingHref}" class="search-result-link">
+                    <span class="search-result-title">${encodedHeading}</span>
+                </a>`;
+            group.appendChild(headingEl);
+        });
+
+        // -- Section/topic badge --
+        if (r.section) {
+            const badge = document.createElement('div');
+            badge.className = 'search-result-badge';
+            badge.textContent = 'Topic: ' + r.section;
+            group.appendChild(badge);
+        }
+
+        container.appendChild(group);
     });
-    container.appendChild(list);
 }
 
 export default function init(element) {
