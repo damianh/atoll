@@ -46,6 +46,15 @@ public sealed class AtollOptions
         new List<(string RelativeFilePath, Type ComponentType)>();
 
     /// <summary>
+    /// Gets or sets whether to add ETag and Cache-Control headers to dynamically rendered
+    /// page responses, enabling HTTP conditional request (304 Not Modified) support.
+    /// When <c>true</c>, every page response includes a <c>W/"…"</c> weak ETag computed
+    /// from the rendered HTML body, and a <c>Cache-Control: no-cache</c> header.
+    /// Defaults to <c>true</c>.
+    /// </summary>
+    public bool EnableCacheControl { get; set; } = true;
+
+    /// <summary>
     /// Gets the service props dictionary. Service props are automatically merged into
     /// the props for every page render, providing shared dependencies like
     /// <see cref="CollectionQuery"/>.

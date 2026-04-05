@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.Text;
+using Atoll.Build.Pipeline;
 using Atoll.Components;
 using Atoll.Rendering;
 using Atoll.Routing;
@@ -142,7 +144,7 @@ public sealed class AtollRequestHandler
 
     /// <summary>
     /// Handles a page request by rendering the page component (with layouts) and
-    /// writing the HTML response.
+    /// writing the HTML response, with optional ETag/304 conditional request support.
     /// </summary>
     private async Task HandlePageAsync(HttpContext httpContext, RouteMatchResult match)
     {
@@ -173,9 +175,35 @@ public sealed class AtollRequestHandler
         var renderer = new PageRenderer();
         var result = await renderer.RenderPageAsync(renderDelegate);
 
-        httpContext.Response.StatusCode = 200;
-        httpContext.Response.ContentType = "text/html; charset=utf-8";
-        await result.WriteToStreamAsync(httpContext.Response.Body);
+        if (_options.EnableCacheControl)
+        {
+            // Compute ETag from rendered HTML bytes (full SHA-256, weak ETag)
+            var bodyBytes = Encoding.UTF8.GetBytes(result.Html);
+            var hash = AssetFingerprinter.ComputeHash(bodyBytes, 64);
+            var etag = $"W/\"{hash}\"";
+
+            // Check If-None-Match for 304 conditional response (RFC 7232 §3.2)
+            var ifNoneMatch = httpContext.Request.Headers["If-None-Match"].ToString();
+            if (ifNoneMatch == "*" || ifNoneMatch == etag)
+            {
+                httpContext.Response.StatusCode = 304;
+                httpContext.Response.Headers["ETag"] = etag;
+                return;
+            }
+
+            // 200 response with ETag and Cache-Control
+            httpContext.Response.StatusCode = 200;
+            httpContext.Response.ContentType = "text/html; charset=utf-8";
+            httpContext.Response.Headers["ETag"] = etag;
+            httpContext.Response.Headers["Cache-Control"] = "no-cache";
+            await httpContext.Response.Body.WriteAsync(bodyBytes);
+        }
+        else
+        {
+            httpContext.Response.StatusCode = 200;
+            httpContext.Response.ContentType = "text/html; charset=utf-8";
+            await result.WriteToStreamAsync(httpContext.Response.Body);
+        }
     }
 
     /// <summary>

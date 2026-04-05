@@ -118,6 +118,44 @@
             4,
             8
           ]
+        },
+        "cache": {
+          "type": "object",
+          "description": "Cache configuration for the build output.",
+          "additionalProperties": false,
+          "properties": {
+            "generateHeadersFile": {
+              "type": "boolean",
+              "description": "Whether to generate a '_headers' file in the output directory for Netlify / Cloudflare Pages deployments.",
+              "default": true
+            },
+            "customRules": {
+              "type": "array",
+              "description": "Custom header rules appended after the default rules in the generated '_headers' file.",
+              "default": [],
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["path", "headers"],
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "The URL path pattern (e.g., '/api/*').",
+                    "examples": ["/api/*", "/images/*"]
+                  },
+                  "headers": {
+                    "type": "object",
+                    "description": "Header name → value pairs to apply for requests matching 'path'.",
+                    "additionalProperties": { "type": "string" },
+                    "examples": [
+                      { "Cache-Control": "no-store" },
+                      { "Cache-Control": "public, max-age=86400" }
+                    ]
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }

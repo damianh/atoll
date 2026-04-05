@@ -129,6 +129,14 @@ public sealed class BuildCommandHandler
         var manifest = BuildManifestWriter.BuildFrom(ssgResult, assetResult, ssgOptions);
         await manifestWriter.WriteAsync(manifest);
 
+        // Generate _headers file for Netlify / Cloudflare Pages deployments
+        if (config.Build.Cache.GenerateHeadersFile)
+        {
+            var headersGenerator = new HeadersFileGenerator(config.Build.Cache);
+            await headersGenerator.WriteAsync(outputDir);
+            Console.WriteLine("  Headers: _headers file generated");
+        }
+
         // Generate search index (if project implements ISearchIndexConfiguration from Atoll.Lagoon)
         if (assembly is not null && serviceProps.TryGetValue("Query", out var queryObj) && queryObj is CollectionQuery collectionQuery)
         {
