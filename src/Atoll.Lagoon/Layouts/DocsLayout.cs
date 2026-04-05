@@ -238,6 +238,7 @@ public sealed class DocsLayout : AtollComponent
             ["MaxLevel"] = Config.TableOfContents.MaxHeadingLevel,
             ["Translations"] = translations,
         }));
+        WriteHtml(TocScrollTrackingScript);
         WriteHtml("</aside>");
 
         WriteHtml("</div>"); // .docs-body
@@ -261,4 +262,43 @@ public sealed class DocsLayout : AtollComponent
 
     private static string HtmlEncode(string value) =>
         System.Net.WebUtility.HtmlEncode(value);
+
+    /// <summary>
+    /// Inline script that highlights the current ToC link as the user scrolls.
+    /// Uses <c>IntersectionObserver</c> to detect which heading is near the top of
+    /// the viewport and sets <c>aria-current="true"</c> on the corresponding link.
+    /// </summary>
+    private const string TocScrollTrackingScript = """
+        <script>
+        (function(){
+            var toc = document.querySelector('.docs-toc nav');
+            if (!toc) return;
+            var links = Array.from(toc.querySelectorAll('a[href^="#"]'));
+            if (!links.length) return;
+            var ids = links.map(function(a){ return a.getAttribute('href').slice(1); });
+            var headings = ids.map(function(id){ return document.getElementById(id); }).filter(Boolean);
+            if (!headings.length) return;
+            var current = headings[0];
+            function setCurrent(heading){
+                if (current === heading) return;
+                current = heading;
+                links.forEach(function(a){ a.removeAttribute('aria-current'); });
+                var id = heading.getAttribute('id');
+                var link = toc.querySelector('a[href="#' + CSS.escape(id) + '"]');
+                if (link) link.setAttribute('aria-current', 'true');
+            }
+            setCurrent(headings[0]);
+            var observer = new IntersectionObserver(function(entries){
+                for (var i = 0; i < entries.length; i++){
+                    var e = entries[i];
+                    if (e.isIntersecting){
+                        setCurrent(e.target);
+                        return;
+                    }
+                }
+            }, { rootMargin: '-80px 0px -80% 0px', threshold: 0 });
+            headings.forEach(function(h){ observer.observe(h); });
+        })();
+        </script>
+        """;
 }

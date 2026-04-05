@@ -348,9 +348,17 @@ public sealed class DocsTheme : AtollComponent
         .docs-toc nav a {
             font-size: 0.8125rem;
             color: var(--docs-text-muted);
-            transition: color 0.1s;
+            transition: color 0.15s, border-color 0.15s;
+            display: block;
+            padding: 0.15rem 0 0.15rem 0.75rem;
+            border-left: 2px solid transparent;
         }
         .docs-toc nav a:hover { color: var(--docs-link-hover); text-decoration: none; }
+        .docs-toc nav a[aria-current="true"] {
+            color: var(--docs-link);
+            font-weight: 600;
+            border-left-color: var(--docs-link);
+        }
         .docs-toc nav ul ul { padding-left: 0.875rem; }
         .docs-toc nav ul ul a { font-size: 0.78125rem; }
         .docs-toc-heading {
