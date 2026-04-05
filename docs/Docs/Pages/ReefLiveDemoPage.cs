@@ -1,3 +1,4 @@
+using System.Net;
 using Atoll.Build.Content.Collections;
 using Atoll.Components;
 using Atoll.Reef.Components;
@@ -84,9 +85,11 @@ public sealed class ReefLiveDemoPage : AtollComponent, IAtollPage
             .OrderBy(a => a)
             .ToList();
 
-        const string basePath = "/docs/reef/live-demo";
+        // Use "#" as base path so article and tag links are inert (no 404 navigation)
+        const string basePath = "#";
 
-        // Inject scoped CSS: view-panel visibility + reef variable bridge
+        // Inject scoped CSS: view-panel visibility, filter tag styling, demo link
+        // neutralisation, and reef variable bridge
         WriteHtml("""
             <style>
             [data-view-container] [data-view-panel] { display: none; }
@@ -102,6 +105,47 @@ public sealed class ReefLiveDemoPage : AtollComponent, IAtollPage
                 flex-wrap: wrap;
                 margin-bottom: 1.5rem;
             }
+
+            /* Filter tag pills — match the ReefTheme filter-pill design */
+            .reef-demo .article-filter .tag-pill {
+                cursor: pointer;
+                padding: 0.3rem 0.75rem;
+                border: 1px solid var(--reef-border);
+                border-radius: 9999px;
+                font-size: 0.8rem;
+                font-weight: 500;
+                background: var(--reef-bg-raised);
+                color: var(--reef-text);
+                transition: background 0.15s, color 0.15s, border-color 0.15s;
+            }
+            .reef-demo .article-filter .tag-pill:hover,
+            .reef-demo .article-filter .tag-pill--active {
+                background: var(--reef-primary);
+                color: #fff;
+                border-color: var(--reef-primary);
+            }
+
+            /* Author dropdown styling */
+            .reef-demo .article-filter__author-label {
+                font-size: 0.875rem;
+                color: var(--reef-text-muted);
+                margin-right: 0.25rem;
+            }
+            .reef-demo .article-filter__author-select {
+                padding: 0.3rem 0.5rem;
+                border: 1px solid var(--reef-border);
+                border-radius: 0.375rem;
+                background: var(--reef-bg-raised);
+                color: var(--reef-text);
+                font-size: 0.8rem;
+            }
+
+            /* Neutralise demo links — articles and tags are sample-only */
+            .reef-demo a[href^="#/"] {
+                pointer-events: none;
+                cursor: default;
+            }
+
             .reef-demo {
                 --reef-bg: var(--docs-bg, #ffffff);
                 --reef-bg-raised: var(--docs-bg-raised, #f9fafb);
@@ -119,8 +163,7 @@ public sealed class ReefLiveDemoPage : AtollComponent, IAtollPage
             """);
 
         WriteHtml("<h1>Reef Live Demo</h1>");
-        WriteHtml("<p>This page renders live Reef components with sample article data. Use the toggle to switch between List, Grid, and Table views. The Timeline section below is always visible.</p>");
-        WriteHtml("<p><em>Note: article links on this page point to sample slugs and will return 404 — they are for demonstration purposes only.</em></p>");
+        WriteHtml("<p>This page renders live Reef components with sample article data. Use the toggle to switch between List, Grid, and Table views. Use the tag pills and author dropdown to filter articles. The Timeline section is always visible below.</p>");
 
         // View-toggle container
         WriteHtml("<div class=\"reef-demo\" data-view-container data-view=\"list\">");
@@ -128,13 +171,13 @@ public sealed class ReefLiveDemoPage : AtollComponent, IAtollPage
         // Controls bar: ViewToggle island + ArticleFilter island
         WriteHtml("<div class=\"reef-listing-controls\">");
 
-        var viewToggle = new ViewToggle { CurrentView = DefaultView.List };
+        var viewToggle = new ViewToggle();
         await viewToggle.RenderIslandAsync(context.Destination, new Dictionary<string, object?>
         {
             [nameof(ViewToggle.CurrentView)] = DefaultView.List,
         });
 
-        var articleFilter = new ArticleFilter { Tags = tags, Authors = authors };
+        var articleFilter = new ArticleFilter();
         await articleFilter.RenderIslandAsync(context.Destination, new Dictionary<string, object?>
         {
             [nameof(ArticleFilter.Tags)] = (IReadOnlyList<string>)tags,
@@ -143,28 +186,18 @@ public sealed class ReefLiveDemoPage : AtollComponent, IAtollPage
 
         WriteHtml("</div>"); // .reef-listing-controls
 
-        // List view panel
+        // List view panel — each article wrapped with data-tags/data-author for filtering
         WriteHtml("<div data-view-panel=\"list\">");
-        var listFragment = ComponentRenderer.ToFragment<ArticleList>(new Dictionary<string, object?>
-        {
-            [nameof(ArticleList.Items)] = SampleArticles,
-            [nameof(ArticleList.BasePath)] = basePath,
-        });
-        await RenderAsync(listFragment);
+        await WriteFilterableArticles(context, "list");
         WriteHtml("</div>");
 
         // Grid view panel
         WriteHtml("<div data-view-panel=\"grid\">");
-        var gridFragment = ComponentRenderer.ToFragment<ArticleGrid>(new Dictionary<string, object?>
-        {
-            [nameof(ArticleGrid.Items)] = SampleArticles,
-            [nameof(ArticleGrid.BasePath)] = basePath,
-            [nameof(ArticleGrid.Columns)] = 2,
-        });
-        await RenderAsync(gridFragment);
+        await WriteFilterableArticles(context, "grid");
         WriteHtml("</div>");
 
-        // Table view panel
+        // Table view panel — table can't easily wrap individual rows, render without
+        // per-row filtering wrappers (filter still works on the sibling card containers)
         WriteHtml("<div data-view-panel=\"table\">");
         var tableFragment = ComponentRenderer.ToFragment<ArticleTable>(new Dictionary<string, object?>
         {
@@ -188,5 +221,63 @@ public sealed class ReefLiveDemoPage : AtollComponent, IAtollPage
         });
         await RenderAsync(timelineFragment);
         WriteHtml("</div>");
+    }
+
+    /// <summary>
+    /// Renders each article individually inside a wrapper <c>&lt;div&gt;</c> carrying
+    /// <c>data-tags</c> and <c>data-author</c> attributes so the ArticleFilter island
+    /// JS can show/hide them.
+    /// </summary>
+    private async Task WriteFilterableArticles(RenderContext context, string viewKind)
+    {
+        const string basePath = "#";
+
+        if (viewKind == "grid")
+        {
+            WriteHtml("<div class=\"article-grid\" style=\"--grid-cols:2\">");
+        }
+
+        foreach (var item in SampleArticles)
+        {
+            var tagsCsv = string.Join(",", item.Tags);
+            var encodedTags = WebUtility.HtmlEncode(tagsCsv);
+            var encodedAuthor = WebUtility.HtmlEncode(item.Author ?? "");
+
+            WriteHtml($"<div data-tags=\"{encodedTags}\" data-author=\"{encodedAuthor}\">");
+
+            if (viewKind == "list")
+            {
+                // Render a single-item ArticleList
+                var fragment = ComponentRenderer.ToFragment<ArticleList>(new Dictionary<string, object?>
+                {
+                    [nameof(ArticleList.Items)] = new[] { item },
+                    [nameof(ArticleList.BasePath)] = basePath,
+                });
+                await RenderAsync(fragment);
+            }
+            else if (viewKind == "grid")
+            {
+                // Render a single ArticleCard
+                var fragment = ComponentRenderer.ToFragment<ArticleCard>(new Dictionary<string, object?>
+                {
+                    [nameof(ArticleCard.Title)] = item.Title,
+                    [nameof(ArticleCard.Slug)] = item.Slug,
+                    [nameof(ArticleCard.Description)] = item.Description,
+                    [nameof(ArticleCard.PubDate)] = item.PubDate,
+                    [nameof(ArticleCard.Author)] = item.Author,
+                    [nameof(ArticleCard.Tags)] = item.Tags,
+                    [nameof(ArticleCard.ReadingTimeMinutes)] = item.ReadingTimeMinutes,
+                    [nameof(ArticleCard.BasePath)] = basePath,
+                });
+                await RenderAsync(fragment);
+            }
+
+            WriteHtml("</div>");
+        }
+
+        if (viewKind == "grid")
+        {
+            WriteHtml("</div>");
+        }
     }
 }
