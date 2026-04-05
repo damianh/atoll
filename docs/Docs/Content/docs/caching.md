@@ -17,6 +17,10 @@ Atoll's caching philosophy is:
 - **HTML always revalidates.** HTML pages are stale as soon as a new deploy happens, so they are served with `Cache-Control: public, max-age=0, must-revalidate` (or `no-cache` on the live server). Browsers revalidate on every navigation but can serve from cache if the content hasn't changed (304 Not Modified).
 - **Dev server is never cached.** The dev server always sends `Cache-Control: no-cache` everywhere so you always see your latest changes.
 
+:::aside{type="tip" title="No hard-refreshing in dev mode"}
+The dev server always sends `Cache-Control: no-cache` on every response, so you never need to hard-refresh during development. This behaviour is intentional and cannot be disabled.
+:::
+
 ---
 
 ## SSG Deployments
@@ -97,15 +101,21 @@ When you run Atoll as a live ASP.NET Core server (using `services.AddAtoll()` + 
 
 For every page response, Atoll:
 
+:::steps
 1. Renders the page to HTML.
 2. Computes a [weak ETag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) from the full SHA-256 hash of the rendered bytes: `W/"e3b0c44..."`.
 3. Compares the ETag with the request's `If-None-Match` header (if present).
 4. If they match, returns `304 Not Modified` — no body, just the ETag header. The browser serves the page from its local cache.
 5. If they don't match (or no `If-None-Match` was sent), returns `200 OK` with the full HTML, the `ETag` header, and `Cache-Control: no-cache`.
+:::
 
 This means the first visit to a page always fetches the full HTML; subsequent visits send `If-None-Match` and typically get a lightweight `304` response back.
 
 ### Disabling ETag on page responses
+
+:::aside{type="caution" title="Disabling ETags removes caching benefits"}
+When ETags are disabled, the live server renders and streams pages with no `ETag` or `Cache-Control` header. Every request will transfer the full response body, increasing bandwidth and response times.
+:::
 
 ```csharp
 services.AddAtoll(options =>
@@ -140,6 +150,10 @@ var pipeline = MiddlewareSequencer.Sequence(
 ```
 
 `CacheControlMiddleware` will not overwrite an `ETag` header that is already present on the response — if your endpoint sets its own ETag, the middleware passes through unchanged.
+
+:::aside{type="note" title="Existing ETags are preserved"}
+If your endpoint already sets an `ETag` header, `CacheControlMiddleware` will not overwrite it. This lets you implement custom ETag logic when needed.
+:::
 
 ---
 
@@ -189,6 +203,21 @@ The `build.cache` section in `atoll.json`:
 ---
 
 ## Hosting-specific guidance
+
+:::card-grid{stagger=true}
+:::card{title="Vercel"}
+Configure headers in `vercel.json` — Vercel does not use `_headers`.
+:::
+:::card{title="Azure Static Web Apps"}
+Configure headers in `staticwebapp.config.json`.
+:::
+:::card{title="nginx"}
+Use `location` blocks to set `Cache-Control` headers per path pattern.
+:::
+:::card{title="IIS"}
+Use `web.config` with `<location>` elements to control static content caching.
+:::
+:::
 
 ### Vercel
 
