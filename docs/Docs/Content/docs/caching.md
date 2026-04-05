@@ -1,3 +1,10 @@
+---
+title: HTTP Caching
+description: Cache-control headers, ETags, and _headers file generation for SSG and live server deployments.
+order: 10
+section: Features
+---
+
 # HTTP Caching in Atoll
 
 Atoll ships with a thoughtful, opinionated caching strategy designed to be optimal out of the box for both SSG (static-site generation) and live server deployments.

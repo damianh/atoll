@@ -49,6 +49,7 @@ public static class DocsSetup
                     new SidebarItem { Label = "CSS Scoping",             Link = "/docs/css-scoping" },
                     new SidebarItem { Label = "Islands Architecture",    Link = "/docs/islands" },
                     new SidebarItem { Label = "Static Site Generation",  Link = "/docs/static-site-generation" },
+                    new SidebarItem { Label = "HTTP Caching",            Link = "/docs/caching" },
                 ],
             },
             new SidebarItem
