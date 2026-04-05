@@ -334,25 +334,24 @@ public sealed class DocsTheme : AtollComponent
             padding: 0.3rem 0.75rem;
             border-radius: 0.25rem;
             font-size: 0.875rem;
-            color: var(--docs-text);
+            color: var(--docs-text-muted);
             transition: background 0.1s, color 0.1s;
         }
         .docs-sidebar nav a:hover {
-            background: var(--docs-sidebar-link-active-bg);
-            color: var(--docs-primary);
+            color: var(--docs-text);
             text-decoration: none;
         }
         .docs-sidebar nav a[aria-current="page"] {
             background: var(--docs-sidebar-link-active-bg);
             color: var(--docs-sidebar-link-active-text);
             font-weight: 600;
+            border-inline-start: 3px solid var(--docs-primary);
+            padding-inline-start: calc(0.75rem - 3px);
         }
         .sidebar-group-heading {
-            font-size: 0.7rem;
+            font-size: 0.875rem;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--docs-text-muted);
+            color: var(--docs-text);
             padding: 0.75rem 0.75rem 0.25rem;
         }
         .sidebar-badge {
@@ -372,21 +371,21 @@ public sealed class DocsTheme : AtollComponent
             cursor: pointer;
             display: flex;
             align-items: center;
-            font-size: 0.7rem;
+            font-size: 0.875rem;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--docs-text-muted);
-            padding: 0.75rem 0.75rem 0.25rem;
+            color: var(--docs-text);
+            padding: 0.5rem 0.75rem 0.25rem;
             gap: 0.35rem;
         }
         .docs-sidebar details > summary::-webkit-details-marker { display: none; }
         .docs-sidebar details > summary .sidebar-chevron {
-            display: inline-block;
-            font-size: 0.75rem;
-            line-height: 1;
-            transition: transform 0.2s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.25rem;
+            height: 1.25rem;
             flex-shrink: 0;
+            transition: transform 0.2s ease-in-out;
         }
         .docs-sidebar details[open] > summary .sidebar-chevron {
             transform: rotate(90deg);
@@ -399,6 +398,12 @@ public sealed class DocsTheme : AtollComponent
         .docs-sidebar .sidebar-chevron-start > summary {
             flex-direction: row-reverse;
             justify-content: flex-end;
+        }
+        /* Add top border between sidebar groups for visual separation */
+        .docs-sidebar nav > ul > .sidebar-group-item + .sidebar-group-item {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid var(--docs-border);
         }
         """;
 

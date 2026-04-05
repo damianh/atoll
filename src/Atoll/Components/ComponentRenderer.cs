@@ -543,10 +543,14 @@ public sealed class ComponentRenderer
                     // Attempt conversion for common types
                     try
                     {
-                        var converted = Convert.ChangeType(propValue, targetType);
+                        // Enum types need Enum.Parse; Convert.ChangeType does not handle string→enum.
+                        var converted = targetType.IsEnum && propValue is string enumString
+                            ? Enum.Parse(targetType, enumString, ignoreCase: true)
+                            : Convert.ChangeType(propValue, targetType);
                         property.SetValue(component, converted);
                     }
-                    catch (Exception ex) when (ex is InvalidCastException or FormatException or OverflowException)
+                    catch (Exception ex) when (ex is InvalidCastException or FormatException
+                                                    or OverflowException or ArgumentException)
                     {
                         throw new InvalidOperationException(
                             $"Cannot convert prop '{property.Name}' value of type '{propValue.GetType().Name}' " +
