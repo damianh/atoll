@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Reflection;
 using Atoll.Components;
 using Atoll.Css;
 using Atoll.Islands;
@@ -183,12 +184,17 @@ internal sealed class DevAtollRequestHandler
     {
         if (path == "/_atoll/favicon.svg")
         {
-            context.Response.StatusCode = 200;
-            context.Response.ContentType = "image/svg+xml";
-            context.Response.Headers["Cache-Control"] = "no-cache";
-            context.Response.WriteAsync(
-                Lagoon.Assets.LagoonAssets.GetIconSvg()).GetAwaiter().GetResult();
-            return true;
+            var svg = GetLagoonIconSvg();
+            if (svg is not null)
+            {
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "image/svg+xml";
+                context.Response.Headers["Cache-Control"] = "no-cache";
+                context.Response.WriteAsync(svg).GetAwaiter().GetResult();
+                return true;
+            }
+
+            return false;
         }
 
         var scriptContent = path switch
@@ -359,6 +365,47 @@ internal sealed class DevAtollRequestHandler
         if (atollResponse.Body is not null)
         {
             await httpResponse.Body.WriteAsync(atollResponse.Body);
+        }
+    }
+
+    private static string? _cachedIconSvg;
+
+    /// <summary>
+    /// Loads the Atoll icon SVG from the <c>Atoll.Lagoon</c> assembly via reflection,
+    /// avoiding a hard project reference. Returns <see langword="null"/> if the assembly
+    /// or resource is not available.
+    /// </summary>
+    private static string? GetLagoonIconSvg()
+    {
+        if (_cachedIconSvg is not null)
+        {
+            return _cachedIconSvg;
+        }
+
+        try
+        {
+            var lagoonAssembly = AppDomain.CurrentDomain.GetAssemblies()
+                .FirstOrDefault(a => a.GetName().Name == "Atoll.Lagoon");
+
+            if (lagoonAssembly is null)
+            {
+                return null;
+            }
+
+            const string resourceName = "Atoll.Lagoon.Assets.atoll-icon.svg";
+            using var stream = lagoonAssembly.GetManifestResourceStream(resourceName);
+            if (stream is null)
+            {
+                return null;
+            }
+
+            using var reader = new StreamReader(stream);
+            _cachedIconSvg = reader.ReadToEnd();
+            return _cachedIconSvg;
+        }
+        catch (Exception)
+        {
+            return null;
         }
     }
 }
