@@ -2,7 +2,7 @@
 title: Configuration
 description: Configure Reef with ReefConfig and ArticleSchema.
 order: 31
-section: Reef Theme
+section: Reef Plugin
 ---
 
 # Configuration

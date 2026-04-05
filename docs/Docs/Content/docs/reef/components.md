@@ -2,7 +2,7 @@
 title: Components
 description: Reusable server-rendered components for article views.
 order: 32
-section: Reef Theme
+section: Reef Plugin
 ---
 
 # Components

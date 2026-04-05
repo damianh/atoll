@@ -193,6 +193,7 @@ public sealed class DocsLayout : AtollComponent
             ["ChevronPosition"] = Config.SidebarChevronPosition,
         }));
         WriteHtml("</aside>");
+        WriteHtml("<script src=\"/scripts/atoll-sidebar-state.js\"></script>");
 
         // Main content
         WriteHtml("<main class=\"docs-main\" id=\"main-content\">");

@@ -13,6 +13,8 @@
       LogicalName="Atoll.Lagoon.Islands.Assets.theme-toggle.js" />
     <EmbeddedResource Include="Islands\Assets\mobile-nav.js"
       LogicalName="Atoll.Lagoon.Islands.Assets.mobile-nav.js" />
+    <EmbeddedResource Include="Islands\Assets\sidebar-state.js"
+      LogicalName="Atoll.Lagoon.Islands.Assets.sidebar-state.js" />
     <EmbeddedResource Include="Assets\atoll-icon.svg"
       LogicalName="Atoll.Lagoon.Assets.atoll-icon.svg" />
   </ItemGroup>

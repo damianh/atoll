@@ -2,7 +2,7 @@
 title: Series & Navigation
 description: Article series, related content, and navigation helpers.
 order: 36
-section: Reef Theme
+section: Reef Plugin
 ---
 
 # Series & Navigation

@@ -2,7 +2,7 @@
 title: Islands
 description: Interactive islands for filtering and view switching.
 order: 33
-section: Reef Theme
+section: Reef Plugin
 ---
 
 # Islands

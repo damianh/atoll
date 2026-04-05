@@ -49,16 +49,39 @@ public sealed class SidebarTests
     {
         var html = await RenderSidebarAsync([]);
 
-        html.ShouldContain("<nav aria-label=\"Main\">");
+        html.ShouldContain("aria-label=\"Main\"");
         html.ShouldContain("</nav>");
     }
 
     [Fact]
-    public async Task ShouldRenderEmptySidebarWithEmptyList()
+    public async Task ShouldRenderDataHashOnNavElement()
     {
         var html = await RenderSidebarAsync([]);
 
-        html.ShouldBe("<nav aria-label=\"Main\"><ul></ul></nav>");
+        html.ShouldContain("data-hash=\"");
+    }
+
+    [Fact]
+    public async Task ShouldRenderNavOpeningTag()
+    {
+        var html = await RenderSidebarAsync([]);
+
+        html.ShouldContain("<nav ");
+        html.ShouldContain("aria-label=\"Main\"");
+        html.ShouldContain("data-hash=\"");
+        html.ShouldContain("<ul>");
+        html.ShouldContain("</ul>");
+        html.ShouldContain("</nav>");
+    }
+
+    [Fact]
+    public async Task ShouldRenderInlineRestoreScript()
+    {
+        var html = await RenderSidebarAsync([]);
+
+        html.ShouldContain("<script>");
+        html.ShouldContain("sl-sidebar-restore");
+        html.ShouldContain("atoll:sidebar-state");
     }
 
     [Fact]
@@ -137,13 +160,13 @@ public sealed class SidebarTests
     }
 
     [Fact]
-    public async Task ShouldRenderGroupOpenByDefault()
+    public async Task ShouldRenderGroupCollapsedByDefault()
     {
         var html = await RenderSidebarAsync([
             Group("Guides", [Link("Start", "/guides/start")])
         ]);
 
-        html.ShouldContain(" open>");
+        html.ShouldNotContain(" open>");
     }
 
     [Fact]
@@ -154,6 +177,16 @@ public sealed class SidebarTests
         ]);
 
         html.ShouldNotContain(" open>");
+    }
+
+    [Fact]
+    public async Task ShouldRenderActiveGroupAsOpen()
+    {
+        var html = await RenderSidebarAsync([
+            Group("Guides", [Link("Start", "/guides/start", isCurrent: true)], isActive: true)
+        ]);
+
+        html.ShouldContain(" open>");
     }
 
     [Fact]
@@ -180,6 +213,103 @@ public sealed class SidebarTests
         html.ShouldContain("href=\"/guides/start\"");
     }
 
+    // --- data-index ---
+
+    [Fact]
+    public async Task ShouldRenderDataIndexOnDetailsElements()
+    {
+        var html = await RenderSidebarAsync([
+            Group("Alpha", [Link("A", "/a")]),
+            Group("Beta", [Link("B", "/b")]),
+        ]);
+
+        html.ShouldContain("data-index=\"0\"");
+        html.ShouldContain("data-index=\"1\"");
+    }
+
+    [Fact]
+    public async Task ShouldAssignSequentialIndicesForNestedGroups()
+    {
+        var html = await RenderSidebarAsync([
+            Group("Outer", [
+                Group("Inner", [Link("Start", "/start")])
+            ])
+        ]);
+
+        html.ShouldContain("data-index=\"0\"");
+        html.ShouldContain("data-index=\"1\"");
+    }
+
+    [Fact]
+    public async Task ShouldRenderSidebarRestoreCustomElement()
+    {
+        var html = await RenderSidebarAsync([
+            Group("Guides", [Link("Start", "/guides/start")])
+        ]);
+
+        html.ShouldContain("<sl-sidebar-restore data-index=\"0\"></sl-sidebar-restore>");
+    }
+
+    // --- data-active ---
+
+    [Fact]
+    public async Task ShouldRenderDataActiveOnActiveGroup()
+    {
+        var html = await RenderSidebarAsync([
+            Group("Guides", [Link("Start", "/guides/start")], isActive: true)
+        ]);
+
+        html.ShouldContain("data-active");
+    }
+
+    [Fact]
+    public async Task ShouldNotRenderDataActiveOnInactiveGroup()
+    {
+        var html = await RenderSidebarAsync([
+            Group("Guides", [Link("Start", "/guides/start")], isActive: false)
+        ]);
+
+        // The <details> element must not carry data-active; the attribute only appears in
+        // the inline JS string as a literal (hasAttribute('data-active')), so we verify
+        // the details tag itself doesn't include the attribute.
+        html.ShouldNotContain("<details class=\"sidebar-chevron-end\" data-index=\"0\" data-active");
+    }
+
+    // --- Hash computation ---
+
+    [Fact]
+    public async Task ShouldComputeStableHash()
+    {
+        var items = new[] { Group("Alpha", [Link("A", "/a")]) };
+        var html1 = await RenderSidebarAsync(items);
+        var html2 = await RenderSidebarAsync(items);
+
+        // Extract hash values and confirm they match
+        var hash1 = ExtractDataHash(html1);
+        var hash2 = ExtractDataHash(html2);
+        hash1.ShouldNotBeNullOrEmpty();
+        hash1.ShouldBe(hash2);
+    }
+
+    [Fact]
+    public async Task ShouldComputeDifferentHashForDifferentStructure()
+    {
+        var html1 = await RenderSidebarAsync([Group("Alpha", [Link("A", "/a")])]);
+        var html2 = await RenderSidebarAsync([Group("Beta", [Link("B", "/b")])]);
+
+        ExtractDataHash(html1).ShouldNotBe(ExtractDataHash(html2));
+    }
+
+    private static string ExtractDataHash(string html)
+    {
+        var marker = "data-hash=\"";
+        var start = html.IndexOf(marker, StringComparison.Ordinal);
+        if (start < 0) return string.Empty;
+        start += marker.Length;
+        var end = html.IndexOf('"', start);
+        return end < 0 ? string.Empty : html[start..end];
+    }
+
     // --- HTML encoding ---
 
     [Fact]
@@ -187,7 +317,7 @@ public sealed class SidebarTests
     {
         var html = await RenderSidebarAsync([Link("<script>", "/safe")]);
 
-        html.ShouldNotContain("<script>");
+        html.ShouldNotContain("<a href=\"/safe\"><script>");
         html.ShouldContain("&lt;script&gt;");
     }
 
@@ -208,7 +338,9 @@ public sealed class SidebarTests
             Group("Guides", [Link("Start", "/guides/start")])
         ]);
 
-        html.ShouldContain("<span class=\"sidebar-chevron\" aria-hidden=\"true\">&#x203A;</span>");
+        html.ShouldContain("<span class=\"sidebar-chevron\" aria-hidden=\"true\">");
+        html.ShouldContain("<svg");
+        html.ShouldContain("</svg>");
     }
 
     [Fact]

@@ -2,7 +2,7 @@
 title: Reef Overview
 description: An articles and blog theme addon for Atoll.
 order: 30
-section: Reef Theme
+section: Reef Plugin
 ---
 
 # Reef Overview

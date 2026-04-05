@@ -51,7 +51,6 @@ public static class DocsSetup
                     new SidebarItem { Label = "Islands Architecture",    Link = "/docs/islands" },
                     new SidebarItem { Label = "Static Site Generation",  Link = "/docs/static-site-generation" },
                     new SidebarItem { Label = "HTTP Caching",            Link = "/docs/caching" },
-                    new SidebarItem { Label = "DrawIO Diagrams",         Link = "/docs/drawio" },
                 ],
             },
             new SidebarItem
@@ -81,7 +80,7 @@ public static class DocsSetup
             },
             new SidebarItem
             {
-                Label = "Reef Theme",
+                Label = "Reef Plugin",
                 Items =
                 [
                     new SidebarItem { Label = "Overview",             Link = "/docs/reef/overview" },
@@ -91,6 +90,22 @@ public static class DocsSetup
                     new SidebarItem { Label = "Views & Layouts",      Link = "/docs/reef/views-and-layouts" },
                     new SidebarItem { Label = "Feeds & SEO",          Link = "/docs/reef/feeds-and-seo" },
                     new SidebarItem { Label = "Series & Navigation",  Link = "/docs/reef/series-and-navigation" },
+                ],
+            },
+            new SidebarItem
+            {
+                Label = "DrawIO Plugin",
+                Items =
+                [
+                    new SidebarItem { Label = "Overview",  Link = "/docs/drawio/overview" },
+                ],
+            },
+            new SidebarItem
+            {
+                Label = "Giscus Plugin",
+                Items =
+                [
+                    new SidebarItem { Label = "Overview",  Link = "/docs/giscus/overview" },
                 ],
             },
         ],

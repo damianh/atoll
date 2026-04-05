@@ -2,7 +2,7 @@
 title: Views & Layouts
 description: Article listing views and page layouts.
 order: 34
-section: Reef Theme
+section: Reef Plugin
 ---
 
 # Views & Layouts

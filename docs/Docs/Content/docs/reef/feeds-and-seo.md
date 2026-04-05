@@ -2,7 +2,7 @@
 title: Feeds & SEO
 description: RSS feeds, OpenGraph meta, and SEO for article sites.
 order: 35
-section: Reef Theme
+section: Reef Plugin
 ---
 
 # Feeds & SEO

@@ -1,11 +1,11 @@
 ---
-title: DrawIO Diagrams
+title: DrawIO Overview
 description: Render draw.io diagrams as static or interactive SVG with pan, zoom, and layer controls.
-order: 7
-section: Features
+order: 40
+section: DrawIO Plugin
 ---
 
-# DrawIO Diagrams
+# DrawIO Overview
 
 The `Atoll.DrawIo` plugin renders `.drawio` (draw.io / diagrams.net) files as inline SVG — no external processes, no JavaScript, and no third-party services. Diagrams are parsed and rendered entirely in .NET at build time.
 

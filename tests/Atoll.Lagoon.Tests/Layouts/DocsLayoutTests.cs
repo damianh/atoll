@@ -685,4 +685,14 @@ public sealed class DocsLayoutTests
         html.ShouldContain("Pas traduite");
         html.ShouldNotContain("This page has not been translated yet.");
     }
+
+    [Fact]
+    public async Task ShouldRenderSidebarStateScriptTag()
+    {
+        var config = MakeConfig();
+
+        var html = await RenderLayoutAsync(config);
+
+        html.ShouldContain("atoll-sidebar-state.js");
+    }
 }

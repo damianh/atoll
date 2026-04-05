@@ -28,5 +28,10 @@ public sealed class LagoonIslandAssetProvider : IIslandAssetProvider
             "scripts/atoll-docs-mobile-nav.js",
             "Atoll.Lagoon.Islands.Assets.mobile-nav.js",
             ResourceAssembly);
+
+        yield return new IslandAssetDescriptor(
+            "scripts/atoll-sidebar-state.js",
+            "Atoll.Lagoon.Islands.Assets.sidebar-state.js",
+            ResourceAssembly);
     }
 }
