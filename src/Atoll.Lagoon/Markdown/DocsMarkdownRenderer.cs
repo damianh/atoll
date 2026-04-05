@@ -46,7 +46,7 @@ public static class DocsMarkdownRenderer
         var corePipeline = MarkdownRenderer.BuildPipeline(options.Core);
 
         // If no docs-specific extensions needed, return the core pipeline directly.
-        if (!options.EnableMermaid)
+        if (!options.EnableMermaid && !options.EnableSyntaxHighlighting)
         {
             return corePipeline;
         }
@@ -58,7 +58,18 @@ public static class DocsMarkdownRenderer
             builder.Extensions.Add(ext);
         }
 
-        builder.Extensions.Add(new MermaidExtension());
+        if (options.EnableMermaid)
+        {
+            builder.Extensions.Add(new MermaidExtension());
+        }
+
+        if (options.EnableSyntaxHighlighting)
+        {
+            // SyntaxHighlightExtension must be added AFTER MermaidExtension so that
+            // it captures MermaidCodeBlockRenderer as its fallback (when both are enabled).
+            builder.Extensions.Add(new SyntaxHighlightExtension());
+        }
+
         return builder.Build();
     }
 }

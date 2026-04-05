@@ -21,4 +21,12 @@ public sealed class DocsMarkdownOptions
     /// Defaults to <c>false</c>.
     /// </summary>
     public bool EnableMermaid { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether server-side syntax highlighting is enabled.
+    /// When <c>true</c>, fenced code blocks with recognized language identifiers are
+    /// rendered with CSS classes for syntax coloring using TextMate grammars.
+    /// Defaults to <c>false</c>.
+    /// </summary>
+    public bool EnableSyntaxHighlighting { get; set; }
 }

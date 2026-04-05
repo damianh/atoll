@@ -16,7 +16,7 @@ namespace Atoll.Lagoon.Styles;
 /// sidebar nav, TOC, pagination, breadcrumbs, hero, and search dialog.
 /// </remarks>
 [GlobalStyle]
-[Styles(Reset + LightTokens + DarkTokens + Layout + Typography + Prose + CodeBlocks +
+[Styles(Reset + LightTokens + DarkTokens + Layout + Typography + Prose + CodeBlocks + SyntaxHighlightTokens +
         SidebarNav + TocNav + PaginationStyles + BreadcrumbStyles + HeroStyles + SplashStyles + SearchStyles +
         LanguagePickerStyles + UntranslatedNoticeStyles)]
 public sealed class DocsTheme : AtollComponent
@@ -297,6 +297,32 @@ public sealed class DocsTheme : AtollComponent
             justify-content: center;
             padding: 2rem;
         }
+        """;
+
+    private const string SyntaxHighlightTokens = """
+        /* ---- Syntax Highlighting Tokens ---- */
+        .highlight code .tm-keyword { color: #c792ea; }
+        .highlight code .tm-string { color: #c3e88d; }
+        .highlight code .tm-comment { color: #637777; font-style: italic; }
+        .highlight code .tm-type { color: #ffcb6b; }
+        .highlight code .tm-number { color: #f78c6c; }
+        .highlight code .tm-function { color: #82aaff; }
+        .highlight code .tm-variable { color: #f07178; }
+        .highlight code .tm-constant { color: #f78c6c; }
+        .highlight code .tm-punctuation { color: #89ddff; }
+        .highlight code .tm-namespace { color: #ffcb6b; }
+        .highlight code .tm-preprocessor { color: #637777; }
+        [data-theme="dark"] .highlight code .tm-keyword { color: #c792ea; }
+        [data-theme="dark"] .highlight code .tm-string { color: #c3e88d; }
+        [data-theme="dark"] .highlight code .tm-comment { color: #546e7a; font-style: italic; }
+        [data-theme="dark"] .highlight code .tm-type { color: #ffcb6b; }
+        [data-theme="dark"] .highlight code .tm-number { color: #f78c6c; }
+        [data-theme="dark"] .highlight code .tm-function { color: #82aaff; }
+        [data-theme="dark"] .highlight code .tm-variable { color: #f07178; }
+        [data-theme="dark"] .highlight code .tm-constant { color: #f78c6c; }
+        [data-theme="dark"] .highlight code .tm-punctuation { color: #89ddff; }
+        [data-theme="dark"] .highlight code .tm-namespace { color: #ffcb6b; }
+        [data-theme="dark"] .highlight code .tm-preprocessor { color: #546e7a; }
         """;
 
     private const string SidebarNav = """

@@ -3,6 +3,9 @@
     <ProjectReference Include="..\Atoll\Atoll.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="TextMateSharp.Grammars" />
+  </ItemGroup>
+  <ItemGroup>
     <EmbeddedResource Include="Islands\Assets\search-dialog.js"
       LogicalName="Atoll.Lagoon.Islands.Assets.search-dialog.js" />
     <EmbeddedResource Include="Islands\Assets\theme-toggle.js"
