@@ -8,5 +8,6 @@
     <ProjectReference Include="..\..\src\Atoll.Middleware\Atoll.Middleware.csproj" />
     <ProjectReference Include="..\..\src\Atoll.Lagoon\Atoll.Lagoon.csproj" />
     <ProjectReference Include="..\..\src\Atoll.DrawIo\Atoll.DrawIo.csproj" />
+    <ProjectReference Include="..\..\src\Atoll.Reef\Atoll.Reef.csproj" />
   </ItemGroup>
 </Project>

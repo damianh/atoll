@@ -90,6 +90,7 @@ public static class DocsSetup
                     new SidebarItem { Label = "Views & Layouts",      Link = "/docs/reef/views-and-layouts" },
                     new SidebarItem { Label = "Feeds & SEO",          Link = "/docs/reef/feeds-and-seo" },
                     new SidebarItem { Label = "Series & Navigation",  Link = "/docs/reef/series-and-navigation" },
+                    new SidebarItem { Label = "Live Demo",            Link = "/docs/reef/live-demo" },
                 ],
             },
             new SidebarItem
