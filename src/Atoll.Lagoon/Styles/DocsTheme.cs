@@ -583,13 +583,15 @@ public sealed class DocsTheme : AtollComponent
             padding: 0;
             max-width: 36rem;
             width: calc(100% - 2rem);
-            margin-top: 10vh;
+            margin: 10vh auto 0;
             background: var(--docs-bg);
             box-shadow: 0 25px 50px rgba(0,0,0,0.25);
             overflow: hidden;
         }
         #search-dialog::backdrop {
             background: rgba(0,0,0,0.4);
+            -webkit-backdrop-filter: blur(0.25rem);
+            backdrop-filter: blur(0.25rem);
         }
         .search-dialog-inner {
             width: 100%;
@@ -600,6 +602,12 @@ public sealed class DocsTheme : AtollComponent
             gap: 0.5rem;
             padding: 0.75rem 1rem;
             border-bottom: 1px solid var(--docs-border);
+        }
+        .search-dialog-header svg {
+            flex-shrink: 0;
+            width: 1.25rem;
+            height: 1.25rem;
+            color: var(--docs-text-muted);
         }
         #search-input {
             flex: 1;
@@ -626,6 +634,9 @@ public sealed class DocsTheme : AtollComponent
             list-style: none;
             margin: 0;
             padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
         }
         .search-no-results {
             padding: 1rem;
@@ -634,15 +645,22 @@ public sealed class DocsTheme : AtollComponent
             font-size: 0.875rem;
         }
         .search-result-item {
-            padding: 0.6rem 0.75rem;
+            padding: 0.65rem 0.75rem;
             border-radius: 0.375rem;
             cursor: pointer;
             color: var(--docs-text);
+            border: 1px solid transparent;
+            transition: background 0.1s, border-color 0.1s;
         }
         .search-result-item:hover,
+        .search-result-item:focus-within {
+            background: var(--docs-bg-subtle);
+            border-color: var(--docs-border);
+        }
         .search-result-item:focus,
         .search-result-item[aria-selected="true"] {
             background: var(--docs-sidebar-link-active-bg);
+            border-color: var(--docs-primary);
             outline: none;
         }
         .search-result-link {
@@ -650,13 +668,45 @@ public sealed class DocsTheme : AtollComponent
             color: inherit;
             display: block;
         }
-        .search-result-title { font-weight: 600; font-size: 0.9375rem; margin-bottom: 0.2rem; }
-        .search-result-desc { font-size: 0.8125rem; color: var(--docs-text-muted); display: block; }
+        .search-result-title {
+            font-weight: 600;
+            font-size: 0.9375rem;
+            margin-bottom: 0.15rem;
+            line-height: 1.4;
+        }
+        .search-result-desc {
+            font-size: 0.8125rem;
+            color: var(--docs-text-muted);
+            display: block;
+            line-height: 1.45;
+        }
         .search-result-desc mark,
-        .search-result-title mark { background: transparent; color: var(--docs-accent); font-weight: 600; }
+        .search-result-title mark {
+            background: transparent;
+            color: var(--docs-accent);
+            font-weight: 600;
+        }
         .search-result-section { font-size: 0.75rem; color: var(--docs-text-muted); margin-bottom: 0.2rem; }
         .search-result-snippet { font-size: 0.8125rem; color: var(--docs-text-muted); }
         .search-result-snippet mark { background: transparent; color: var(--docs-accent); font-weight: 600; }
+        .search-dialog-footer {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-top: 1px solid var(--docs-border);
+            font-size: 0.75rem;
+            color: var(--docs-text-faint);
+        }
+        .search-dialog-footer kbd {
+            display: inline-block;
+            padding: 0.1rem 0.35rem;
+            border: 1px solid var(--docs-border);
+            border-radius: 0.2rem;
+            font-size: 0.7rem;
+            font-family: inherit;
+            background: var(--docs-bg-subtle);
+        }
 
         /* Mobile nav toggle button */
         #mobile-nav-toggle {

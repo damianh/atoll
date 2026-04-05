@@ -57,12 +57,16 @@ public sealed class SearchDialog : VanillaJsIsland
         WriteHtml($"<dialog id=\"search-dialog\" aria-label=\"{System.Net.WebUtility.HtmlEncode(Translations.SearchDialogLabel)}\">");
         WriteHtml("<div class=\"search-dialog-inner\">");
         WriteHtml("<div class=\"search-dialog-header\">");
+        WriteHtml("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"8\"/><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"/></svg>");
         WriteHtml("<input id=\"search-input\" type=\"search\" placeholder=\"");
         WriteHtml(System.Net.WebUtility.HtmlEncode(EffectivePlaceholder));
         WriteHtml("\" autofocus />");
         WriteHtml($"<button id=\"search-close\" type=\"button\" aria-label=\"{System.Net.WebUtility.HtmlEncode(Translations.SearchCloseLabel)}\">&times;</button>");
         WriteHtml("</div>");
         WriteHtml($"<div id=\"search-results\" role=\"listbox\" aria-label=\"{System.Net.WebUtility.HtmlEncode(Translations.SearchResultsLabel)}\"></div>");
+        WriteHtml("<footer class=\"search-dialog-footer\">");
+        WriteHtml("<kbd>↑↓</kbd> navigate <kbd>↵</kbd> select <kbd>esc</kbd> close");
+        WriteHtml("</footer>");
         WriteHtml("</div>");
         WriteHtml("</dialog>");
 
