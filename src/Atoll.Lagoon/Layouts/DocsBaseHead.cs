@@ -1,4 +1,5 @@
 using Atoll.Components;
+using Atoll.Lagoon.Assets;
 using Atoll.Lagoon.Configuration;
 
 namespace Atoll.Lagoon.Layouts;
@@ -49,6 +50,10 @@ public sealed class DocsBaseHead : AtollComponent
         {
             WriteHtml($"<meta name=\"description\" content=\"{HtmlEncode(description)}\" />");
         }
+
+        // Favicon
+        var faviconHref = Config.FaviconHref ?? LagoonAssets.DefaultFaviconPath;
+        WriteHtml($"<link rel=\"icon\" type=\"image/svg+xml\" href=\"{HtmlEncode(faviconHref)}\" />");
 
         // Theme FOUC prevention — must run before page renders
         WriteHtml("""

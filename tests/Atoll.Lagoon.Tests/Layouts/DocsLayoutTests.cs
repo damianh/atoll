@@ -232,7 +232,8 @@ public sealed class DocsLayoutTests
     {
         var html = await RenderLayoutAsync(MakeConfig());
 
-        html.ShouldNotContain("<img src=");
+        // When LogoSrc is null, the default Atoll icon is rendered instead.
+        html.ShouldContain("<img src=\"/_atoll/favicon.svg\"");
     }
 
     [Fact]

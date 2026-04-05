@@ -20,7 +20,7 @@ public sealed class DocsConfig
 
     /// <summary>
     /// Gets or sets the URL or path to the site logo image.
-    /// When <c>null</c>, no logo is displayed.
+    /// When <c>null</c>, the built-in Atoll icon is used.
     /// </summary>
     public string? LogoSrc { get; set; }
 
@@ -28,6 +28,13 @@ public sealed class DocsConfig
     /// Gets or sets the alt text for the logo image.
     /// </summary>
     public string LogoAlt { get; set; } = "";
+
+    /// <summary>
+    /// Gets or sets the URL or path to the site favicon.
+    /// When <c>null</c>, the built-in Atoll icon SVG is used
+    /// (served at <c>/_atoll/favicon.svg</c>).
+    /// </summary>
+    public string? FaviconHref { get; set; }
 
     /// <summary>
     /// Gets or sets the sidebar navigation items.

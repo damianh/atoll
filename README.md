@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/atoll-icon.svg" alt="Atoll" width="120" />
+</p>
+
 # Atoll
 
 A .NET-native framework inspired by [Astro](https://astro.build). Atoll brings server-first HTML rendering, islands architecture, content collections, and static site generation to the .NET ecosystem.

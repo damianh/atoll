@@ -1,4 +1,5 @@
 using Atoll.Components;
+using Atoll.Lagoon.Assets;
 using Atoll.Lagoon.Configuration;
 using Atoll.Lagoon.Islands;
 
@@ -54,6 +55,10 @@ public sealed class SplashLayout : AtollComponent
         if (!string.IsNullOrEmpty(Config.LogoSrc))
         {
             WriteHtml($"<img src=\"{HtmlEncode(Config.LogoSrc)}\" alt=\"{HtmlEncode(Config.LogoAlt)}\" class=\"docs-logo\" />");
+        }
+        else
+        {
+            WriteHtml($"<img src=\"{LagoonAssets.DefaultFaviconPath}\" alt=\"{HtmlEncode(Config.LogoAlt)}\" class=\"docs-logo\" />");
         }
 
         WriteText(Config.Title);

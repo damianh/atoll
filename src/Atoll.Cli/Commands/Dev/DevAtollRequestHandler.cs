@@ -181,6 +181,16 @@ internal sealed class DevAtollRequestHandler
     /// </summary>
     private static bool TryServeAtollScript(HttpContext context, string path)
     {
+        if (path == "/_atoll/favicon.svg")
+        {
+            context.Response.StatusCode = 200;
+            context.Response.ContentType = "image/svg+xml";
+            context.Response.Headers["Cache-Control"] = "no-cache";
+            context.Response.WriteAsync(
+                Lagoon.Assets.LagoonAssets.GetIconSvg()).GetAwaiter().GetResult();
+            return true;
+        }
+
         var scriptContent = path switch
         {
             "/_atoll/island.js" => IslandScriptProvider.GetIslandScript(),

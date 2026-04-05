@@ -14,5 +14,7 @@
       LogicalName="Atoll.Lagoon.Islands.Assets.mobile-nav.js" />
     <EmbeddedResource Include="Islands\Assets\mermaid-init.js"
       LogicalName="Atoll.Lagoon.Islands.Assets.mermaid-init.js" />
+    <EmbeddedResource Include="Assets\atoll-icon.svg"
+      LogicalName="Atoll.Lagoon.Assets.atoll-icon.svg" />
   </ItemGroup>
 </Project>

@@ -1,6 +1,7 @@
 using Atoll.Build.Content.Markdown;
 using Atoll.Components;
 using Atoll.Islands;
+using Atoll.Lagoon.Assets;
 using Atoll.Lagoon.Components;
 using Atoll.Lagoon.Configuration;
 using Atoll.Lagoon.I18n;
@@ -122,6 +123,10 @@ public sealed class DocsLayout : AtollComponent
         if (!string.IsNullOrEmpty(Config.LogoSrc))
         {
             WriteHtml($"<img src=\"{HtmlEncode(Config.LogoSrc)}\" alt=\"{HtmlEncode(Config.LogoAlt)}\" class=\"docs-logo\" />");
+        }
+        else
+        {
+            WriteHtml($"<img src=\"{LagoonAssets.DefaultFaviconPath}\" alt=\"{HtmlEncode(Config.LogoAlt)}\" class=\"docs-logo\" />");
         }
 
         WriteText(Config.Title);
