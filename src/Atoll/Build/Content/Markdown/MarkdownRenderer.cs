@@ -241,6 +241,15 @@ public static class MarkdownRenderer
             builder.Extensions.Add(directiveExtension);
         }
 
+        // Append any additional extensions provided by addon packages (e.g. Atoll.Lagoon).
+        if (options.Extensions is { Count: > 0 } extensions)
+        {
+            foreach (var extension in extensions)
+            {
+                builder.Extensions.Add(extension);
+            }
+        }
+
         return builder.Build();
     }
 

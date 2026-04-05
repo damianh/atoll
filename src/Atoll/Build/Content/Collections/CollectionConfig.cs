@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Atoll.Build.Content.Markdown;
 
 namespace Atoll.Build.Content.Collections;
 
@@ -53,6 +54,15 @@ public sealed class CollectionConfig
     /// Collection subdirectories are resolved relative to this path.
     /// </summary>
     public string BaseDirectory { get; }
+
+    /// <summary>
+    /// Gets or sets the Markdown rendering options for this content configuration.
+    /// When <c>null</c>, the default <see cref="MarkdownOptions"/> are used.
+    /// Addon packages (e.g. <c>Atoll.Lagoon</c>) can populate this with
+    /// custom pipeline extensions for syntax highlighting, diagrams, etc.
+    /// Default: <c>null</c>.
+    /// </summary>
+    public MarkdownOptions? Markdown { get; set; }
 
     /// <summary>
     /// Gets a read-only dictionary of all registered collections, keyed by collection name.

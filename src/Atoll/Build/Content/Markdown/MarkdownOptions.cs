@@ -1,3 +1,5 @@
+using Markdig;
+
 namespace Atoll.Build.Content.Markdown;
 
 /// <summary>
@@ -92,4 +94,14 @@ public sealed class MarkdownOptions
     /// </para>
     /// </remarks>
     public ComponentMap? Components { get; set; }
+
+    /// <summary>
+    /// Gets or sets additional Markdig extensions to include in the rendering pipeline.
+    /// These are appended after all built-in extensions, allowing addon packages
+    /// (e.g. <c>Atoll.Lagoon</c>) to inject custom renderers such as syntax highlighting
+    /// or diagram support.
+    /// When <c>null</c> or empty, no additional extensions are added.
+    /// Default: <c>null</c>.
+    /// </summary>
+    public IReadOnlyList<IMarkdownExtension>? Extensions { get; set; }
 }

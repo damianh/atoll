@@ -68,6 +68,14 @@ public sealed class DocsConfig
     public bool EnableMermaid { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether server-side syntax highlighting is enabled.
+    /// When <c>true</c>, fenced code blocks with recognized language identifiers are
+    /// rendered with CSS classes for syntax coloring using TextMate grammars at build time.
+    /// Default: <c>false</c>.
+    /// </summary>
+    public bool EnableSyntaxHighlighting { get; set; }
+
+    /// <summary>
     /// Gets or sets the base URL path prefix for the documentation site.
     /// For example, <c>"/docs"</c> when docs are hosted at <c>https://example.com/docs/</c>.
     /// Default: <c>""</c> (root).

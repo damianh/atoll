@@ -231,7 +231,9 @@ public sealed class BuildCommandHandler
 
         var fileProvider = new PhysicalFileProvider();
         var loader = new CollectionLoader(resolvedConfig, fileProvider);
-        return new CollectionQuery(loader);
+        return collectionConfig.Markdown is { } markdown
+            ? new CollectionQuery(loader, markdown)
+            : new CollectionQuery(loader);
     }
 
     /// <summary>

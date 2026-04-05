@@ -586,7 +586,9 @@ internal sealed class DevServerReloader
 
         var fileProvider = new PhysicalFileProvider();
         var loader = new CollectionLoader(resolvedConfig, fileProvider);
-        return new CollectionQuery(loader);
+        return collectionConfig.Markdown is { } markdown
+            ? new CollectionQuery(loader, markdown)
+            : new CollectionQuery(loader);
     }
 
     private static async Task<BuildResult> BuildProjectAsync(string csprojPath)

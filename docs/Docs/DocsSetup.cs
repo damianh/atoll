@@ -17,6 +17,7 @@ public static class DocsSetup
         Description = "A .NET-native static-site framework inspired by Astro.",
         BasePath = "",
         EnableMermaid = false,
+        EnableSyntaxHighlighting = true,
         Social =
         [
             new SocialLink("GitHub", "https://github.com/damianh/atoll", SocialIcon.GitHub),

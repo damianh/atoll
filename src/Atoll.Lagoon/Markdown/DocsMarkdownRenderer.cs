@@ -1,14 +1,39 @@
 using Atoll.Build.Content.Markdown;
+using Atoll.Lagoon.Configuration;
 using Markdig;
 
 namespace Atoll.Lagoon.Markdown;
 
 /// <summary>
-/// Extends the core <see cref="MarkdownRenderer"/> with docs-specific Markdig extensions,
-/// specifically Mermaid diagram rendering.
+/// Extends the core <see cref="MarkdownRenderer"/> with docs-specific Markdig extensions
+/// such as Mermaid diagram rendering and server-side syntax highlighting.
 /// </summary>
 public static class DocsMarkdownRenderer
 {
+    /// <summary>
+    /// Builds a <see cref="MarkdownOptions"/> instance with Lagoon-specific extensions
+    /// (Mermaid, syntax highlighting) populated in <see cref="MarkdownOptions.Extensions"/>
+    /// based on the provided <see cref="DocsConfig"/>.
+    /// Use this to configure a <see cref="Atoll.Build.Content.Collections.CollectionConfig"/>
+    /// so that <c>CollectionQuery.Render()</c> applies Lagoon extensions.
+    /// </summary>
+    /// <param name="config">The documentation site configuration.</param>
+    /// <returns>A <see cref="MarkdownOptions"/> with Lagoon extensions, or <c>null</c> if
+    /// no Lagoon-specific extensions are enabled.</returns>
+    public static MarkdownOptions? CreateMarkdownOptions(DocsConfig config)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+
+        var extensions = BuildExtensionList(config.EnableMermaid, config.EnableSyntaxHighlighting);
+
+        if (extensions is null)
+        {
+            return null;
+        }
+
+        return new MarkdownOptions { Extensions = extensions };
+    }
+
     /// <summary>
     /// Renders the specified Markdown content to HTML using the provided docs-specific options.
     /// When <see cref="DocsMarkdownOptions.EnableMermaid"/> is <c>true</c>, fenced code blocks
@@ -22,7 +47,11 @@ public static class DocsMarkdownRenderer
         ArgumentNullException.ThrowIfNull(markdown);
         ArgumentNullException.ThrowIfNull(options);
 
-        var pipeline = BuildPipeline(options);
+        // Populate the core options with Lagoon extensions so the core pipeline includes them.
+        var coreOptions = options.Core;
+        coreOptions.Extensions = BuildExtensionList(options.EnableMermaid, options.EnableSyntaxHighlighting);
+
+        var pipeline = MarkdownRenderer.BuildPipeline(coreOptions);
         var document = Markdig.Markdown.Parse(markdown, pipeline);
         var html = document.ToHtml(pipeline);
 
@@ -42,34 +71,35 @@ public static class DocsMarkdownRenderer
     {
         ArgumentNullException.ThrowIfNull(options);
 
-        // Start from the core pipeline.
-        var corePipeline = MarkdownRenderer.BuildPipeline(options.Core);
+        var coreOptions = options.Core;
+        coreOptions.Extensions = BuildExtensionList(options.EnableMermaid, options.EnableSyntaxHighlighting);
 
-        // If no docs-specific extensions needed, return the core pipeline directly.
-        if (!options.EnableMermaid && !options.EnableSyntaxHighlighting)
+        return MarkdownRenderer.BuildPipeline(coreOptions);
+    }
+
+    private static IReadOnlyList<IMarkdownExtension>? BuildExtensionList(
+        bool enableMermaid,
+        bool enableSyntaxHighlighting)
+    {
+        if (!enableMermaid && !enableSyntaxHighlighting)
         {
-            return corePipeline;
+            return null;
         }
 
-        // Rebuild with the Mermaid extension appended.
-        var builder = new MarkdownPipelineBuilder();
-        foreach (var ext in corePipeline.Extensions)
+        var extensions = new List<IMarkdownExtension>();
+
+        if (enableMermaid)
         {
-            builder.Extensions.Add(ext);
+            extensions.Add(new MermaidExtension());
         }
 
-        if (options.EnableMermaid)
-        {
-            builder.Extensions.Add(new MermaidExtension());
-        }
-
-        if (options.EnableSyntaxHighlighting)
+        if (enableSyntaxHighlighting)
         {
             // SyntaxHighlightExtension must be added AFTER MermaidExtension so that
             // it captures MermaidCodeBlockRenderer as its fallback (when both are enabled).
-            builder.Extensions.Add(new SyntaxHighlightExtension());
+            extensions.Add(new SyntaxHighlightExtension());
         }
 
-        return builder.Build();
+        return extensions;
     }
 }
