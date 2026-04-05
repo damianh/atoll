@@ -11,6 +11,16 @@ section: Lagoon Plugin
 Lagoon is the official documentation theme addon for Atoll. Add it to your Atoll project to get a full documentation site — with sidebar navigation, search, dark mode, breadcrumbs, pagination, and a responsive layout — without building any of it yourself. It is the Atoll equivalent of [Astro Starlight](https://starlight.astro.build).
 :::
 
+> **Note**: The `:::aside{...}` syntax above can also be written as PascalCase HTML-like tags:
+>
+> ```md
+> <Aside Type="tip" Title="Starlight for .NET">
+> Lagoon is the official documentation theme addon for Atoll...
+> </Aside>
+> ```
+>
+> Both syntaxes coexist — use whichever you prefer.
+
 ## What's included
 
 :::card-grid{stagger=true}
@@ -197,8 +207,7 @@ GitHub, Discord, Twitter, and more in the header.
 :::card-grid
 :::link-card{title="Configuration" href="./configuration" description="Full DocsConfig reference."}
 :::
-:::link-card{title="Sidebar Navigation" href="./sidebar" description="Manual links, groups, auto-generate."}
-:::
+<LinkCard Title="Sidebar Navigation" Href="./sidebar" Description="Manual links, groups, auto-generate." />
 :::link-card{title="Theme & Styling" href="./theming" description="Design tokens, dark mode, custom CSS."}
 :::
 :::link-card{title="Components & Layout" href="./components" description="DocsLayout, Hero, navigation helpers."}

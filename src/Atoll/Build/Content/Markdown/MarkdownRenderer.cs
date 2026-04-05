@@ -122,6 +122,12 @@ public static class MarkdownRenderer
     private static readonly Regex PlaceholderPattern =
         new(@"<!--atoll:(\d+)-->", RegexOptions.Compiled, TimeSpan.FromSeconds(5));
 
+    // Matches placeholder comments emitted by ComponentTagPreprocessor.
+    // Pattern: <!--atoll-tag:0-->, <!--atoll-tag:1-->, etc.
+    // Capture group 1 contains the numeric index.
+    private static readonly Regex TagPlaceholderPattern =
+        new(@"<!--atoll-tag:(\d+)-->", RegexOptions.Compiled, TimeSpan.FromSeconds(5));
+
     /// <summary>
     /// Renders the specified Markdown content to HTML using default options.
     /// </summary>
@@ -147,10 +153,18 @@ public static class MarkdownRenderer
         ArgumentNullException.ThrowIfNull(markdown);
         ArgumentNullException.ThrowIfNull(options);
 
+        IReadOnlyList<ComponentReference> tagReferences = [];
         ComponentDirectiveExtension? directiveExtension = null;
 
         if (options.Components is not null)
         {
+            // Step 1: Pre-process PascalCase component tags BEFORE Markdig parsing.
+            // The preprocessor uses <!--atoll-tag:N--> placeholders to avoid colliding
+            // with the :::directive extension's <!--atoll:N--> placeholders.
+            var preprocessor = new ComponentTagPreprocessor(options.Components, options);
+            (markdown, tagReferences) = preprocessor.Process(markdown);
+
+            // Step 2: Set up the ::: directive extension for Markdig.
             directiveExtension = new ComponentDirectiveExtension(options.Components);
         }
 
@@ -160,12 +174,39 @@ public static class MarkdownRenderer
         var html = document.ToHtml(pipeline);
         var headings = ExtractHeadings(document);
 
-        // If the directive extension was active and collected any component references,
-        // split the HTML into fragments.
-        if (directiveExtension is not null &&
-            directiveExtension.CollectedReferences.Count > 0)
+        // Step 3: Merge references from both sources if either was active.
+        var directiveReferences = directiveExtension?.CollectedReferences
+            ?? (IReadOnlyList<ComponentReference>)[];
+
+        var allReferences = MergeReferences(tagReferences, directiveReferences);
+
+        if (allReferences.Count > 0)
         {
-            var fragments = BuildFragments(html, directiveExtension.CollectedReferences);
+            // Step 4: Renumber placeholder indices so both sequences share a single
+            // unified <!--atoll:N--> namespace:
+            //   - Directive placeholders <!--atoll:K--> become <!--atoll:{M+K}-->
+            //     (offset by M = number of tag references, so tag refs occupy 0..M-1)
+            //   - Tag placeholders <!--atoll-tag:N--> are normalised to <!--atoll:N-->
+            // Order matters: offset directives FIRST, then normalise tags (to avoid
+            // a normalised tag placeholder being re-matched by the directive offset step).
+            var m = tagReferences.Count;
+            if (m > 0 && directiveReferences.Count > 0)
+            {
+                // Offset directive placeholders.
+                html = PlaceholderPattern.Replace(html, match =>
+                {
+                    var k = int.Parse(match.Groups[1].Value);
+                    return $"<!--atoll:{m + k}-->";
+                });
+            }
+
+            if (m > 0)
+            {
+                // Normalise tag placeholders.
+                html = TagPlaceholderPattern.Replace(html, match => $"<!--atoll:{match.Groups[1].Value}-->");
+            }
+
+            var fragments = BuildFragments(html, allReferences);
             return new MarkdownRenderResult(html, headings, fragments);
         }
 
@@ -251,6 +292,30 @@ public static class MarkdownRenderer
         }
 
         return builder.Build();
+    }
+
+    /// <summary>
+    /// Merges the tag-preprocessor references (indices 0..M-1) with the directive-extension
+    /// references (indices M..M+K-1) into a single ordered list.
+    /// </summary>
+    private static IReadOnlyList<ComponentReference> MergeReferences(
+        IReadOnlyList<ComponentReference> tagReferences,
+        IReadOnlyList<ComponentReference> directiveReferences)
+    {
+        if (tagReferences.Count == 0)
+        {
+            return directiveReferences;
+        }
+
+        if (directiveReferences.Count == 0)
+        {
+            return tagReferences;
+        }
+
+        var merged = new List<ComponentReference>(tagReferences.Count + directiveReferences.Count);
+        merged.AddRange(tagReferences);
+        merged.AddRange(directiveReferences);
+        return merged;
     }
 
     private static List<ContentFragment> BuildFragments(
