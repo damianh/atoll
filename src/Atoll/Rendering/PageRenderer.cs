@@ -1,6 +1,7 @@
 using Atoll.Components;
 using Atoll.Head;
 using Atoll.Instructions;
+using Atoll.Islands;
 using Atoll.Slots;
 
 namespace Atoll.Rendering;
@@ -145,6 +146,7 @@ public sealed class PageRenderer
 
     private PageRenderResult BuildResult(string componentOutput)
     {
+        EmitHydrationScripts(componentOutput);
         var html = InjectHeadContent(componentOutput);
         html = InjectScripts(html);
         html = EnsureDoctype(html);
@@ -216,5 +218,21 @@ public sealed class PageRenderer
         }
 
         return Doctype + "\n" + html;
+    }
+
+    /// <summary>
+    /// Scans rendered HTML for <c>&lt;atoll-island&gt;</c> elements and, when found,
+    /// adds the island bootstrap and directives scripts to the <see cref="InstructionProcessor"/>
+    /// so they are injected before <c>&lt;/body&gt;</c>.
+    /// </summary>
+    private void EmitHydrationScripts(string html)
+    {
+        if (!IslandDirectiveScanner.ContainsIslands(html))
+        {
+            return;
+        }
+
+        _instructionProcessor.Add(ScriptInstruction.Module(IslandDirectiveScanner.IslandScriptUrl));
+        _instructionProcessor.Add(ScriptInstruction.Module(IslandDirectiveScanner.DirectivesScriptUrl));
     }
 }

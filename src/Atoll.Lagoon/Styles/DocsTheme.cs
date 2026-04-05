@@ -578,23 +578,21 @@ public sealed class DocsTheme : AtollComponent
             background: var(--docs-bg);
         }
         #search-dialog {
-            position: fixed;
-            inset: 0;
-            z-index: 200;
-            display: none;
-            align-items: flex-start;
-            justify-content: center;
-            padding-top: 10vh;
+            border: none;
+            border-radius: 0.75rem;
+            padding: 0;
+            max-width: 36rem;
+            width: calc(100% - 2rem);
+            margin-top: 10vh;
+            background: var(--docs-bg);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+            overflow: hidden;
+        }
+        #search-dialog::backdrop {
             background: rgba(0,0,0,0.4);
         }
-        #search-dialog[open] { display: flex; }
         .search-dialog-inner {
-            background: var(--docs-bg);
-            border-radius: 0.75rem;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
             width: 100%;
-            max-width: 36rem;
-            overflow: hidden;
         }
         .search-dialog-header {
             display: flex;
@@ -624,6 +622,17 @@ public sealed class DocsTheme : AtollComponent
             overflow-y: auto;
             padding: 0.5rem;
         }
+        .search-results-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .search-no-results {
+            padding: 1rem;
+            text-align: center;
+            color: var(--docs-text-muted);
+            font-size: 0.875rem;
+        }
         .search-result-item {
             padding: 0.6rem 0.75rem;
             border-radius: 0.375rem;
@@ -631,10 +640,20 @@ public sealed class DocsTheme : AtollComponent
             color: var(--docs-text);
         }
         .search-result-item:hover,
+        .search-result-item:focus,
         .search-result-item[aria-selected="true"] {
             background: var(--docs-sidebar-link-active-bg);
+            outline: none;
+        }
+        .search-result-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
         }
         .search-result-title { font-weight: 600; font-size: 0.9375rem; margin-bottom: 0.2rem; }
+        .search-result-desc { font-size: 0.8125rem; color: var(--docs-text-muted); display: block; }
+        .search-result-desc mark,
+        .search-result-title mark { background: transparent; color: var(--docs-accent); font-weight: 600; }
         .search-result-section { font-size: 0.75rem; color: var(--docs-text-muted); margin-bottom: 0.2rem; }
         .search-result-snippet { font-size: 0.8125rem; color: var(--docs-text-muted); }
         .search-result-snippet mark { background: transparent; color: var(--docs-accent); font-weight: 600; }

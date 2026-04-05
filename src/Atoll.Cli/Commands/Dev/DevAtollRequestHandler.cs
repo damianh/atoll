@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using Atoll.Components;
 using Atoll.Css;
+using Atoll.Islands;
 using Atoll.Rendering;
 using Atoll.Routing;
 using Atoll.Routing.Matching;
@@ -95,6 +96,13 @@ internal sealed class DevAtollRequestHandler
             return true;
         }
 
+        // Serve the built-in Atoll hydration scripts (island bootstrap + directives).
+        // These are embedded resources in the Atoll assembly, served at /_atoll/*.js.
+        if (TryServeAtollScript(context, path))
+        {
+            return true;
+        }
+
         // Serve the search index JSON when requested.
         if (TryServeSearchIndex(context, state, path))
         {
@@ -164,6 +172,31 @@ internal sealed class DevAtollRequestHandler
         context.Response.ContentType = "application/javascript; charset=utf-8";
         context.Response.Headers["Cache-Control"] = "no-cache";
         context.Response.Body.Write(bytes);
+        return true;
+    }
+
+    /// <summary>
+    /// Serves the built-in Atoll hydration scripts (<c>island.js</c> and <c>directives.js</c>)
+    /// from embedded resources when the request path starts with <c>/_atoll/</c>.
+    /// </summary>
+    private static bool TryServeAtollScript(HttpContext context, string path)
+    {
+        var scriptContent = path switch
+        {
+            "/_atoll/island.js" => IslandScriptProvider.GetIslandScript(),
+            "/_atoll/directives.js" => IslandScriptProvider.GetDirectivesScript(),
+            _ => null,
+        };
+
+        if (scriptContent is null)
+        {
+            return false;
+        }
+
+        context.Response.StatusCode = 200;
+        context.Response.ContentType = "application/javascript; charset=utf-8";
+        context.Response.Headers["Cache-Control"] = "no-cache";
+        context.Response.WriteAsync(scriptContent).GetAwaiter().GetResult();
         return true;
     }
 

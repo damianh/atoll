@@ -59,6 +59,7 @@ function renderResults(container, results, query, noResultsText) {
     list.setAttribute('role', 'listbox');
     results.forEach((r, i) => {
         const li = document.createElement('li');
+        li.className = 'search-result-item';
         li.setAttribute('role', 'option');
         li.setAttribute('tabindex', '-1');
         li.dataset.href = r.href;
