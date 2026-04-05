@@ -9,6 +9,10 @@ section: Lagoon Plugin
 
 Lagoon includes a library of content components for authoring rich documentation pages. These mirror the components available in [Astro Starlight](https://starlight.astro.build/components/using-components/) and are all `AtollComponent` subclasses that render semantic, accessible HTML.
 
+:::aside{type="tip" title="Two syntax options"}
+All live examples on this page use `:::` directive syntax. Every component also supports `<PascalCaseName>` HTML-like tag syntax — for example, `:::aside{type="tip"}...:::` can be written as `<Aside Type="tip">...</Aside>`. See the [MDA Format](../mda-format) page for details on both syntaxes.
+:::
+
 ## Aside
 
 Callout boxes for tips, notes, cautions, and warnings. Use these to draw attention to important information.

@@ -7,7 +7,7 @@ section: Features
 
 # MDA Format
 
-`.mda` (Markdown Atoll) is Atoll's content file format. It extends standard Markdown with YAML frontmatter and `:::` component directives, while remaining plain-text and editor-friendly.
+`.mda` (Markdown Atoll) is Atoll's content file format. It extends standard Markdown with YAML frontmatter and component directives, while remaining plain-text and editor-friendly. Components can be embedded using either `:::` directive syntax or `<PascalCaseName>` HTML-like tags — both coexist in the same document.
 
 :::aside{type="tip" title="Eating our own dog food"}
 This page uses the component directives it documents — the callouts, steps, and cards you see are live-rendered examples.
@@ -25,10 +25,10 @@ Atoll content files use the same Markdown + frontmatter + directive syntax regar
 |---|---|
 | `.md` | Standard Markdown (any tool) |
 | `.mdx` | Markdown + JSX (Astro, Next.js) |
-| `.mda` | Markdown + Atoll directives |
+| `.mda` | Markdown + Atoll directives / tags |
 
 :::aside{type="tip" title="When to use .mda"}
-Using `.mda` disambiguates your content files and signals that they may contain Atoll-specific `:::` component directives.
+Using `.mda` disambiguates your content files and signals that they may contain Atoll-specific component directives or tags.
 :::
 
 ## File structure
@@ -51,17 +51,29 @@ This is rendered by the `CalloutBox` component.
 :::
 ```
 
+The same component can also be written as:
+
+```markdown
+<CalloutBox Type="info">
+This is rendered by the `CalloutBox` component.
+</CalloutBox>
+```
+
 :::steps
 1. **YAML frontmatter** — delimited by `---`, maps to your schema class
 
 2. **Markdown body** — standard CommonMark
 
-3. **Component directives** — `:::ComponentName{prop=value}` blocks (optional)
+3. **Component directives / tags** — `:::ComponentName{prop=value}` blocks or `<ComponentName Prop="value">` tags (optional)
 :::
 
 ## Component directives
 
-Directives embed registered components inside Markdown content. The syntax follows the [Markdown directives proposal](https://talk.commonmark.org/t/generic-directives-plugins-syntax/444):
+Directives embed registered components inside Markdown content. Two equivalent syntaxes are supported — use whichever you prefer, or mix them in the same document.
+
+### `:::` directive syntax
+
+Follows the [Markdown directives proposal](https://talk.commonmark.org/t/generic-directives-plugins-syntax/444):
 
 ```markdown
 :::ComponentName{prop="value" flag}
@@ -69,9 +81,34 @@ Optional child content rendered into the default slot.
 :::
 ```
 
-- **Name** — matches a registered component by name (case-sensitive)
+- **Name** — matches a registered component by name (case-insensitive)
 - **Attributes** — quoted strings or bare values; boolean flags without a value are `true`
 - **Child content** — rendered as Markdown and passed to `RenderSlotAsync()`
+
+### `<PascalCaseName>` tag syntax
+
+Uses familiar HTML-like tags with PascalCase component names:
+
+```markdown
+<ComponentName Prop="value" Flag>
+Optional child content rendered into the default slot.
+</ComponentName>
+```
+
+Self-closing tags (no children):
+
+```markdown
+<ComponentName Prop="value" />
+```
+
+- **Name** — must be PascalCase (starts with uppercase, at least 2 characters) and match a registered component's type name
+- **Attributes** — HTML-style: `Key="value"`, `Key='value'`, `Key=value`, or boolean `Key`
+- **Child content** — rendered as Markdown and passed to `RenderSlotAsync()`
+- **Nesting** — tags can nest inside other tags: `<CardGrid><Card>...</Card></CardGrid>`
+
+:::aside{type="tip" title="Which syntax should I use?"}
+Both syntaxes produce identical output. The `<PascalCaseName>` form may feel more natural if you're used to JSX/MDX, while `:::` is more Markdown-idiomatic. You can freely mix them in the same file.
+:::
 
 ### Example
 
@@ -90,11 +127,23 @@ public sealed class CalloutBox : AtollComponent
 }
 ```
 
+Using `:::` directive syntax:
+
 ```markdown
 :::CalloutBox{type=warning}
 Be careful — this action cannot be undone.
 :::
 ```
+
+Using `<PascalCaseName>` tag syntax:
+
+```markdown
+<CalloutBox Type="warning">
+Be careful — this action cannot be undone.
+</CalloutBox>
+```
+
+Both produce identical output.
 
 ## Register components
 
@@ -120,6 +169,8 @@ public sealed class ContentConfig : IContentConfiguration
     }
 }
 ```
+
+Each `Add<T>("name")` call registers the component under the explicit name (for `:::` directives) and automatically creates a PascalCase alias from the type name (for `<Tag>` syntax). For example, `Add<CardGrid>("card-grid")` makes both `:::card-grid{...}` and `<CardGrid ... />` work.
 
 ## Rendering
 
@@ -160,6 +211,12 @@ public sealed class LiveCounter : VanillaJsIsland
 ```markdown
 :::LiveCounter{}
 :::
+```
+
+Or equivalently:
+
+```markdown
+<LiveCounter />
 ```
 
 The island is server-rendered to static HTML and hydrated on the client exactly as if it were used directly in a component. See [Islands](./islands) for the full client directive reference.
