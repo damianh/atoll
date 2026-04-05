@@ -674,8 +674,20 @@ internal sealed class DevServerReloader
             // isCollectible: true — allows this ALC to be unloaded after hot-reload,
             // preventing memory leaks from accumulated assembly loads.
             var loadContext = new AssemblyLoadContext(contextName, isCollectible: true);
+
+            // Use AssemblyDependencyResolver to resolve transitive NuGet dependencies
+            // (e.g. TextMateSharp) from the user project's .deps.json file.
+            var resolver = new AssemblyDependencyResolver(absolutePath);
             loadContext.Resolving += (context, assemblyName) =>
             {
+                // First try the deps.json resolver (handles NuGet packages).
+                var resolvedPath = resolver.ResolveAssemblyToPath(assemblyName);
+                if (resolvedPath is not null)
+                {
+                    return context.LoadFromAssemblyPath(resolvedPath);
+                }
+
+                // Fallback: probe the assembly's directory for project references.
                 var dir = Path.GetDirectoryName(absolutePath)!;
                 var candidate = Path.Combine(dir, assemblyName.Name + ".dll");
                 return File.Exists(candidate) ? context.LoadFromAssemblyPath(candidate) : null;

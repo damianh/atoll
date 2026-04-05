@@ -730,9 +730,20 @@ public sealed class BuildCommandHandler
         try
         {
             var loadContext = new AssemblyLoadContext("AtollBuild", isCollectible: false);
+
+            // Use AssemblyDependencyResolver to resolve transitive NuGet dependencies
+            // (e.g. TextMateSharp) from the user project's .deps.json file.
+            var resolver = new AssemblyDependencyResolver(assemblyPath);
             loadContext.Resolving += (context, assemblyName) =>
             {
-                // Try to resolve from the assembly's directory
+                // First try the deps.json resolver (handles NuGet packages).
+                var resolvedPath = resolver.ResolveAssemblyToPath(assemblyName);
+                if (resolvedPath is not null)
+                {
+                    return context.LoadFromAssemblyPath(resolvedPath);
+                }
+
+                // Fallback: probe the assembly's directory for project references.
                 var dir = Path.GetDirectoryName(assemblyPath)!;
                 var candidate = Path.Combine(dir, assemblyName.Name + ".dll");
                 return File.Exists(candidate) ? context.LoadFromAssemblyPath(candidate) : null;
