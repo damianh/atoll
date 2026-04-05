@@ -26,6 +26,8 @@ Lagoon vs [Astro Starlight](https://starlight.astro.build) — extracted from th
 | Sidebar badge colour variants | `BadgeVariant` enum (Default, Note, Tip, Success, Caution, Danger) on `SidebarBadge` — renders variant-specific CSS classes reusing aside colour tokens | Colour variants (success, caution, tip, danger) |
 | Custom footer content | `DocsConfig.Footer` (`FooterConfig`) — configurable text and link list replacing the default "Built with" footer | Configurable footer text and links |
 | Favicon configuration | `DocsConfig.FaviconHref` — sets the `<link rel="icon">` in `DocsBaseHead`; falls back to default Atoll logo | `favicon` option in site config |
+| Internationalisation (i18n) | `LocaleConfig`, `UiTranslations`, `BuiltInTranslations`, `LanguagePicker` — 8 built-in languages, locale routing, UI string translation, RTL support | 30+ languages, locale routing, UI string translation, RTL support |
+| Content components | `Aside`, `Card`, `CardGrid`, `Steps`, `Tabs`, `FileTree`, `LinkCard`, `LinkButton`, `Icon` — 10 content components for rich documentation authoring | Cards, Tabs, Asides/Callouts, Steps, FileTree, LinkCards, CardGrids, LinkButtons, Icons |
 
 ## Notable Gaps
 
@@ -33,17 +35,16 @@ Significant features that may block adoption depending on project requirements.
 
 | Feature | Starlight | Lagoon Status | Impact |
 |---|---|---|---|
-| Internationalisation (i18n) | 30+ languages, locale routing, UI string translation, RTL support | No i18n support | Single-language sites only; blocks any multilingual project |
 | Component overrides | Replace any built-in UI component by path | No override mechanism | Layout/UI not customisable without forking Lagoon source |
 | Plugin system | Plugin API for extending Starlight at build and runtime | No plugin architecture | Extensions must be built as standalone Atoll components |
-| Rich content components | Cards, Tabs, Asides/Callouts, Steps, FileTree, LinkCards, CardGrids, LinkButtons, Icons, expressive Code blocks (title, highlights, line numbers) | `Hero` only — structural components are layout, not content authoring | Inline components must be written from scratch as Atoll components |
+| Expressive Code blocks | Syntax highlighting with frames, markers, diffs, and collapsible sections | Standard code blocks only | Rich code block features must be built manually |
 | Versioned documentation | Version selector for multiple doc versions simultaneously | Not implemented | No way to serve multiple versions side-by-side |
 | Route data API | Typed `StarlightPage` route data accessible in components | No equivalent API | Components cannot access structured page metadata |
 
 ## Summary
 
-**Parity**: 20 features fully covered (including all 6 previously identified minor gaps).
+**Parity**: 22 features fully covered (including all 6 previously identified minor gaps, i18n, and content components).
 **Minor gaps**: 0 — all closed.
-**Notable gaps**: 6 — significant features that affect extensibility, internationalisation, and content authoring richness.
+**Notable gaps**: 5 — significant features that affect extensibility, code block richness, and versioning.
 
-Lagoon covers the core requirements for a single-language .NET documentation site. The notable gaps primarily affect projects needing i18n, deep UI customisation, or rich inline content components.
+Lagoon covers the core requirements for a .NET documentation site, including multi-language support and rich content components. The notable gaps primarily affect projects needing deep UI customisation, a plugin architecture, or multi-version documentation.
