@@ -66,6 +66,21 @@ Inject analytics, social meta, or custom scripts per page via frontmatter `head:
 :::card{title="Social Links"}
 GitHub, Discord, Twitter, and more in the header.
 :::
+:::card{title="Edit Page Links"}
+"Edit this page" link with configurable repository URL.
+:::
+:::card{title="Last Updated Date"}
+Per-page last-modified timestamp displayed below content.
+:::
+:::card{title="Draft Mode"}
+Hide draft pages from sidebar navigation and search index.
+:::
+:::card{title="Badge Variants"}
+Colour-coded sidebar badges — note, tip, success, caution, danger.
+:::
+:::card{title="Custom Footer"}
+Replace the default footer with custom text and navigation links.
+:::
 :::
 
 ## Quick start
@@ -152,9 +167,9 @@ GitHub, Discord, Twitter, and more in the header.
            var config = DocsSetup.Config;
            var currentHref = $"/docs/{Slug}";
 
-           var entries = Query.GetCollection<DocSchema>("docs")
-               .Select(e => new SidebarEntry(e.Data.Title, $"/docs/{e.Slug}", e.Slug, e.Data.Order, null))
-               .ToList();
+            var entries = Query.GetCollection<DocSchema>("docs")
+                .Select(e => new SidebarEntry(e.Data.Title, $"/docs/{e.Slug}", e.Slug, e.Data.Order, null, false))
+                .ToList();
 
            var sidebarItems = new SidebarBuilder(config.Sidebar, entries).Build(currentHref);
            var pagination = new PaginationResolver(sidebarItems, flatten: true).Resolve(currentHref);

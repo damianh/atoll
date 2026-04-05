@@ -33,6 +33,8 @@ Lagoon provides two full-page layouts (`DocsLayout` for documentation pages, `Sp
 | `Previous` | `PaginationLink?` | | Previous page link (from `PaginationResolver`) |
 | `Next` | `PaginationLink?` | | Next page link (from `PaginationResolver`) |
 | `BreadcrumbItems` | `IReadOnlyList<BreadcrumbItem>` | | Breadcrumb trail (from `BreadcrumbBuilder`) |
+| `PageSlug` | `string?` | | Content slug for the current page; used to build the "Edit this page" link when `Config.EditUrl` is set |
+| `LastUpdated` | `DateTimeOffset?` | | Last-modified timestamp for the current page, displayed in the content footer |
 | `PageHeadContent` | `string?` | | Raw HTML to inject into `<head>` for this page (e.g. analytics, social meta) |
 
 The **default slot** receives your page content.
@@ -287,7 +289,7 @@ public sealed class SiteLayout : AtollComponent
             : null;
 
         var entries = Query.GetCollection<DocSchema>("docs")
-            .Select(e => new SidebarEntry(e.Data.Title, $"/docs/{e.Slug}", e.Slug, e.Data.Order, null))
+            .Select(e => new SidebarEntry(e.Data.Title, $"/docs/{e.Slug}", e.Slug, e.Data.Order, null, e.Data.Draft))
             .ToList();
 
         var sidebarItems  = new SidebarBuilder(config.Sidebar, entries).Build(currentHref);
@@ -305,6 +307,8 @@ public sealed class SiteLayout : AtollComponent
             ["Previous"]        = pagination.Previous,
             ["Next"]            = pagination.Next,
             ["BreadcrumbItems"] = breadcrumbs,
+            ["PageSlug"]        = Slug,
+            ["LastUpdated"]     = currentEntry?.Data.LastUpdated,
             ["PageHeadContent"] = currentEntry?.Data.Head,
         };
 

@@ -22,6 +22,9 @@ All Lagoon options live in a single `DocsConfig` instance. Create one in a stati
 | `Social` | `IReadOnlyList<SocialLink>` | `[]` | Social/external links shown in the header |
 | `CustomCss` | `IReadOnlyList<string>` | `[]` | Paths or URLs of additional CSS files to load on every page |
 | `EnableMermaid` | `bool` | `false` | Load the Mermaid JS library and render ` ```mermaid ` blocks |
+| `EditUrl` | `string?` | `null` | Base URL for "Edit this page" links (e.g. `"https://github.com/org/repo/edit/main/docs/"`). The page slug is appended at render time |
+| `Footer` | `FooterConfig?` | `null` | Custom footer content. When `null`, the default "Built with Atoll" footer is rendered |
+| `FaviconHref` | `string?` | `null` | URL or path to the site favicon. When `null`, the built-in Atoll logo is used |
 | `BasePath` | `string` | `""` | URL prefix when hosting at a sub-path (e.g. `"/docs"`) |
 
 ## `SidebarItem` properties
@@ -30,12 +33,72 @@ All Lagoon options live in a single `DocsConfig` instance. Create one in a stati
 |---|---|---|---|
 | `Label` | `string` | `""` | Display text for this item |
 | `Link` | `string?` | `null` | URL for a leaf link; omit for group headers |
-| `Badge` | `string?` | `null` | Short badge text shown next to the label (e.g. `"New"`) |
+| `Badge` | `SidebarBadge?` | `null` | Badge shown next to the label. Assign a plain `string` (e.g. `"New"`) or a `SidebarBadge` with a colour variant |
 | `Collapsed` | `bool` | `false` | Start the group collapsed; only applies to items with `Items` |
 | `AutoGenerate` | `string?` | `null` | Directory slug to auto-populate children from content entries |
 | `Items` | `IReadOnlyList<SidebarItem>` | `[]` | Child items for manual groups; ignored when `AutoGenerate` is set |
 
 See [Sidebar Navigation](./sidebar) for detailed usage examples.
+
+## `SidebarBadge`
+
+A badge can be created from a plain string (implicit conversion) or with an explicit colour variant:
+
+```csharp
+// Plain text — uses BadgeVariant.Default
+Badge = "New"
+
+// Explicit variant
+Badge = new SidebarBadge("Deprecated", BadgeVariant.Danger)
+```
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `Text` | `string` | *(required)* | The badge display text |
+| `Variant` | `BadgeVariant` | `Default` | The colour variant |
+
+### `BadgeVariant` values
+
+| Value | Colour | Description |
+|---|---|---|
+| `Default` | Accent | Site primary/accent colour |
+| `Note` | Blue | Informational note |
+| `Tip` | Green | Helpful tip |
+| `Success` | Green | Positive outcome or recommended option |
+| `Caution` | Amber | Proceed with caution |
+| `Danger` | Red | Dangerous or destructive action |
+
+## `FooterConfig`
+
+Custom footer configuration. When `DocsConfig.Footer` is set, it replaces the default "Built with Atoll" footer.
+
+```csharp
+Footer = new FooterConfig
+{
+    Text = "Copyright &copy; 2025 My Project",
+    Links =
+    [
+        new FooterLink("Privacy", "/privacy"),
+        new FooterLink("Terms", "/terms"),
+    ],
+}
+```
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `Text` | `string?` | `null` | Raw HTML text to render in the footer |
+| `Links` | `IReadOnlyList<FooterLink>` | `[]` | Navigation links rendered below the text |
+
+### `FooterLink`
+
+```csharp
+new FooterLink(string label, string href)
+```
+
+| Property | Description |
+|---|---|
+| `Label` | Display text for the link |
+| `Href` | URL the link points to |
 
 ## `SocialLink`
 
@@ -83,6 +146,8 @@ public static class DocsSetup
         Title        = "Atoll",
         Description  = "A .NET-native static-site framework inspired by Astro.",
         BasePath     = "",
+        FaviconHref  = "/favicon.svg",
+        EditUrl      = "https://github.com/me/my-project/edit/main/docs/",
         EnableMermaid = false,
         TableOfContents = new TableOfContentsConfig
         {
@@ -95,6 +160,15 @@ public static class DocsSetup
             new SocialLink("Discord", "https://discord.gg/example", SocialIcon.Discord),
         ],
         CustomCss = ["/styles/custom.css"],
+        Footer = new FooterConfig
+        {
+            Text = "Copyright &copy; 2025 My Project",
+            Links =
+            [
+                new FooterLink("Privacy", "/privacy"),
+                new FooterLink("Terms", "/terms"),
+            ],
+        },
         Sidebar =
         [
             new SidebarItem { Label = "Getting Started", Link = "/docs/getting-started" },
@@ -104,7 +178,7 @@ public static class DocsSetup
                 Items =
                 [
                     new SidebarItem { Label = "Installation",  Link = "/docs/installation" },
-                    new SidebarItem { Label = "Configuration", Link = "/docs/configuration", Badge = "New" },
+                    new SidebarItem { Label = "Configuration", Link = "/docs/configuration", Badge = new SidebarBadge("New", BadgeVariant.Tip) },
                 ],
             },
             new SidebarItem

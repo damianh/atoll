@@ -31,19 +31,16 @@ These features exist in Lagoon and are fully documented in this section.
 | Per-page head injection | `DocsBaseHead.PageHeadContent` | Raw HTML injection from frontmatter `head:` field |
 | Internationalisation (i18n) | `LocaleConfig`, `UiTranslations`, `BuiltInTranslations`, `LanguagePicker` | 8 built-in languages, locale routing, UI string translation, RTL support |
 | Content components | `Aside`, `Card`, `CardGrid`, `Steps`, `Tabs`, `FileTree`, `LinkCard`, `LinkButton`, `Icon` | 10 content components for rich documentation authoring |
+| Edit page links | `DocsConfig.EditUrl` + `DocsLayout.PageSlug` | "Edit this page" link rendered below content |
+| Last updated date | `DocsLayout.LastUpdated` | Per-page last-modified timestamp in the content footer |
+| Draft mode | `SidebarEntry.Draft` + `SidebarBuilder` auto-filter | Draft pages excluded from sidebar and (optionally) search |
+| Sidebar badge variants | `SidebarBadge` + `BadgeVariant` enum | 6 colour variants: Default, Note, Tip, Success, Caution, Danger |
+| Custom footer | `FooterConfig` + `FooterLink` | Configurable footer text and navigation links |
+| Favicon configuration | `DocsConfig.FaviconHref` | Custom favicon path or URL |
 
 ## Minor gaps
 
-Small features that Starlight has and Lagoon does not yet implement. These have limited impact on most documentation sites.
-
-| Feature | Starlight | Lagoon | Notes |
-|---|---|---|---|
-| Edit page links | "Edit this page on GitHub" per page | Not implemented | Could be added as a `DocsConfig` option |
-| Last updated date | Shows last modified timestamp from git | Not implemented | — |
-| Draft mode | `draft: true` frontmatter hides pages | Not implemented | Can be worked around with content filtering |
-| Sidebar badge variants | Colour variants (success, caution, tip, danger) | Text-only badges, no colour variants | `SidebarItem.Badge` is `string?` only |
-| Custom footer content | Configurable footer text and links | Hardcoded footer text | — |
-| Favicon configuration | `favicon` option in site config | Not in `DocsConfig` | Add a custom `<link>` via `CustomCss` as a workaround |
+No minor gaps remain. All six features previously listed here have been implemented.
 
 ## Notable gaps
 

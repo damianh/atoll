@@ -55,6 +55,7 @@ public sealed class SearchConfig : ISearchIndexConfiguration
 | `Headings` | `IReadOnlyList<string>` | `[]` | Pre-extracted headings; if empty, parsed from `HtmlBody` |
 | `PlainBody` | `string?` | `null` | Plain-text override; when set, `HtmlBody` is ignored for body text |
 | `MaxBodyLength` | `int` | `500` | Maximum plain-text body length in characters (truncated if exceeded) |
+| `Draft` | `bool` | `false` | Caller-side draft marker. When `true`, callers should exclude this document from the search index before passing it to the generator |
 
 ## Search index processing
 

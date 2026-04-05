@@ -65,13 +65,78 @@ Auto-generated and manually-defined items cannot be mixed in the same group. If 
 
 ## Badges
 
-Add a short badge text to any item to surface a label (e.g. `"New"`, `"Beta"`):
+Add a badge to any sidebar item to surface a label (e.g. `"New"`, `"Beta"`). A badge can be a plain string or a `SidebarBadge` with a colour variant.
+
+### Plain text badge
 
 ```csharp
 new SidebarItem { Label = "Search", Link = "/docs/search", Badge = "New" }
 ```
 
-Badges are plain text; color variants are not yet supported (see [Starlight Comparison](./starlight-comparison)).
+Plain strings are implicitly converted to a `SidebarBadge` with `BadgeVariant.Default`, so existing code continues to work without changes.
+
+### Coloured badge
+
+```csharp
+new SidebarItem { Label = "v1 API", Link = "/docs/v1-api", Badge = new SidebarBadge("Deprecated", BadgeVariant.Danger) }
+```
+
+### `BadgeVariant` values
+
+| Value | Colour | Use for |
+|---|---|---|
+| `Default` | Accent | General-purpose labels |
+| `Note` | Blue | Informational notes |
+| `Tip` | Green | Tips and recommendations |
+| `Success` | Green | Positive / recommended |
+| `Caution` | Amber | Proceed with care |
+| `Danger` | Red | Deprecation, breaking changes |
+
+See [Configuration](./configuration#sidebarbadge) for the full `SidebarBadge` API reference.
+
+## Draft mode
+
+Mark a content entry as a draft to exclude it from auto-generated sidebar groups and (optionally) the search index. Draft pages are still accessible by direct URL — they are hidden from navigation, not from the site.
+
+### Creating draft entries
+
+Use the 6-parameter `SidebarEntry` constructor with `draft: true`:
+
+```csharp
+var entries = Query.GetCollection<DocSchema>("docs")
+    .Select(e => new SidebarEntry(
+        label: e.Data.Title,
+        href:  $"/docs/{e.Slug}",
+        slug:  e.Slug,
+        order: e.Data.Order,
+        badge: null,
+        draft: e.Data.Draft))   // ← from your frontmatter schema
+    .ToList();
+```
+
+`SidebarBuilder` automatically filters out entries where `Draft == true` when populating auto-generated groups. No additional filtering is needed on the sidebar side.
+
+### Search index filtering
+
+Draft entries should also be excluded from the search index. Filter them in your `ISearchIndexConfiguration`:
+
+```csharp
+public IEnumerable<SearchDocumentInput> GetDocuments(CollectionQuery query)
+{
+    foreach (var entry in query.GetCollection<DocSchema>("docs"))
+    {
+        var rendered = query.Render(entry);
+        yield return new SearchDocumentInput(entry.Data.Title, $"/docs/{entry.Slug}")
+        {
+            Description = entry.Data.Description,
+            HtmlBody    = rendered.Html,
+            Draft       = entry.Data.Draft,  // ← caller-side marker
+        };
+    }
+}
+```
+
+The `SearchDocumentInput.Draft` property is a caller-side marker — callers are responsible for filtering draft documents before passing them to the search index generator.
 
 ## Active state
 
@@ -90,7 +155,8 @@ var entries = Query.GetCollection<DocSchema>("docs")
         href:  $"/docs/{e.Slug}",
         slug:  e.Slug,
         order: e.Data.Order,
-        badge: null))
+        badge: null,
+        draft: false))
     .ToList();
 
 var sidebarItems = new SidebarBuilder(config.Sidebar, entries).Build(currentHref);
