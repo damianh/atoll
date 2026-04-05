@@ -16,7 +16,7 @@ public static class DocsSetup
         Title = "Atoll",
         Description = "A .NET-native static-site framework inspired by Astro.",
         BasePath = "",
-        EnableMermaid = false,
+        EnableMermaid = true,
         EnableSyntaxHighlighting = true,
         Social =
         [
@@ -90,6 +90,14 @@ public static class DocsSetup
                     new SidebarItem { Label = "Views & Layouts",      Link = "/docs/reef/views-and-layouts" },
                     new SidebarItem { Label = "Feeds & SEO",          Link = "/docs/reef/feeds-and-seo" },
                     new SidebarItem { Label = "Series & Navigation",  Link = "/docs/reef/series-and-navigation" },
+                ],
+            },
+            new SidebarItem
+            {
+                Label = "Mermaid Plugin",
+                Items =
+                [
+                    new SidebarItem { Label = "Overview",  Link = "/docs/mermaid/overview" },
                 ],
             },
             new SidebarItem

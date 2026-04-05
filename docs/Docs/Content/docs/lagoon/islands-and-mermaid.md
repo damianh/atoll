@@ -77,45 +77,6 @@ Renders a hamburger menu button for narrow viewports.
 
 ## Mermaid diagrams
 
-Mermaid renders plain text into diagrams (flowcharts, sequence diagrams, Gantt charts, and more). Enable it with one config flag:
+Lagoon integrates the `Atoll.Mermaid` plugin to render [Mermaid](https://mermaid.js.org/) diagrams from fenced code blocks. Set `EnableMermaid = true` in `DocsConfig` and write `` ```mermaid `` blocks in your markdown — diagrams render as SVGs at page load with automatic dark/light theme support.
 
-```csharp
-new DocsConfig
-{
-    EnableMermaid = true,
-    // ...
-}
-```
-
-When `EnableMermaid` is `true`, `DocsLayout` injects the Mermaid initialisation script (`atoll-docs-mermaid-init.js`) into the page. This script loads the Mermaid library from its CDN and calls `mermaid.initialize()`.
-
-### Writing Mermaid diagrams
-
-Use a fenced code block with the `mermaid` language identifier in your markdown:
-
-````markdown
-```mermaid
-flowchart LR
-    A[Request] --> B{Cache?}
-    B -- Hit --> C[Return cached]
-    B -- Miss --> D[Fetch & cache]
-    D --> C
-```
-````
-
-At build time, `DocsMarkdownRenderer` converts `` ```mermaid `` blocks into `<pre class="mermaid">` elements. The Mermaid library then renders these as SVG diagrams at page load.
-
-### Supported diagram types
-
-Any diagram type supported by the Mermaid library works, including:
-
-- Flowcharts (`flowchart`)
-- Sequence diagrams (`sequenceDiagram`)
-- Class diagrams (`classDiagram`)
-- Gantt charts (`gantt`)
-- Entity-relationship diagrams (`erDiagram`)
-- State diagrams (`stateDiagram-v2`)
-
-### Disabling Mermaid
-
-Leave `EnableMermaid` at its default (`false`) if you do not use diagrams. No Mermaid-related JavaScript is loaded, keeping page weight minimal.
+See the [Mermaid Plugin](../mermaid/overview) documentation for installation, usage, supported diagram types, and technical details.
