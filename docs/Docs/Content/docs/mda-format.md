@@ -9,7 +9,13 @@ section: Features
 
 `.mda` (Markdown Atoll) is Atoll's content file format. It extends standard Markdown with YAML frontmatter and `:::` component directives, while remaining plain-text and editor-friendly.
 
+:::aside{type="tip" title="Eating our own dog food"}
+This page uses the component directives it documents — the callouts, steps, and cards you see are live-rendered examples.
+:::
+
+:::aside{type="note" title="Existing .md files keep working"}
 `.md` files continue to work identically — `.mda` is an opt-in extension for projects that want to distinguish Atoll content from plain Markdown.
+:::
 
 ## Why `.mda`?
 
@@ -21,7 +27,9 @@ Atoll content files use the same Markdown + frontmatter + directive syntax regar
 | `.mdx` | Markdown + JSX (Astro, Next.js) |
 | `.mda` | Markdown + Atoll directives |
 
+:::aside{type="tip" title="When to use .mda"}
 Using `.mda` disambiguates your content files and signals that they may contain Atoll-specific `:::` component directives.
+:::
 
 ## File structure
 
@@ -43,9 +51,13 @@ This is rendered by the `CalloutBox` component.
 :::
 ```
 
+:::steps
 1. **YAML frontmatter** — delimited by `---`, maps to your schema class
+
 2. **Markdown body** — standard CommonMark
+
 3. **Component directives** — `:::ComponentName{prop=value}` blocks (optional)
+:::
 
 ## Component directives
 
@@ -86,6 +98,10 @@ Be careful — this action cannot be undone.
 
 ## Register components
 
+:::aside{type="caution" title="Register before rendering"}
+Components must be registered before any Markdown is rendered. Unrecognised directive names produce an empty output without throwing.
+:::
+
 Register components in your `IContentConfiguration` implementation using `ComponentMap`:
 
 ```csharp
@@ -104,8 +120,6 @@ public sealed class ContentConfig : IContentConfiguration
     }
 }
 ```
-
-Components must be registered before any Markdown is rendered. Unrecognised directive names produce an empty output without throwing.
 
 ## Rendering
 
@@ -174,4 +188,7 @@ var fileProvider = new InMemoryFileProvider()
     .AddFile("Content/blog", "my-post.mda", "---\ntitle: Test\n---\n# Test");
 ```
 
-See [Content Collections](./content-collections) for the full loading and querying API.
+## See also
+
+:::link-card{title="Content Collections" href="./content-collections" description="Full loading and querying API for content collections."}
+:::
