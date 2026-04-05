@@ -2,7 +2,7 @@
 title: Sidebar Navigation
 description: Configure sidebar items — manual links, groups, auto-generated sections, badges, and collapse.
 order: 22
-section: Lagoon Theme
+section: Lagoon Plugin
 ---
 
 # Sidebar Navigation

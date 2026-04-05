@@ -2,7 +2,7 @@
 title: Site Search
 description: Build-time search index generation and client-side search dialog.
 order: 25
-section: Lagoon Theme
+section: Lagoon Plugin
 ---
 
 # Site Search

@@ -2,7 +2,7 @@
 title: Components & Layout
 description: DocsLayout, SplashLayout, Hero, breadcrumbs, pagination, and table of contents components.
 order: 24
-section: Lagoon Theme
+section: Lagoon Plugin
 ---
 
 # Components & Layout

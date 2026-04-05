@@ -2,7 +2,7 @@
 title: Starlight Comparison
 description: Feature comparison and gap analysis between Lagoon and Astro Starlight.
 order: 27
-section: Lagoon Theme
+section: Lagoon Plugin
 ---
 
 # Starlight Comparison

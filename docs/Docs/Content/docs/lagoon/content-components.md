@@ -2,7 +2,7 @@
 title: Content Components
 description: Card, Aside, Steps, Tabs, FileTree, LinkCard, LinkButton, Icon, and CardGrid components for rich documentation content.
 order: 25
-section: Lagoon Theme
+section: Lagoon Plugin
 ---
 
 # Content Components

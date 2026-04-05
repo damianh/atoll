@@ -2,7 +2,7 @@
 title: Islands & Mermaid
 description: Built-in interactive islands and Mermaid diagram support.
 order: 26
-section: Lagoon Theme
+section: Lagoon Plugin
 ---
 
 # Islands & Mermaid

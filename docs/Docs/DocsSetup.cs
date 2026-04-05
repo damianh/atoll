@@ -64,7 +64,7 @@ public static class DocsSetup
             },
             new SidebarItem
             {
-                Label = "Lagoon Theme",
+                Label = "Lagoon Plugin",
                 Items =
                 [
                     new SidebarItem { Label = "Overview",              Link = "/docs/lagoon/overview" },

@@ -2,7 +2,7 @@
 title: Lagoon Overview
 description: A documentation theme addon for Atoll, inspired by Astro Starlight.
 order: 20
-section: Lagoon Theme
+section: Lagoon Plugin
 ---
 
 # Lagoon Overview

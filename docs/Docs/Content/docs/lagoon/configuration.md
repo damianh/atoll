@@ -2,7 +2,7 @@
 title: Lagoon Configuration
 description: Complete DocsConfig reference — title, sidebar, social links, theming, and more.
 order: 21
-section: Lagoon Theme
+section: Lagoon Plugin
 ---
 
 # Lagoon Configuration

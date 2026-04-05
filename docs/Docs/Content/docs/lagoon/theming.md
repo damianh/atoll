@@ -2,7 +2,7 @@
 title: Theme & Styling
 description: Design tokens, dark mode, custom CSS, and the DocsTheme component.
 order: 23
-section: Lagoon Theme
+section: Lagoon Plugin
 ---
 
 # Theme & Styling
