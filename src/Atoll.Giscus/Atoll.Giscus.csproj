@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Atoll\Atoll.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Islands\Assets\giscus-init.js"
+      LogicalName="Atoll.Giscus.Islands.Assets.giscus-init.js" />
+  </ItemGroup>
+</Project>

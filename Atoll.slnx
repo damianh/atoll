@@ -3,6 +3,7 @@
     <Project Path="src/Atoll.Cli/Atoll.Cli.csproj" />
     <Project Path="src/Atoll/Atoll.csproj" />
     <Project Path="src/Atoll.DrawIo/Atoll.DrawIo.csproj" />
+    <Project Path="src/Atoll.Giscus/Atoll.Giscus.csproj" />
     <Project Path="src/Atoll.Lagoon/Atoll.Lagoon.csproj" />
     <Project Path="src/Atoll.Middleware/Atoll.Middleware.csproj" />
   </Folder>
@@ -14,6 +15,7 @@
     <Project Path="docs/Docs/Docs.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Atoll.Giscus.Tests/Atoll.Giscus.Tests.csproj" />
     <Project Path="tests/Atoll.Tests/Atoll.Tests.csproj" />
     <Project Path="tests/Atoll.DrawIo.Tests/Atoll.DrawIo.Tests.csproj" />
     <Project Path="tests/Atoll.Lagoon.Tests/Atoll.Lagoon.Tests.csproj" />
