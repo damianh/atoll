@@ -1,7 +1,7 @@
 using Atoll.Components;
 using Atoll.Lagoon.Assets;
 using Atoll.Lagoon.Configuration;
-using Atoll.Lagoon.Islands;
+using Atoll.Slots;
 
 namespace Atoll.Lagoon.Layouts;
 
@@ -15,6 +15,7 @@ namespace Atoll.Lagoon.Layouts;
 /// Usage: set <see cref="Config"/> (required), optional page-specific parameters
 /// (<see cref="PageTitle"/>, <see cref="PageDescription"/>), then place page content
 /// (e.g. a <c>Hero</c> component) in the default slot.
+/// Rendering is delegated to <c>SplashLayoutTemplate.cshtml</c>.
 /// </remarks>
 public sealed class SplashLayout : AtollComponent
 {
@@ -33,80 +34,19 @@ public sealed class SplashLayout : AtollComponent
     /// <inheritdoc />
     protected override async Task RenderCoreAsync(RenderContext context)
     {
-        WriteHtml("<!DOCTYPE html>");
-        WriteHtml("<html lang=\"en\">");
+        var logoSrc = !string.IsNullOrEmpty(Config.LogoSrc)
+            ? Config.LogoSrc
+            : LagoonAssets.DefaultFaviconPath;
 
-        // <head>
-        await RenderAsync(ComponentRenderer.ToFragment<DocsBaseHead>(new Dictionary<string, object?>
-        {
-            ["Config"] = Config,
-            ["PageTitle"] = PageTitle,
-            ["PageDescription"] = PageDescription,
-        }));
+        var model = new SplashLayoutModel(Config, PageTitle, PageDescription, logoSrc, Config.EnableMermaid);
 
-        WriteHtml("<body>");
+        // Pass the page content slot through to the Razor template.
+        var pageSlot = context.Slots.GetSlotFragment(SlotCollection.DefaultSlotName);
+        var templateSlots = SlotCollection.FromDefault(pageSlot);
 
-        // Header (shared chrome — no MobileNav, no sidebar to toggle)
-        WriteHtml("<header class=\"docs-header\">");
-        WriteHtml("<div class=\"docs-header-inner\">");
-
-        // Logo / site title
-        WriteHtml("<a href=\"/\" class=\"docs-brand\">");
-        if (!string.IsNullOrEmpty(Config.LogoSrc))
-        {
-            WriteHtml($"<img src=\"{HtmlEncode(Config.LogoSrc)}\" alt=\"{HtmlEncode(Config.LogoAlt)}\" class=\"docs-logo\" />");
-        }
-        else
-        {
-            WriteHtml($"<img src=\"{LagoonAssets.DefaultFaviconPath}\" alt=\"{HtmlEncode(Config.LogoAlt)}\" class=\"docs-logo\" />");
-        }
-
-        WriteText(Config.Title);
-        WriteHtml("</a>");
-
-        // Header right: search + social + theme toggle
-        WriteHtml("<div class=\"docs-header-actions\">");
-
-        // Search dialog island
-        await RenderAsync(ComponentRenderer.ToFragment<SearchDialog>(new Dictionary<string, object?>()));
-
-        // Social links
-        foreach (var social in Config.Social)
-        {
-            WriteHtml($"<a href=\"{HtmlEncode(social.Url)}\" class=\"docs-social-link\" rel=\"noopener noreferrer\" target=\"_blank\">");
-            WriteText(social.Label);
-            WriteHtml("</a>");
-        }
-
-        // Theme toggle island
-        await RenderAsync(ComponentRenderer.ToFragment<ThemeToggle>(new Dictionary<string, object?>()));
-
-        WriteHtml("</div>"); // .docs-header-actions
-        WriteHtml("</div>"); // .docs-header-inner
-        WriteHtml("</header>");
-
-        // Main content — full-width, no sidebar or TOC
-        WriteHtml("<main class=\"splash-main\" id=\"main-content\">");
-        WriteHtml("<article class=\"splash-content\">");
-        await RenderSlotAsync();
-        WriteHtml("</article>");
-        WriteHtml("</main>");
-
-        // Footer
-        WriteHtml("<footer class=\"docs-footer\">");
-        WriteHtml("<p>Built with <a href=\"https://github.com/damianh/atoll\">Atoll</a> &mdash; a .NET-native framework inspired by Astro.</p>");
-        WriteHtml("</footer>");
-
-        // Mermaid support (conditionally injected)
-        if (Config.EnableMermaid)
-        {
-            WriteHtml("<script src=\"/scripts/atoll-docs-mermaid-init.js\" type=\"module\"></script>");
-        }
-
-        WriteHtml("</body>");
-        WriteHtml("</html>");
+        await ComponentRenderer.RenderSliceAsync<SplashLayoutTemplate, SplashLayoutModel>(
+            context.Destination,
+            model,
+            templateSlots);
     }
-
-    private static string HtmlEncode(string value) =>
-        System.Net.WebUtility.HtmlEncode(value);
 }

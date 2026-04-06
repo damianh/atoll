@@ -22,7 +22,7 @@ public sealed class Card : AtollComponent
 {
     protected override Task RenderCoreAsync(RenderContext context)
     {
-        WriteHtml("<div class=\"card\"><h2>Scoped Title</h2></div>");
+        WriteHtml("""<div class="card"><h2>Scoped Title</h2></div>""");
         return Task.CompletedTask;
     }
 }
@@ -41,11 +41,8 @@ Use `[GlobalStyle]` to opt out of scoping. Useful for base styles or third-party
 [GlobalStyle("body { font-family: system-ui; } a { color: navy; }")]
 public sealed class BaseStyles : AtollComponent
 {
-    protected override Task RenderCoreAsync(RenderContext context)
-    {
-        // This component might render nothing, just injecting global CSS
-        return Task.CompletedTask;
-    }
+    protected override Task RenderCoreAsync(RenderContext context) =>
+        Task.CompletedTask; // renders nothing — just injects global CSS
 }
 ```
 

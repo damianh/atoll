@@ -1,0 +1,22 @@
+@inherits Atoll.Components.AtollSlice<Atoll.Lagoon.Components.VersionPickerModel>
+@using Atoll.Lagoon.Versioning
+<nav class="version-picker" aria-label="@Model.Translations.VersionSelectLabel">
+    <select aria-label="@Model.Translations.VersionSelectLabel" onchange="window.location.href=this.value">
+        @foreach (var (key, config) in Model.Versions)
+        {
+            var versionPrefix = string.Equals(key, "current", StringComparison.OrdinalIgnoreCase)
+                ? ""
+                : "/" + key;
+            var url = VersionPathHelper.PrefixPath(Model.CurrentContentPath, versionPrefix, Model.LocalePrefix, Model.BasePath);
+            var isSelected = string.Equals(key, Model.CurrentVersionKey, StringComparison.OrdinalIgnoreCase);
+            if (isSelected)
+            {
+                <option value="@url" selected>@config.Label</option>
+            }
+            else
+            {
+                <option value="@url">@config.Label</option>
+            }
+        }
+    </select>
+</nav>

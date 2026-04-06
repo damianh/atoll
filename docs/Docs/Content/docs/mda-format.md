@@ -120,7 +120,7 @@ public sealed class CalloutBox : AtollComponent
 
     protected override async Task RenderCoreAsync(RenderContext context)
     {
-        WriteHtml($"<div class=\"callout callout-{Type}\">");
+        WriteHtml($"""<div class="callout callout-{Type}">""");
         await RenderSlotAsync();   // renders child Markdown
         WriteHtml("</div>");
     }
@@ -202,7 +202,7 @@ public sealed class LiveCounter : VanillaJsIsland
 
     protected override Task RenderCoreAsync(RenderContext context)
     {
-        WriteHtml("<button id=\"counter\">Count: 0</button>");
+        WriteHtml("""<button id="counter">Count: 0</button>""");
         return Task.CompletedTask;
     }
 }

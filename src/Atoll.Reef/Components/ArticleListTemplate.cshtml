@@ -1,0 +1,17 @@
+@inherits Atoll.Components.AtollSlice<Atoll.Reef.Components.ArticleListModel>
+<div class="article-list">
+    @foreach (var item in Model.Items)
+    {
+        var href = $"{Model.BaseTrimmed}/{item.Slug.TrimStart('/')}";
+        <article class="article-list-item">
+            <div class="article-list-item-header">
+                <h3 class="article-list-item-title"><a href="@href">@item.Title</a></h3>
+                <time class="article-list-item-date" datetime="@item.PubDate.ToString("yyyy-MM-dd")">@item.PubDate.ToString("MMM d, yyyy")</time>
+            </div>
+            @if (!string.IsNullOrEmpty(item.Description))
+            {
+                <p class="article-list-item-description">@item.Description</p>
+            }
+        </article>
+    }
+</div>

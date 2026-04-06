@@ -1,0 +1,19 @@
+@inherits Atoll.Components.AtollSlice<Atoll.Reef.Components.ArticleSeriesModel>
+<aside class="article-series" aria-label="Article series">
+    <p class="series-header">Part @Model.CurrentPart of @Model.Parts.Count in &#8220;@Model.SeriesName&#8221;</p>
+    <ol class="series-parts">
+        @for (var i = 0; i < Model.Parts.Count; i++)
+        {
+            var part = Model.Parts[i];
+            var isCurrent = i + 1 == Model.CurrentPart;
+            if (isCurrent)
+            {
+                <li class="series-part series-part--current"><a href="@part.Href" aria-current="page">@part.Title</a></li>
+            }
+            else
+            {
+                <li class="series-part"><a href="@part.Href">@part.Title</a></li>
+            }
+        }
+    </ol>
+</aside>

@@ -1,0 +1,21 @@
+@inherits Atoll.Components.AtollSlice<Atoll.Reef.Components.AuthorCardModel>
+<aside class="author-card">
+    @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+    {
+        <img class="author-card__avatar" src="@Model.AvatarUrl" alt="@Model.Name" />
+    }
+    <div class="author-card__info">
+        @if (!string.IsNullOrEmpty(Model.Url))
+        {
+            <a class="author-card__name" href="@Model.Url">@Model.Name</a>
+        }
+        else
+        {
+            <p class="author-card__name">@Model.Name</p>
+        }
+        @if (!string.IsNullOrEmpty(Model.Bio))
+        {
+            <p class="author-card__bio">@Model.Bio</p>
+        }
+    </div>
+</aside>

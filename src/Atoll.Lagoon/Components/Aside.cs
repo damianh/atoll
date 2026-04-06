@@ -1,4 +1,5 @@
 using Atoll.Components;
+using Atoll.Slots;
 
 namespace Atoll.Lagoon.Components;
 
@@ -6,6 +7,9 @@ namespace Atoll.Lagoon.Components;
 /// A callout box with note/tip/caution/danger variants, an optional custom title,
 /// and slotted content body.
 /// </summary>
+/// <remarks>
+/// Rendering is delegated to <c>AsideTemplate.cshtml</c>.
+/// </remarks>
 public sealed class Aside : AtollComponent
 {
     /// <summary>Gets or sets the aside variant. Defaults to <see cref="AsideType.Note"/>.</summary>
@@ -29,26 +33,14 @@ public sealed class Aside : AtollComponent
         };
 
         var title = Title ?? defaultTitle;
-        var encodedTitle = HtmlEncode(title);
+        var model = new AsideModel(variantClass, title, iconName);
 
-        WriteHtml($"<aside class=\"aside {variantClass}\" role=\"note\" aria-label=\"{encodedTitle}\">");
+        var slot = context.Slots.GetSlotFragment(SlotCollection.DefaultSlotName);
+        var templateSlots = SlotCollection.FromDefault(slot);
 
-        // Title line with icon
-        WriteHtml("<p class=\"aside-title\">");
-        var iconProps = new Dictionary<string, object?> { ["Name"] = iconName };
-        var iconFragment = ComponentRenderer.ToFragment<Icon>(iconProps);
-        await RenderAsync(iconFragment);
-        WriteText(title);
-        WriteHtml("</p>");
-
-        // Content
-        WriteHtml("<div class=\"aside-content\">");
-        await RenderSlotAsync();
-        WriteHtml("</div>");
-
-        WriteHtml("</aside>");
+        await ComponentRenderer.RenderSliceAsync<AsideTemplate, AsideModel>(
+            context.Destination,
+            model,
+            templateSlots);
     }
-
-    private static string HtmlEncode(string value) =>
-        System.Net.WebUtility.HtmlEncode(value);
 }

@@ -1,0 +1,14 @@
+@inherits Atoll.Components.AtollSlice<Atoll.Lagoon.Components.CardModel>
+@using Atoll.Lagoon.Components
+<div class="card">
+    <div class="card-header">
+        @if (Model.IconName.HasValue)
+        {
+                await RenderComponentAsync<Icon>(new Dictionary<string, object?> { ["Name"] = Model.IconName.Value });
+        }
+        <h3 class="card-title">@Model.Title</h3>
+    </div>
+    <div class="card-body">
+        @{ await RenderSlotAsync(); }
+    </div>
+</div>

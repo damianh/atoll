@@ -40,12 +40,12 @@ The **default slot** receives the callout body content.
 ```csharp
 await RenderAsync<Aside>(new { Type = AsideType.Tip, Title = "Performance tip" }, slot =>
 {
-    slot.WriteHtml("<p>Use <code>client:idle</code> for non-critical islands to avoid blocking the main thread.</p>");
+    slot.WriteHtml("""<p>Use <code>client:idle</code> for non-critical islands to avoid blocking the main thread.</p>""");
 });
 
 await RenderAsync<Aside>(new { Type = AsideType.Danger }, slot =>
 {
-    slot.WriteHtml("<p>This operation is destructive and cannot be undone.</p>");
+    slot.WriteHtml("""<p>This operation is destructive and cannot be undone.</p>""");
 });
 ```
 
@@ -96,7 +96,7 @@ A bordered content card with a title, optional icon, and slotted body content.
 ```csharp
 await RenderAsync<Card>(new { Title = "Getting Started", IconName = IconName.Rocket }, slot =>
 {
-    slot.WriteHtml("<p>Set up your first Atoll project in under 5 minutes.</p>");
+    slot.WriteHtml("""<p>Set up your first Atoll project in under 5 minutes.</p>""");
 });
 ```
 
@@ -139,11 +139,11 @@ await RenderAsync<CardGrid>(new { Stagger = false }, async slot =>
 {
     await slot.RenderAsync<Card>(new { Title = "Fast" }, s =>
     {
-        s.WriteHtml("<p>Sub-millisecond component rendering.</p>");
+        s.WriteHtml("""<p>Sub-millisecond component rendering.</p>""");
     });
     await slot.RenderAsync<Card>(new { Title = "Type-safe" }, s =>
     {
-        s.WriteHtml("<p>Full C# type safety for all parameters.</p>");
+        s.WriteHtml("""<p>Full C# type safety for all parameters.</p>""");
     });
 });
 ```

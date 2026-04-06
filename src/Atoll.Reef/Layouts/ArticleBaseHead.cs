@@ -7,6 +7,9 @@ namespace Atoll.Reef.Layouts;
 /// Renders the <c>&lt;head&gt;</c> section for article/blog pages, including meta tags,
 /// viewport settings, title template, custom CSS, and the theme FOUC-prevention inline script.
 /// </summary>
+/// <remarks>
+/// Rendering is delegated to <c>ArticleBaseHeadTemplate.cshtml</c>.
+/// </remarks>
 public sealed class ArticleBaseHead : AtollComponent
 {
     /// <summary>Gets or sets the Reef theme configuration.</summary>
@@ -26,66 +29,14 @@ public sealed class ArticleBaseHead : AtollComponent
     public string? PageHeadContent { get; set; }
 
     /// <inheritdoc />
-    protected override Task RenderCoreAsync(RenderContext context)
+    protected override async Task RenderCoreAsync(RenderContext context)
     {
-        WriteHtml("<head>");
-        WriteHtml("<meta charset=\"utf-8\" />");
-        WriteHtml("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />");
-
-        // Title
-        WriteHtml("<title>");
-        if (!string.IsNullOrEmpty(PageTitle))
-        {
-            WriteText(PageTitle);
-            WriteHtml(" | ");
-        }
-
-        WriteText(Config.Title);
-        WriteHtml("</title>");
-
-        // Description meta
         var description = PageDescription ?? Config.Description;
-        if (!string.IsNullOrEmpty(description))
-        {
-            WriteHtml($"<meta name=\"description\" content=\"{HtmlEncode(description)}\" />");
-        }
 
-        // Favicon
-        if (!string.IsNullOrEmpty(Config.FaviconHref))
-        {
-            WriteHtml($"<link rel=\"icon\" type=\"image/svg+xml\" href=\"{HtmlEncode(Config.FaviconHref)}\" />");
-        }
+        var model = new ArticleBaseHeadModel(Config, PageTitle, description, PageHeadContent);
 
-        // RSS feed auto-discovery link
-        if (Config.RssEnabled)
-        {
-            var basePath = Config.BasePath.TrimEnd('/');
-            WriteHtml($"<link rel=\"alternate\" type=\"application/rss+xml\" title=\"{HtmlEncode(Config.Title)}\" href=\"{HtmlEncode($"{basePath}/feed.xml")}\" />");
-        }
-
-        // Theme FOUC prevention — must run before page renders
-        WriteHtml("""
-            <script>
-            (function(){var s=localStorage.getItem('atoll-theme');if(s==='dark'||s==='light'){document.documentElement.setAttribute('data-theme',s);}else if(window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.setAttribute('data-theme','dark');}})();
-            </script>
-            """);
-
-        // Custom CSS
-        foreach (var css in Config.CustomCss)
-        {
-            WriteHtml($"<link rel=\"stylesheet\" href=\"{HtmlEncode(css)}\" />");
-        }
-
-        // Per-page head content (e.g., OG meta, analytics snippets)
-        if (!string.IsNullOrEmpty(PageHeadContent))
-        {
-            WriteHtml(PageHeadContent);
-        }
-
-        WriteHtml("</head>");
-        return Task.CompletedTask;
+        await ComponentRenderer.RenderSliceAsync<ArticleBaseHeadTemplate, ArticleBaseHeadModel>(
+            context.Destination,
+            model);
     }
-
-    private static string HtmlEncode(string value) =>
-        System.Net.WebUtility.HtmlEncode(value);
 }

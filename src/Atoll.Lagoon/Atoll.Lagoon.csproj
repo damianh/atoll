@@ -1,9 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Atoll\Atoll.csproj" />
     <ProjectReference Include="..\Atoll.Mermaid\Atoll.Mermaid.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="RazorSlices" />
     <PackageReference Include="TextMateSharp.Grammars" />
   </ItemGroup>
   <ItemGroup>

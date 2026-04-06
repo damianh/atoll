@@ -1,0 +1,20 @@
+@inherits Atoll.Components.AtollSlice<Atoll.Lagoon.Components.BreadcrumbsModel>
+@if (Model.Items.Count > 0)
+{
+    var encodedLabel = Atoll.Rendering.HtmlEncoder.Encode(Model.Translations.BreadcrumbsLabel);
+    WriteLiteral($"<nav class=\"docs-breadcrumbs\" aria-label=\"{encodedLabel}\">");
+        <ol>
+            @foreach (var item in Model.Items)
+            {
+                if (item.IsCurrent)
+                {
+                    <li aria-current="page">@item.Label</li>
+                }
+                else
+                {
+                    <li><a href="@(item.Href ?? "")">@item.Label</a></li>
+                }
+            }
+        </ol>
+    WriteLiteral("</nav>");
+}

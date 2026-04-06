@@ -1,0 +1,25 @@
+@inherits Atoll.Components.AtollSlice<Atoll.Reef.Components.ArticleCardModel>
+@using Atoll.Reef.Components
+<article class="article-card">
+    @if (!string.IsNullOrEmpty(Model.ImageSrc))
+    {
+        <a class="article-card-image-link" href="@Model.Href" tabindex="-1" aria-hidden="true">
+            <img class="article-card-image" src="@Model.ImageSrc" alt="@Model.ImageAlt" loading="lazy" />
+        </a>
+    }
+    <div class="article-card-body">
+        <h3 class="article-card-title"><a href="@Model.Href">@Model.Title</a></h3>
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <p class="article-card-description">@Model.Description</p>
+        }
+        @{ await RenderComponentAsync<ArticleMeta>(new Dictionary<string, object?>
+        {
+            ["PubDate"] = Model.PubDate,
+            ["Author"] = Model.Author,
+            ["ReadingTimeMinutes"] = Model.ReadingTimeMinutes,
+            ["Tags"] = Model.Tags,
+            ["BasePath"] = Model.BasePath,
+        }); }
+    </div>
+</article>

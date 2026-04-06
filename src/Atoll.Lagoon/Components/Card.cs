@@ -1,10 +1,14 @@
 using Atoll.Components;
+using Atoll.Slots;
 
 namespace Atoll.Lagoon.Components;
 
 /// <summary>
 /// A content card with a title, optional icon, and slotted body content.
 /// </summary>
+/// <remarks>
+/// Rendering is delegated to <c>CardTemplate.cshtml</c>.
+/// </remarks>
 public sealed class Card : AtollComponent
 {
     /// <summary>Gets or sets the card title.</summary>
@@ -18,27 +22,14 @@ public sealed class Card : AtollComponent
     /// <inheritdoc />
     protected override async Task RenderCoreAsync(RenderContext context)
     {
-        WriteHtml("<div class=\"card\">");
+        var model = new CardModel(Title, IconName);
 
-        WriteHtml("<div class=\"card-header\">");
+        var slot = context.Slots.GetSlotFragment(SlotCollection.DefaultSlotName);
+        var templateSlots = SlotCollection.FromDefault(slot);
 
-        if (IconName.HasValue)
-        {
-            var iconProps = new Dictionary<string, object?> { ["Name"] = IconName.Value };
-            var iconFragment = ComponentRenderer.ToFragment<Icon>(iconProps);
-            await RenderAsync(iconFragment);
-        }
-
-        WriteHtml("<h3 class=\"card-title\">");
-        WriteText(Title);
-        WriteHtml("</h3>");
-
-        WriteHtml("</div>");
-
-        WriteHtml("<div class=\"card-body\">");
-        await RenderSlotAsync();
-        WriteHtml("</div>");
-
-        WriteHtml("</div>");
+        await ComponentRenderer.RenderSliceAsync<CardTemplate, CardModel>(
+            context.Destination,
+            model,
+            templateSlots);
     }
 }

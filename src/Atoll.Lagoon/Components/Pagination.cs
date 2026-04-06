@@ -7,6 +7,9 @@ namespace Atoll.Lagoon.Components;
 /// <summary>
 /// Renders previous/next navigation links at the bottom of documentation pages.
 /// </summary>
+/// <remarks>
+/// Rendering is delegated to <c>PaginationTemplate.cshtml</c>.
+/// </remarks>
 public sealed class Pagination : AtollComponent
 {
     /// <summary>Gets or sets the link to the previous page, or <c>null</c> if this is the first page.</summary>
@@ -22,43 +25,17 @@ public sealed class Pagination : AtollComponent
     public UiTranslations Translations { get; set; } = UiTranslations.Default;
 
     /// <inheritdoc />
-    protected override Task RenderCoreAsync(RenderContext context)
+    protected override async Task RenderCoreAsync(RenderContext context)
     {
         if (Previous is null && Next is null)
         {
-            return Task.CompletedTask;
+            return;
         }
 
-        WriteHtml($"<nav class=\"docs-pagination\" aria-label=\"{HtmlEncode(Translations.PaginationLabel)}\">");
+        var model = new PaginationModel(Previous, Next, Translations);
 
-        if (Previous is not null)
-        {
-            WriteHtml($"<a href=\"{HtmlEncode(Previous.Href)}\" rel=\"prev\">");
-            WriteHtml("<span class=\"pagination-direction\">");
-            WriteText(Translations.PaginationPrevious);
-            WriteHtml("</span>");
-            WriteHtml("<span class=\"pagination-label\">");
-            WriteText(Previous.Label);
-            WriteHtml("</span>");
-            WriteHtml("</a>");
-        }
-
-        if (Next is not null)
-        {
-            WriteHtml($"<a href=\"{HtmlEncode(Next.Href)}\" rel=\"next\">");
-            WriteHtml("<span class=\"pagination-direction\">");
-            WriteText(Translations.PaginationNext);
-            WriteHtml("</span>");
-            WriteHtml("<span class=\"pagination-label\">");
-            WriteText(Next.Label);
-            WriteHtml("</span>");
-            WriteHtml("</a>");
-        }
-
-        WriteHtml("</nav>");
-        return Task.CompletedTask;
+        await ComponentRenderer.RenderSliceAsync<PaginationTemplate, PaginationModel>(
+            context.Destination,
+            model);
     }
-
-    private static string HtmlEncode(string value) =>
-        System.Net.WebUtility.HtmlEncode(value);
 }

@@ -1,0 +1,11 @@
+@inherits Atoll.Components.AtollSlice<Atoll.Lagoon.Components.AsideModel>
+@using Atoll.Lagoon.Components
+<aside class="aside @Model.VariantClass" role="note" aria-label="@Model.Title">
+    <p class="aside-title">
+        @{ await RenderComponentAsync<Icon>(new Dictionary<string, object?> { ["Name"] = Model.IconName }); }
+        @Model.Title
+    </p>
+    <div class="aside-content">
+        @{ await RenderSlotAsync(); }
+    </div>
+</aside>

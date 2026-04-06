@@ -1,0 +1,15 @@
+@inherits Atoll.Components.AtollSlice<Atoll.Lagoon.Components.LinkCardModel>
+@using Atoll.Lagoon.Components
+<a href="@Model.Href" class="link-card">
+    <span class="link-card-title">
+        @if (Model.IconName.HasValue)
+        {
+            await RenderComponentAsync<Icon>(new Dictionary<string, object?> { ["Name"] = Model.IconName.Value });
+        }
+        @Model.Title
+    </span>
+    @if (Model.Description is not null)
+    {
+        <span class="link-card-description">@Model.Description</span>
+    }
+</a>

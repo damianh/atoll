@@ -1,3 +1,5 @@
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 using Atoll.Rendering;
 using Atoll.Slots;
 using RazorSlices;
@@ -34,6 +36,12 @@ public sealed class SliceComponentAdapter : IAtollComponent
         _slice = slice;
     }
 
+    /// <summary>
+    /// HTML encoder that passes all Unicode characters through, matching Atoll's built-in encoding behavior.
+    /// </summary>
+    private static readonly System.Text.Encodings.Web.HtmlEncoder PermissiveHtmlEncoder =
+        System.Text.Encodings.Web.HtmlEncoder.Create(UnicodeRanges.All);
+
     /// <inheritdoc />
     public async Task RenderAsync(RenderContext context)
     {
@@ -45,7 +53,7 @@ public sealed class SliceComponentAdapter : IAtollComponent
         InjectAtollContext(destination, slots);
 
         await using var writer = new RenderDestinationTextWriter(destination);
-        await _slice.RenderAsync(writer);
+        await _slice.RenderAsync(writer, PermissiveHtmlEncoder);
     }
 
     /// <summary>

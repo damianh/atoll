@@ -7,6 +7,9 @@ namespace Atoll.Reef.Components;
 /// The number of columns is controlled by the <see cref="Columns"/> parameter and is injected
 /// via a CSS custom property (<c>--grid-cols</c>).
 /// </summary>
+/// <remarks>
+/// Rendering is delegated to <c>ArticleGridTemplate.cshtml</c>.
+/// </remarks>
 public sealed class ArticleGrid : AtollComponent
 {
     /// <summary>
@@ -27,26 +30,10 @@ public sealed class ArticleGrid : AtollComponent
     /// <inheritdoc />
     protected override async Task RenderCoreAsync(RenderContext context)
     {
-        WriteHtml("<div class=\"article-grid\" style=\"--grid-cols:");
-        WriteHtml(Columns.ToString());
-        WriteHtml("\">");
+        var model = new ArticleGridModel(Columns, Items, BasePath);
 
-        foreach (var item in Items)
-        {
-            var cardFragment = ComponentRenderer.ToFragment<ArticleCard>(new Dictionary<string, object?>
-            {
-                [nameof(ArticleCard.Title)] = item.Title,
-                [nameof(ArticleCard.Slug)] = item.Slug,
-                [nameof(ArticleCard.Description)] = item.Description,
-                [nameof(ArticleCard.PubDate)] = item.PubDate,
-                [nameof(ArticleCard.Author)] = item.Author,
-                [nameof(ArticleCard.Tags)] = item.Tags,
-                [nameof(ArticleCard.ReadingTimeMinutes)] = item.ReadingTimeMinutes,
-                [nameof(ArticleCard.BasePath)] = BasePath,
-            });
-            await RenderAsync(cardFragment);
-        }
-
-        WriteHtml("</div>");
+        await ComponentRenderer.RenderSliceAsync<ArticleGridTemplate, ArticleGridModel>(
+            context.Destination,
+            model);
     }
 }

@@ -57,7 +57,7 @@ public sealed class ImageGallery : VanillaJsIsland
 
     protected override Task RenderCoreAsync(RenderContext context)
     {
-        WriteHtml("<div class=\"gallery\"><!-- server-rendered gallery grid --></div>");
+        WriteHtml("""<div class="gallery"><!-- server-rendered gallery grid --></div>""");
         return Task.CompletedTask;
     }
 }
@@ -75,7 +75,7 @@ public sealed class MobileNav : VanillaJsIsland
 
     protected override Task RenderCoreAsync(RenderContext context)
     {
-        WriteHtml("<nav class=\"mobile-nav\"><!-- hamburger menu --></nav>");
+        WriteHtml("""<nav class="mobile-nav"><!-- hamburger menu --></nav>""");
         return Task.CompletedTask;
     }
 }

@@ -1,0 +1,22 @@
+@inherits Atoll.Components.AtollSlice<Atoll.Lagoon.Layouts.DocsBaseHeadModel>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>@if (!string.IsNullOrEmpty(Model.PageTitle)) { @Model.PageTitle<text> | </text>}@Model.Config.Title</title>
+@if (!string.IsNullOrEmpty(Model.Description))
+{
+    <meta name="description" content="@Model.Description" />
+}
+<link rel="icon" type="image/png" href="@Model.FaviconHref" />
+<script>
+(function(){var s=localStorage.getItem('atoll-theme');if(s==='dark'||s==='light'){document.documentElement.setAttribute('data-theme',s);}else if(window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.setAttribute('data-theme','dark');}})();
+</script>
+@foreach (var css in Model.Config.CustomCss)
+{
+    <link rel="stylesheet" href="@css" />
+}
+@if (!string.IsNullOrEmpty(Model.PageHeadContent))
+{
+    WriteLiteral(Model.PageHeadContent);
+}
+</head>

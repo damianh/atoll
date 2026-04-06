@@ -1,0 +1,22 @@
+@inherits Atoll.Components.AtollSlice<Atoll.Lagoon.Components.LanguagePickerModel>
+@using Atoll.Lagoon.I18n
+<nav class="language-picker" aria-label="@Model.Translations.LanguageSelectLabel">
+    <select aria-label="@Model.Translations.LanguageSelectLabel" onchange="window.location.href=this.value">
+        @foreach (var (key, config) in Model.Locales)
+        {
+            var localePrefix = string.Equals(key, "root", StringComparison.OrdinalIgnoreCase)
+                ? ""
+                : "/" + key;
+            var url = LocalePathHelper.PrefixPath(Model.CurrentContentPath, localePrefix, Model.BasePath);
+            var isSelected = string.Equals(key, Model.CurrentLocaleKey, StringComparison.OrdinalIgnoreCase);
+            if (isSelected)
+            {
+                <option value="@url" selected>@config.Label</option>
+            }
+            else
+            {
+                <option value="@url">@config.Label</option>
+            }
+        }
+    </select>
+</nav>

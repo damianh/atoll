@@ -6,6 +6,9 @@ namespace Atoll.Reef.Components;
 /// Renders a multi-part article series indicator showing the current part number,
 /// the total part count, and links to all parts in the series.
 /// </summary>
+/// <remarks>
+/// Rendering is delegated to <c>ArticleSeriesTemplate.cshtml</c>.
+/// </remarks>
 public sealed class ArticleSeries : AtollComponent
 {
     /// <summary>Gets or sets the display name of the series.</summary>
@@ -21,35 +24,12 @@ public sealed class ArticleSeries : AtollComponent
     public int CurrentPart { get; set; }
 
     /// <inheritdoc />
-    protected override Task RenderCoreAsync(RenderContext context)
+    protected override async Task RenderCoreAsync(RenderContext context)
     {
-        WriteHtml("<aside class=\"article-series\" aria-label=\"Article series\">");
-        WriteHtml("<p class=\"series-header\">Part ");
-        WriteText(CurrentPart.ToString());
-        WriteHtml(" of ");
-        WriteText(Parts.Count.ToString());
-        WriteHtml(" in &#8220;");
-        WriteText(SeriesName);
-        WriteHtml("&#8221;</p>");
-        WriteHtml("<ol class=\"series-parts\">");
+        var model = new ArticleSeriesModel(SeriesName, Parts, CurrentPart);
 
-        for (var i = 0; i < Parts.Count; i++)
-        {
-            var part = Parts[i];
-            var isCurrent = i + 1 == CurrentPart;
-            var ariaCurrent = isCurrent ? " aria-current=\"page\"" : "";
-            WriteHtml($"<li class=\"series-part{(isCurrent ? " series-part--current" : "")}\">");
-            WriteHtml($"<a href=\"{HtmlEncode(part.Href)}\"{ariaCurrent}>");
-            WriteText(part.Title);
-            WriteHtml("</a>");
-            WriteHtml("</li>");
-        }
-
-        WriteHtml("</ol>");
-        WriteHtml("</aside>");
-        return Task.CompletedTask;
+        await ComponentRenderer.RenderSliceAsync<ArticleSeriesTemplate, ArticleSeriesModel>(
+            context.Destination,
+            model);
     }
-
-    private static string HtmlEncode(string value) =>
-        System.Net.WebUtility.HtmlEncode(value);
 }

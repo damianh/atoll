@@ -1,0 +1,7 @@
+@inherits Atoll.Components.AtollSlice<Atoll.Reef.Components.TagCloudModel>
+<nav class="tag-cloud" aria-label="Tags">
+    @foreach (var tag in Model.Tags)
+    {
+        <a class="tag-pill" href="@($"{Model.BaseTrimmed}/tag/{tag.Slug}")">@tag.Name <span class="tag-count">(@tag.Count)</span></a>
+    }
+</nav>

@@ -24,17 +24,16 @@ public sealed class Card : AtollComponent
 
     protected override Task RenderCoreAsync(RenderContext context)
     {
-        WriteHtml("<div class=\"card\">");
-        WriteHtml("<h2>");
-        WriteText(Title);   // HTML-escaped
-        WriteHtml("</h2>");
-        if (!string.IsNullOrEmpty(Description))
-        {
-            WriteHtml("<p>");
-            WriteText(Description);
-            WriteHtml("</p>");
-        }
-        WriteHtml("</div>");
+        var description = string.IsNullOrEmpty(Description)
+            ? ""
+            : $"<p>{HtmlEncoder.Encode(Description)}</p>";
+
+        WriteHtml($"""
+            <div class="card">
+                <h2>{HtmlEncoder.Encode(Title)}</h2>
+                {description}
+            </div>
+            """);
         return Task.CompletedTask;
     }
 }
@@ -87,10 +86,118 @@ protected override async Task RenderCoreAsync(RenderContext context)
     WriteHtml("<ul>");
     foreach (var item in data)
     {
-        WriteHtml("<li>");
-        WriteText(item.Name);
-        WriteHtml("</li>");
+        WriteHtml($"<li>{HtmlEncoder.Encode(item.Name)}</li>");
     }
     WriteHtml("</ul>");
 }
 ```
+
+## Razor templates
+
+For markup-heavy components, you can delegate rendering to a Razor `.cshtml` template instead of building HTML strings in C#. The component keeps its `[Parameter]` properties and logic; the template owns the markup.
+
+### Project setup
+
+Your project needs the Razor SDK and the RazorSlices package:
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="RazorSlices" />
+  </ItemGroup>
+</Project>
+```
+
+Add a `_ViewImports.cshtml` at the project root to disable MVC tag helpers (which conflict with plain HTML):
+
+```html
+@tagHelperPrefix __disable_tagHelpers__:
+@removeTagHelper *, Microsoft.AspNetCore.Mvc.Razor
+```
+
+### Pattern
+
+A Razor-templated component has three files:
+
+1. **Component** (`Card.cs`) — declares parameters, builds the model, calls `RenderSliceAsync`
+2. **Model** (`CardModel.cs`) — a record carrying data from the component to the template
+3. **Template** (`CardTemplate.cshtml`) — the Razor markup
+
+**Model:**
+
+```csharp
+public sealed record CardModel(string Title, IconName? IconName);
+```
+
+**Component:**
+
+```csharp
+public sealed class Card : AtollComponent
+{
+    [Parameter(Required = true)]
+    public string Title { get; set; } = "";
+
+    [Parameter]
+    public IconName? IconName { get; set; }
+
+    protected override async Task RenderCoreAsync(RenderContext context)
+    {
+        var model = new CardModel(Title, IconName);
+
+        // Pass the default slot through to the template.
+        var slot = context.Slots.GetSlotFragment(SlotCollection.DefaultSlotName);
+        var templateSlots = SlotCollection.FromDefault(slot);
+
+        await ComponentRenderer.RenderSliceAsync<CardTemplate, CardModel>(
+            context.Destination,
+            model,
+            templateSlots);
+    }
+}
+```
+
+**Template (`CardTemplate.cshtml`):**
+
+```html
+@inherits Atoll.Components.AtollSlice<MyApp.Components.CardModel>
+<div class="card">
+    <h3 class="card-title">@Model.Title</h3>
+    <div class="card-body">
+        @{ await RenderSlotAsync(); }
+    </div>
+</div>
+```
+
+### Template base classes
+
+| Base class | Use for | Key method |
+|---|---|---|
+| `AtollSlice<TModel>` | Components | `RenderSlotAsync()` — renders the default slot |
+| `AtollLayoutSlice<TModel>` | Layouts | `RenderBodyAsync()` — renders the page body |
+| `AtollSlice` (no generic) | Slot-only components (no model) | `RenderSlotAsync()` |
+
+### Template helpers
+
+Inside a Razor template, the following helpers are available:
+
+| Helper | Description |
+|---|---|
+| `@Model.Property` | Access model data (auto HTML-escaped) |
+| `await RenderSlotAsync()` | Render the default slot |
+| `await RenderSlotAsync("name")` | Render a named slot |
+| `HasSlot("name")` | Check if a named slot exists |
+| `await RenderComponentAsync<T>(props)` | Render a child C# component inline |
+| `WriteLiteral(html)` | Write raw, unescaped HTML |
+
+### When to use Razor templates
+
+Use Razor templates when the component is **markup-heavy** — lots of HTML with conditional attributes, loops over lists, and nested elements. The Razor syntax is more readable than `WriteHtml`/`WriteText` chains.
+
+Keep using `RenderCoreAsync` with `WriteHtml`/`WriteText` when:
+
+- The component has complex control flow or significant C# logic interleaved with rendering
+- The component embeds inline JavaScript
+- The component is an island with client directives (`[ClientIdle]`, `[ClientLoad]`)

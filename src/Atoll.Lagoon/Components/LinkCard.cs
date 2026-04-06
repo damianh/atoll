@@ -6,6 +6,9 @@ namespace Atoll.Lagoon.Components;
 /// A prominent navigation card rendered as an anchor element, with a title,
 /// optional description, and optional icon.
 /// </summary>
+/// <remarks>
+/// Rendering is delegated to <c>LinkCardTemplate.cshtml</c>.
+/// </remarks>
 public sealed class LinkCard : AtollComponent
 {
     /// <summary>Gets or sets the card title text.</summary>
@@ -27,30 +30,10 @@ public sealed class LinkCard : AtollComponent
     /// <inheritdoc />
     protected override async Task RenderCoreAsync(RenderContext context)
     {
-        WriteHtml($"<a href=\"{HtmlEncode(Href)}\" class=\"link-card\">");
+        var model = new LinkCardModel(Title, Href, Description, IconName);
 
-        WriteHtml("<span class=\"link-card-title\">");
-
-        if (IconName.HasValue)
-        {
-            var iconProps = new Dictionary<string, object?> { ["Name"] = IconName.Value };
-            var iconFragment = ComponentRenderer.ToFragment<Icon>(iconProps);
-            await RenderAsync(iconFragment);
-        }
-
-        WriteText(Title);
-        WriteHtml("</span>");
-
-        if (Description is not null)
-        {
-            WriteHtml("<span class=\"link-card-description\">");
-            WriteText(Description);
-            WriteHtml("</span>");
-        }
-
-        WriteHtml("</a>");
+        await ComponentRenderer.RenderSliceAsync<LinkCardTemplate, LinkCardModel>(
+            context.Destination,
+            model);
     }
-
-    private static string HtmlEncode(string value) =>
-        System.Net.WebUtility.HtmlEncode(value);
 }

@@ -1,0 +1,10 @@
+@inherits Atoll.Components.AtollSlice<Atoll.Reef.Components.RelatedArticlesModel>
+<aside class="related-articles">
+    <h3 class="related-articles__heading">@Model.Heading</h3>
+    <ul class="related-articles__list">
+        @foreach (var article in Model.Items)
+        {
+            <li class="related-articles__item"><a href="@article.Href">@article.Title</a></li>
+        }
+    </ul>
+</aside>

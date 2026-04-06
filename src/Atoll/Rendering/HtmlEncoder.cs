@@ -6,7 +6,7 @@ namespace Atoll.Rendering;
 /// Provides HTML encoding for text content. Used by <see cref="RenderChunk"/>
 /// to escape plain text before output.
 /// </summary>
-internal static class HtmlEncoder
+public static class HtmlEncoder
 {
     /// <summary>
     /// Encodes the specified text for safe inclusion in HTML content.
@@ -14,7 +14,7 @@ internal static class HtmlEncoder
     /// </summary>
     /// <param name="text">The text to encode.</param>
     /// <returns>The HTML-encoded text.</returns>
-    internal static string Encode(string text)
+    public static string Encode(string text)
     {
         if (string.IsNullOrEmpty(text))
         {

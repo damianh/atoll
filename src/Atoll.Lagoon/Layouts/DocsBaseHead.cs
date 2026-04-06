@@ -8,6 +8,9 @@ namespace Atoll.Lagoon.Layouts;
 /// Renders the <c>&lt;head&gt;</c> section for documentation pages, including meta tags,
 /// viewport settings, title template, custom CSS, and the theme FOUC-prevention inline script.
 /// </summary>
+/// <remarks>
+/// Rendering is delegated to <c>DocsBaseHeadTemplate.cshtml</c>.
+/// </remarks>
 public sealed class DocsBaseHead : AtollComponent
 {
     /// <summary>Gets or sets the docs site configuration.</summary>
@@ -27,57 +30,15 @@ public sealed class DocsBaseHead : AtollComponent
     public string? PageHeadContent { get; set; }
 
     /// <inheritdoc />
-    protected override Task RenderCoreAsync(RenderContext context)
+    protected override async Task RenderCoreAsync(RenderContext context)
     {
-        WriteHtml("<head>");
-        WriteHtml("<meta charset=\"utf-8\" />");
-        WriteHtml("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />");
-
-        // Title
-        WriteHtml("<title>");
-        if (!string.IsNullOrEmpty(PageTitle))
-        {
-            WriteText(PageTitle);
-            WriteHtml(" | ");
-        }
-
-        WriteText(Config.Title);
-        WriteHtml("</title>");
-
-        // Description meta
         var description = PageDescription ?? Config.Description;
-        if (!string.IsNullOrEmpty(description))
-        {
-            WriteHtml($"<meta name=\"description\" content=\"{HtmlEncode(description)}\" />");
-        }
-
-        // Favicon
         var faviconHref = Config.FaviconHref ?? LagoonAssets.DefaultFaviconPath;
-        WriteHtml($"<link rel=\"icon\" type=\"image/png\" href=\"{HtmlEncode(faviconHref)}\" />");
 
-        // Theme FOUC prevention — must run before page renders
-        WriteHtml("""
-            <script>
-            (function(){var s=localStorage.getItem('atoll-theme');if(s==='dark'||s==='light'){document.documentElement.setAttribute('data-theme',s);}else if(window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.setAttribute('data-theme','dark');}})();
-            </script>
-            """);
+        var model = new DocsBaseHeadModel(Config, PageTitle, description, faviconHref, PageHeadContent);
 
-        // Custom CSS
-        foreach (var css in Config.CustomCss)
-        {
-            WriteHtml($"<link rel=\"stylesheet\" href=\"{HtmlEncode(css)}\" />");
-        }
-
-        // Per-page head content (e.g., from frontmatter head: field)
-        if (!string.IsNullOrEmpty(PageHeadContent))
-        {
-            WriteHtml(PageHeadContent);
-        }
-
-        WriteHtml("</head>");
-        return Task.CompletedTask;
+        await ComponentRenderer.RenderSliceAsync<DocsBaseHeadTemplate, DocsBaseHeadModel>(
+            context.Destination,
+            model);
     }
-
-    private static string HtmlEncode(string value) =>
-        System.Net.WebUtility.HtmlEncode(value);
 }

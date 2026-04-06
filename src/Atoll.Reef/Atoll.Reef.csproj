@@ -1,6 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Atoll\Atoll.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="RazorSlices" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Islands\Assets\article-filter.js"

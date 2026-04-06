@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Reflection;
+using System.Text.Unicode;
 using Atoll.Islands;
 using Atoll.Rendering;
 using Atoll.Slots;
@@ -33,6 +34,15 @@ namespace Atoll.Components;
 /// </remarks>
 public sealed class ComponentRenderer
 {
+    /// <summary>
+    /// HTML encoder that passes all Unicode characters through unmodified, matching the
+    /// behavior of Atoll's built-in <see cref="Rendering.HtmlEncoder"/>. Only the five
+    /// HTML-significant characters (<c>&amp;</c>, <c>&lt;</c>, <c>&gt;</c>, <c>&quot;</c>, <c>&#39;</c>)
+    /// are encoded.
+    /// </summary>
+    private static readonly System.Text.Encodings.Web.HtmlEncoder PermissiveHtmlEncoder =
+        System.Text.Encodings.Web.HtmlEncoder.Create(UnicodeRanges.All);
+
     /// <summary>
     /// Renders a component of the specified type to the given destination.
     /// If the component implements <see cref="IClientComponent"/> and has a client
@@ -369,7 +379,7 @@ public sealed class ComponentRenderer
         using var slice = TSlice.CreateSlice();
         InjectAtollSliceContext(slice, destination, slots);
         await using var writer = new RenderDestinationTextWriter(destination);
-        await slice.RenderAsync(writer);
+        await slice.RenderAsync(writer, PermissiveHtmlEncoder);
     }
 
     /// <summary>
@@ -408,7 +418,7 @@ public sealed class ComponentRenderer
         using var slice = TSlice.CreateSlice(model);
         InjectAtollSliceContext(slice, destination, slots);
         await using var writer = new RenderDestinationTextWriter(destination);
-        await slice.RenderAsync(writer);
+        await slice.RenderAsync(writer, PermissiveHtmlEncoder);
     }
 
     /// <summary>

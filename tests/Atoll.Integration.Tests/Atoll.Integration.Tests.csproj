@@ -5,11 +5,12 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Atoll.Middleware\Atoll.Middleware.csproj" />
-    <ProjectReference Include="..\..\src\Atoll.Build\Atoll.Build.csproj" />
     <ProjectReference Include="..\..\src\Atoll.Cli\Atoll.Cli.csproj" />
     <ProjectReference Include="..\..\samples\Atoll.Samples.Blog\Atoll.Samples.Blog.csproj" />
     <ProjectReference Include="..\..\samples\Atoll.Samples.Portfolio\Atoll.Samples.Portfolio.csproj" />
     <ProjectReference Include="..\..\docs\Docs\Docs.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />

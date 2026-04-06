@@ -45,8 +45,10 @@ You need the [.NET 10 SDK](https://dotnet.microsoft.com/download) or later insta
    {
        protected override Task RenderCoreAsync(RenderContext context)
        {
-           WriteHtml("<h1>Hello, Atoll!</h1>");
-           WriteHtml("<p>A .NET-native framework inspired by Astro.</p>");
+           WriteHtml("""
+               <h1>Hello, Atoll!</h1>
+               <p>A .NET-native framework inspired by Astro.</p>
+               """);
            return Task.CompletedTask;
        }
    }

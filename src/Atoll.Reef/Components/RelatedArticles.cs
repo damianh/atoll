@@ -6,6 +6,9 @@ namespace Atoll.Reef.Components;
 /// Renders a "Related Articles" section with a heading and a list of article links,
 /// typically populated by <c>RelatedArticlesResolver</c> based on shared tags.
 /// </summary>
+/// <remarks>
+/// Rendering is delegated to <c>RelatedArticlesTemplate.cshtml</c>.
+/// </remarks>
 public sealed class RelatedArticles : AtollComponent
 {
     /// <summary>Gets or sets the related article links to display.</summary>
@@ -21,36 +24,18 @@ public sealed class RelatedArticles : AtollComponent
     public int MaxItems { get; set; } = 3;
 
     /// <inheritdoc />
-    protected override Task RenderCoreAsync(RenderContext context)
+    protected override async Task RenderCoreAsync(RenderContext context)
     {
         var items = Articles.Take(MaxItems).ToList();
         if (items.Count == 0)
         {
-            return Task.CompletedTask;
+            return;
         }
 
-        WriteHtml("<aside class=\"related-articles\">");
-        WriteHtml("<h3 class=\"related-articles__heading\">");
-        WriteText(Heading);
-        WriteHtml("</h3>");
-        WriteHtml("<ul class=\"related-articles__list\">");
+        var model = new RelatedArticlesModel(items, Heading);
 
-        foreach (var article in items)
-        {
-            WriteHtml("<li class=\"related-articles__item\">");
-            WriteHtml("<a href=\"");
-            WriteHtml(HtmlEncode(article.Href));
-            WriteHtml("\">");
-            WriteText(article.Title);
-            WriteHtml("</a>");
-            WriteHtml("</li>");
-        }
-
-        WriteHtml("</ul>");
-        WriteHtml("</aside>");
-        return Task.CompletedTask;
+        await ComponentRenderer.RenderSliceAsync<RelatedArticlesTemplate, RelatedArticlesModel>(
+            context.Destination,
+            model);
     }
-
-    private static string HtmlEncode(string value) =>
-        System.Net.WebUtility.HtmlEncode(value);
 }

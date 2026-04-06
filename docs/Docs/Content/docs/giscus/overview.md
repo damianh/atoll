@@ -107,10 +107,12 @@ public sealed class ArticlePage : AtollComponent
 {
     protected override async Task RenderCoreAsync(RenderContext context)
     {
-        WriteHtml("<article>");
-        WriteHtml("<h1>My Article</h1>");
-        WriteHtml("<p>Article content goes here.</p>");
-        WriteHtml("</article>");
+        WriteHtml("""
+            <article>
+                <h1>My Article</h1>
+                <p>Article content goes here.</p>
+            </article>
+            """);
 
         var props = new Dictionary<string, object?>
         {

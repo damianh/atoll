@@ -1,0 +1,42 @@
+@inherits Atoll.Components.AtollLayoutSlice<Atoll.Reef.Layouts.ArticleLayoutModel>
+@using Atoll.Reef.Layouts
+<!DOCTYPE html>
+<html lang="en">
+@{ await RenderComponentAsync<ArticleBaseHead>(new Dictionary<string, object?>
+{
+    ["Config"] = Model.Config,
+    ["PageTitle"] = Model.PageTitle,
+    ["PageDescription"] = Model.PageDescription,
+    ["PageHeadContent"] = Model.PageHeadContent,
+}); }
+<body>
+    <header class="reef-header" role="banner">
+        <div class="reef-header-inner">
+            <a href="@Model.BrandHref" class="reef-brand">
+                @if (!string.IsNullOrEmpty(Model.Config.LogoSrc))
+                {
+                    <img src="@Model.Config.LogoSrc" alt="@Model.Config.LogoAlt" class="reef-logo" />
+                }
+                @Model.Config.Title
+            </a>
+            @if (Model.Config.Social.Count > 0)
+            {
+                <nav class="reef-social" aria-label="Social links">
+                    @foreach (var social in Model.Config.Social)
+                    {
+                        <a href="@social.Url" class="reef-social-link" rel="noopener noreferrer" target="_blank">@social.Label</a>
+                    }
+                </nav>
+            }
+        </div>
+    </header>
+    <main class="reef-main" id="main-content" role="main">
+        <article class="reef-article prose">
+            @{ await RenderBodyAsync(); }
+        </article>
+    </main>
+    <footer class="reef-footer" role="contentinfo">
+        <p>@Model.Config.Title &mdash; Built with <a href="https://github.com/damianh/atoll">Atoll</a></p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,20 @@
+@inherits Atoll.Components.AtollSlice<Atoll.Lagoon.Components.PaginationModel>
+@if (Model.Previous is not null || Model.Next is not null)
+{
+    <nav class="docs-pagination" aria-label="@Model.Translations.PaginationLabel">
+        @if (Model.Previous is not null)
+        {
+            <a href="@Model.Previous.Href" rel="prev">
+                <span class="pagination-direction">@Model.Translations.PaginationPrevious</span>
+                <span class="pagination-label">@Model.Previous.Label</span>
+            </a>
+        }
+        @if (Model.Next is not null)
+        {
+            <a href="@Model.Next.Href" rel="next">
+                <span class="pagination-direction">@Model.Translations.PaginationNext</span>
+                <span class="pagination-label">@Model.Next.Label</span>
+            </a>
+        }
+    </nav>
+}

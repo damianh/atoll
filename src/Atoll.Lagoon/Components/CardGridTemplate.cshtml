@@ -1,0 +1,7 @@
+@inherits Atoll.Components.AtollSlice<Atoll.Lagoon.Components.CardGridModel>
+@{
+    var cssClass = Model.Stagger ? "card-grid card-grid-stagger" : "card-grid";
+}
+<div class="@cssClass">
+    @{ await RenderSlotAsync(); }
+</div>

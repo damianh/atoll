@@ -1,0 +1,27 @@
+@inherits Atoll.Components.AtollSlice<Atoll.Lagoon.Components.HeroModel>
+@using Atoll.Lagoon.Components
+<section class="hero">
+    <div class="hero-content">
+        <h1 class="hero-title">@Model.Title</h1>
+        @if (Model.Tagline is not null)
+        {
+            <p class="hero-tagline">@Model.Tagline</p>
+        }
+        @if (Model.Actions.Count > 0)
+        {
+            <div class="hero-actions">
+                @foreach (var action in Model.Actions)
+                {
+                    var variantClass = action.Variant == HeroActionVariant.Primary
+                        ? "hero-action hero-action-primary"
+                        : "hero-action hero-action-secondary";
+                    <a href="@action.Href" class="@variantClass">@action.Label</a>
+                }
+            </div>
+        }
+    </div>
+    @if (Model.ImageSrc is not null)
+    {
+        <div class="hero-image"><img src="@Model.ImageSrc" alt="@Model.ImageAlt"></div>
+    }
+</section>

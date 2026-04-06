@@ -1,0 +1,17 @@
+@inherits Atoll.Components.AtollSlice<Atoll.Reef.Components.ArticleNavModel>
+<nav class="article-nav" aria-label="Article navigation">
+    @if (Model.Previous is not null)
+    {
+        <div class="article-nav-prev">
+            <span class="article-nav-label">&larr; Previous</span>
+            <a class="article-nav-link" href="@Model.Previous.Href">@Model.Previous.Title</a>
+        </div>
+    }
+    @if (Model.Next is not null)
+    {
+        <div class="article-nav-next">
+            <span class="article-nav-label">Next &rarr;</span>
+            <a class="article-nav-link" href="@Model.Next.Href">@Model.Next.Title</a>
+        </div>
+    }
+</nav>

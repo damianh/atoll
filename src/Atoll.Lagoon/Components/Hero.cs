@@ -6,6 +6,9 @@ namespace Atoll.Lagoon.Components;
 /// A configurable hero section for the docs landing page, supporting a title, tagline,
 /// optional image, and call-to-action buttons.
 /// </summary>
+/// <remarks>
+/// Rendering is delegated to <c>HeroTemplate.cshtml</c>.
+/// </remarks>
 public sealed class Hero : AtollComponent
 {
     /// <summary>Gets or sets the hero title (large heading text).</summary>
@@ -29,50 +32,12 @@ public sealed class Hero : AtollComponent
     public IReadOnlyList<HeroAction> Actions { get; set; } = [];
 
     /// <inheritdoc />
-    protected override Task RenderCoreAsync(RenderContext context)
+    protected override async Task RenderCoreAsync(RenderContext context)
     {
-        WriteHtml("<section class=\"hero\">");
+        var model = new HeroModel(Title, Tagline, ImageSrc, ImageAlt, Actions);
 
-        WriteHtml("<div class=\"hero-content\">");
-
-        WriteHtml("<h1 class=\"hero-title\">");
-        WriteText(Title);
-        WriteHtml("</h1>");
-
-        if (Tagline is not null)
-        {
-            WriteHtml("<p class=\"hero-tagline\">");
-            WriteText(Tagline);
-            WriteHtml("</p>");
-        }
-
-        if (Actions.Count > 0)
-        {
-            WriteHtml("<div class=\"hero-actions\">");
-            foreach (var action in Actions)
-            {
-                var variantClass = action.Variant == HeroActionVariant.Primary
-                    ? "hero-action hero-action-primary"
-                    : "hero-action hero-action-secondary";
-                WriteHtml($"<a href=\"{HtmlEncode(action.Href)}\" class=\"{variantClass}\">");
-                WriteText(action.Label);
-                WriteHtml("</a>");
-            }
-
-            WriteHtml("</div>");
-        }
-
-        WriteHtml("</div>");
-
-        if (ImageSrc is not null)
-        {
-            WriteHtml($"<div class=\"hero-image\"><img src=\"{HtmlEncode(ImageSrc)}\" alt=\"{HtmlEncode(ImageAlt)}\"></div>");
-        }
-
-        WriteHtml("</section>");
-        return Task.CompletedTask;
+        await ComponentRenderer.RenderSliceAsync<HeroTemplate, HeroModel>(
+            context.Destination,
+            model);
     }
-
-    private static string HtmlEncode(string value) =>
-        System.Net.WebUtility.HtmlEncode(value);
 }

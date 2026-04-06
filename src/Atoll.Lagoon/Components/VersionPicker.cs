@@ -10,6 +10,9 @@ namespace Atoll.Lagoon.Components;
 /// <c>&lt;select&gt;</c> element with an <c>onchange</c> handler.
 /// Renders nothing when there are fewer than two versions configured.
 /// </summary>
+/// <remarks>
+/// Rendering is delegated to <c>VersionPickerTemplate.cshtml</c>.
+/// </remarks>
 public sealed class VersionPicker : AtollComponent
 {
     /// <summary>Gets or sets the version map from <c>DocsConfig.Versions</c>.</summary>
@@ -37,40 +40,18 @@ public sealed class VersionPicker : AtollComponent
     public UiTranslations Translations { get; set; } = UiTranslations.Default;
 
     /// <inheritdoc />
-    protected override Task RenderCoreAsync(RenderContext context)
+    protected override async Task RenderCoreAsync(RenderContext context)
     {
         if (Versions is null || Versions.Count <= 1)
         {
-            return Task.CompletedTask;
+            return;
         }
 
-        var ariaLabel = HtmlEncode(Translations.VersionSelectLabel);
+        var model = new VersionPickerModel(
+            Versions, CurrentVersionKey, CurrentContentPath, LocalePrefix, BasePath, Translations);
 
-        WriteHtml($"<nav class=\"version-picker\" aria-label=\"{ariaLabel}\">");
-        WriteHtml($"<select aria-label=\"{ariaLabel}\" onchange=\"window.location.href=this.value\">");
-
-        foreach (var (key, config) in Versions)
-        {
-            var versionPrefix = string.Equals(key, "current", StringComparison.OrdinalIgnoreCase)
-                ? ""
-                : "/" + key;
-
-            var url = VersionPathHelper.PrefixPath(CurrentContentPath, versionPrefix, LocalePrefix, BasePath);
-            var selected = string.Equals(key, CurrentVersionKey, StringComparison.OrdinalIgnoreCase)
-                ? " selected"
-                : "";
-
-            WriteHtml($"<option value=\"{HtmlEncode(url)}\"{selected}>");
-            WriteText(config.Label);
-            WriteHtml("</option>");
-        }
-
-        WriteHtml("</select>");
-        WriteHtml("</nav>");
-
-        return Task.CompletedTask;
+        await ComponentRenderer.RenderSliceAsync<VersionPickerTemplate, VersionPickerModel>(
+            context.Destination,
+            model);
     }
-
-    private static string HtmlEncode(string value) =>
-        System.Net.WebUtility.HtmlEncode(value);
 }

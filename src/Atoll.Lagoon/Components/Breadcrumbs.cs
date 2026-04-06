@@ -7,6 +7,9 @@ namespace Atoll.Lagoon.Components;
 /// <summary>
 /// Renders a breadcrumb trail as an accessible <c>&lt;nav&gt;</c> with an ordered list.
 /// </summary>
+/// <remarks>
+/// Rendering is delegated to <c>BreadcrumbsTemplate.cshtml</c>.
+/// </remarks>
 public sealed class Breadcrumbs : AtollComponent
 {
     /// <summary>Gets or sets the breadcrumb items to render.</summary>
@@ -18,35 +21,17 @@ public sealed class Breadcrumbs : AtollComponent
     public UiTranslations Translations { get; set; } = UiTranslations.Default;
 
     /// <inheritdoc />
-    protected override Task RenderCoreAsync(RenderContext context)
+    protected override async Task RenderCoreAsync(RenderContext context)
     {
         if (Items.Count == 0)
         {
-            return Task.CompletedTask;
+            return;
         }
 
-        WriteHtml($"<nav class=\"docs-breadcrumbs\" aria-label=\"{HtmlEncode(Translations.BreadcrumbsLabel)}\"><ol>");
+        var model = new BreadcrumbsModel(Items, Translations);
 
-        foreach (var item in Items)
-        {
-            if (item.IsCurrent)
-            {
-                WriteHtml("<li aria-current=\"page\">");
-                WriteText(item.Label);
-                WriteHtml("</li>");
-            }
-            else
-            {
-                WriteHtml($"<li><a href=\"{HtmlEncode(item.Href ?? "")}\">");
-                WriteText(item.Label);
-                WriteHtml("</a></li>");
-            }
-        }
-
-        WriteHtml("</ol></nav>");
-        return Task.CompletedTask;
+        await ComponentRenderer.RenderSliceAsync<BreadcrumbsTemplate, BreadcrumbsModel>(
+            context.Destination,
+            model);
     }
-
-    private static string HtmlEncode(string value) =>
-        System.Net.WebUtility.HtmlEncode(value);
 }

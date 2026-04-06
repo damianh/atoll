@@ -1,0 +1,22 @@
+@inherits Atoll.Components.AtollSlice<Atoll.Reef.Components.ArticleMetaModel>
+<div class="article-meta">
+    <time class="article-date" datetime="@Model.PubDate.ToString("yyyy-MM-dd")">@Model.PubDate.ToString("MMMM d, yyyy")</time>
+    @if (!string.IsNullOrEmpty(Model.Author))
+    {
+        <span class="article-author">@Model.Author</span>
+    }
+    @if (Model.ReadingTimeMinutes.HasValue)
+    {
+        <span class="article-reading-time">@Model.ReadingTimeMinutes.Value min read</span>
+    }
+    @if (Model.Tags.Length > 0)
+    {
+        <ul class="article-tags" aria-label="Tags">
+            @foreach (var tag in Model.Tags)
+            {
+                var slug = tag.ToLowerInvariant();
+                <li><a class="tag-pill" href="@($"{Model.BaseTrimmed}/tag/{slug}")">@tag</a></li>
+            }
+        </ul>
+    }
+</div>

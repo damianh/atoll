@@ -5,6 +5,9 @@ namespace Atoll.Reef.Components;
 /// <summary>
 /// Renders an author bio card showing avatar, name, bio text, and an optional profile link.
 /// </summary>
+/// <remarks>
+/// Rendering is delegated to <c>AuthorCardTemplate.cshtml</c>.
+/// </remarks>
 public sealed class AuthorCard : AtollComponent
 {
     /// <summary>Gets or sets the author's display name.</summary>
@@ -24,48 +27,12 @@ public sealed class AuthorCard : AtollComponent
     public string? Url { get; set; }
 
     /// <inheritdoc />
-    protected override Task RenderCoreAsync(RenderContext context)
+    protected override async Task RenderCoreAsync(RenderContext context)
     {
-        WriteHtml("<aside class=\"author-card\">");
+        var model = new AuthorCardModel(Name, AvatarUrl, Bio, Url);
 
-        if (!string.IsNullOrEmpty(AvatarUrl))
-        {
-            WriteHtml("<img class=\"author-card__avatar\" src=\"");
-            WriteHtml(HtmlEncode(AvatarUrl));
-            WriteHtml("\" alt=\"");
-            WriteHtml(HtmlEncode(Name));
-            WriteHtml("\" />");
-        }
-
-        WriteHtml("<div class=\"author-card__info\">");
-
-        if (!string.IsNullOrEmpty(Url))
-        {
-            WriteHtml("<a class=\"author-card__name\" href=\"");
-            WriteHtml(HtmlEncode(Url));
-            WriteHtml("\">");
-            WriteText(Name);
-            WriteHtml("</a>");
-        }
-        else
-        {
-            WriteHtml("<p class=\"author-card__name\">");
-            WriteText(Name);
-            WriteHtml("</p>");
-        }
-
-        if (!string.IsNullOrEmpty(Bio))
-        {
-            WriteHtml("<p class=\"author-card__bio\">");
-            WriteText(Bio);
-            WriteHtml("</p>");
-        }
-
-        WriteHtml("</div>");
-        WriteHtml("</aside>");
-        return Task.CompletedTask;
+        await ComponentRenderer.RenderSliceAsync<AuthorCardTemplate, AuthorCardModel>(
+            context.Destination,
+            model);
     }
-
-    private static string HtmlEncode(string value) =>
-        System.Net.WebUtility.HtmlEncode(value);
 }

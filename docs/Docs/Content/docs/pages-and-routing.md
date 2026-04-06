@@ -20,8 +20,10 @@ public sealed class AboutPage : AtollComponent, IAtollPage
 {
     protected override Task RenderCoreAsync(RenderContext context)
     {
-        WriteHtml("<h1>About</h1>");
-        WriteHtml("<p>This is the about page.</p>");
+        WriteHtml("""
+            <h1>About</h1>
+            <p>This is the about page.</p>
+            """);
         return Task.CompletedTask;
     }
 }
@@ -40,9 +42,7 @@ public sealed class BlogPostPage : AtollComponent, IAtollPage
 
     protected override Task RenderCoreAsync(RenderContext context)
     {
-        WriteHtml("<h1>Post: ");
-        WriteText(Slug);
-        WriteHtml("</h1>");
+        WriteHtml($"<h1>Post: {HtmlEncoder.Encode(Slug)}</h1>");
         return Task.CompletedTask;
     }
 }

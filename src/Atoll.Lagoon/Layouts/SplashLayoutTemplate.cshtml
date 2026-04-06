@@ -1,0 +1,42 @@
+@inherits Atoll.Components.AtollLayoutSlice<Atoll.Lagoon.Layouts.SplashLayoutModel>
+@using Atoll.Lagoon.Islands
+@using Atoll.Lagoon.Layouts
+<!DOCTYPE html>
+<html lang="en">
+@{ await RenderComponentAsync<DocsBaseHead>(new Dictionary<string, object?>
+{
+    ["Config"] = Model.Config,
+    ["PageTitle"] = Model.PageTitle,
+    ["PageDescription"] = Model.PageDescription,
+}); }
+<body>
+    <header class="docs-header">
+        <div class="docs-header-inner">
+            <a href="/" class="docs-brand">
+                <img src="@Model.LogoSrc" alt="@Model.Config.LogoAlt" class="docs-logo" />
+                @Model.Config.Title
+            </a>
+            <div class="docs-header-actions">
+                @{ await RenderComponentAsync<SearchDialog>(new Dictionary<string, object?>()); }
+                @foreach (var social in Model.Config.Social)
+                {
+                    <a href="@social.Url" class="docs-social-link" rel="noopener noreferrer" target="_blank">@social.Label</a>
+                }
+                @{ await RenderComponentAsync<ThemeToggle>(new Dictionary<string, object?>()); }
+            </div>
+        </div>
+    </header>
+    <main class="splash-main" id="main-content">
+        <article class="splash-content">
+            @{ await RenderBodyAsync(); }
+        </article>
+    </main>
+    <footer class="docs-footer">
+        <p>Built with <a href="https://github.com/damianh/atoll">Atoll</a> &mdash; a .NET-native framework inspired by Astro.</p>
+    </footer>
+    @if (Model.EnableMermaid)
+    {
+        <script src="/scripts/atoll-docs-mermaid-init.js" type="module"></script>
+    }
+</body>
+</html>

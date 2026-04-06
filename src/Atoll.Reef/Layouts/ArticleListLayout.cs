@@ -1,5 +1,6 @@
 using Atoll.Components;
 using Atoll.Reef.Configuration;
+using Atoll.Slots;
 
 namespace Atoll.Reef.Layouts;
 
@@ -8,6 +9,9 @@ namespace Atoll.Reef.Layouts;
 /// Assembles the HTML document shell with header, listing content area, and footer.
 /// Page content (the article list/grid and pagination) is rendered via the default slot.
 /// </summary>
+/// <remarks>
+/// Rendering is delegated to <c>ArticleListLayoutTemplate.cshtml</c>.
+/// </remarks>
 public sealed class ArticleListLayout : AtollComponent
 {
     /// <summary>Gets or sets the Reef theme configuration. Required.</summary>
@@ -29,84 +33,17 @@ public sealed class ArticleListLayout : AtollComponent
     /// <inheritdoc />
     protected override async Task RenderCoreAsync(RenderContext context)
     {
-        WriteHtml("<!DOCTYPE html>");
-        WriteHtml("<html lang=\"en\">");
-
-        // <head>
-        await RenderAsync(ComponentRenderer.ToFragment<ArticleBaseHead>(new Dictionary<string, object?>
-        {
-            [nameof(ArticleBaseHead.Config)] = Config,
-            [nameof(ArticleBaseHead.PageTitle)] = PageTitle,
-            [nameof(ArticleBaseHead.PageDescription)] = PageDescription,
-            [nameof(ArticleBaseHead.PageHeadContent)] = PageHeadContent,
-        }));
-
-        WriteHtml("<body>");
-
-        // Header
         var basePath = Config.BasePath.TrimEnd('/');
-        WriteHtml("<header class=\"reef-header\" role=\"banner\">");
-        WriteHtml("<div class=\"reef-header-inner\">");
+        var brandHref = string.IsNullOrEmpty(basePath) ? "/" : basePath + "/";
 
-        WriteHtml("<a href=\"");
-        WriteHtml(HtmlEncode(string.IsNullOrEmpty(basePath) ? "/" : basePath + "/"));
-        WriteHtml("\" class=\"reef-brand\">");
+        var model = new ArticleListLayoutModel(Config, PageTitle, PageDescription, PageHeadContent, brandHref);
 
-        if (!string.IsNullOrEmpty(Config.LogoSrc))
-        {
-            WriteHtml("<img src=\"");
-            WriteHtml(HtmlEncode(Config.LogoSrc));
-            WriteHtml("\" alt=\"");
-            WriteHtml(HtmlEncode(Config.LogoAlt));
-            WriteHtml("\" class=\"reef-logo\" />");
-        }
+        var pageSlot = context.Slots.GetSlotFragment(SlotCollection.DefaultSlotName);
+        var templateSlots = SlotCollection.FromDefault(pageSlot);
 
-        WriteText(Config.Title);
-        WriteHtml("</a>");
-
-        if (Config.Social.Count > 0)
-        {
-            WriteHtml("<nav class=\"reef-social\" aria-label=\"Social links\">");
-            foreach (var social in Config.Social)
-            {
-                WriteHtml("<a href=\"");
-                WriteHtml(HtmlEncode(social.Url));
-                WriteHtml("\" class=\"reef-social-link\" rel=\"noopener noreferrer\" target=\"_blank\">");
-                WriteText(social.Label);
-                WriteHtml("</a>");
-            }
-
-            WriteHtml("</nav>");
-        }
-
-        WriteHtml("</div>"); // .reef-header-inner
-        WriteHtml("</header>");
-
-        // Main listing area
-        WriteHtml("<main class=\"reef-main article-listing\" id=\"main-content\" role=\"main\">");
-
-        if (!string.IsNullOrWhiteSpace(PageTitle))
-        {
-            WriteHtml("<h1 class=\"listing-heading\">");
-            WriteText(PageTitle);
-            WriteHtml("</h1>");
-        }
-
-        await RenderSlotAsync();
-
-        WriteHtml("</main>");
-
-        // Footer
-        WriteHtml("<footer class=\"reef-footer\" role=\"contentinfo\">");
-        WriteHtml("<p>");
-        WriteText(Config.Title);
-        WriteHtml(" &mdash; Built with <a href=\"https://github.com/damianh/atoll\">Atoll</a></p>");
-        WriteHtml("</footer>");
-
-        WriteHtml("</body>");
-        WriteHtml("</html>");
+        await ComponentRenderer.RenderSliceAsync<ArticleListLayoutTemplate, ArticleListLayoutModel>(
+            context.Destination,
+            model,
+            templateSlots);
     }
-
-    private static string HtmlEncode(string value) =>
-        System.Net.WebUtility.HtmlEncode(value);
 }

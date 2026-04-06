@@ -1,0 +1,18 @@
+@inherits Atoll.Components.AtollSlice<Atoll.Reef.Components.ArticleGridModel>
+@using Atoll.Reef.Components
+<div class="article-grid" style="--grid-cols:@Model.Columns">
+    @foreach (var item in Model.Items)
+    {
+        await RenderComponentAsync<ArticleCard>(new Dictionary<string, object?>
+        {
+            ["Title"] = item.Title,
+            ["Slug"] = item.Slug,
+            ["Description"] = item.Description,
+            ["PubDate"] = item.PubDate,
+            ["Author"] = item.Author,
+            ["Tags"] = item.Tags,
+            ["ReadingTimeMinutes"] = item.ReadingTimeMinutes,
+            ["BasePath"] = Model.BasePath,
+        });
+    }
+</div>
