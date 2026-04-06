@@ -150,4 +150,36 @@ public sealed class SearchDialogTests
         html.ShouldContain("client=\"idle\"");
         html.ShouldContain("component-url=\"/scripts/atoll-docs-search-dialog.js\"");
     }
+
+    [Fact]
+    public async Task ShouldRenderBasePathDataAttribute()
+    {
+        var dest = new StringRenderDestination();
+        var props = new Dictionary<string, object?> { ["BasePath"] = "/atoll" };
+        await ComponentRenderer.RenderComponentAsync<SearchDialog>(dest, props);
+        var html = dest.GetOutput();
+
+        html.ShouldContain("data-base-path=\"/atoll\"");
+    }
+
+    [Fact]
+    public async Task ShouldRenderEmptyBasePathByDefault()
+    {
+        var dest = new StringRenderDestination();
+        await ComponentRenderer.RenderComponentAsync<SearchDialog>(dest, new Dictionary<string, object?>());
+        var html = dest.GetOutput();
+
+        html.ShouldContain("data-base-path=\"\"");
+    }
+
+    [Fact]
+    public async Task ShouldTrimTrailingSlashFromBasePath()
+    {
+        var dest = new StringRenderDestination();
+        var props = new Dictionary<string, object?> { ["BasePath"] = "/atoll/" };
+        await ComponentRenderer.RenderComponentAsync<SearchDialog>(dest, props);
+        var html = dest.GetOutput();
+
+        html.ShouldContain("data-base-path=\"/atoll\"");
+    }
 }

@@ -33,6 +33,15 @@ public sealed class SearchDialog : VanillaJsIsland
     [Parameter]
     public string IndexUrl { get; set; } = "/search-index.json";
 
+    /// <summary>
+    /// Gets or sets the base URL path prefix for the documentation site.
+    /// When set, search result links are prefixed with this path so they resolve
+    /// correctly when the site is hosted under a sub-path (e.g. <c>/atoll</c>).
+    /// Defaults to <c>""</c> (root).
+    /// </summary>
+    [Parameter]
+    public string BasePath { get; set; } = "";
+
     /// <summary>Gets or sets the UI translations. Defaults to English.</summary>
     [Parameter]
     public UiTranslations Translations { get; set; } = UiTranslations.Default;
@@ -46,6 +55,8 @@ public sealed class SearchDialog : VanillaJsIsland
     {
         WriteHtml("<div class=\"search-wrapper\" data-index-url=\"");
         WriteHtml(System.Net.WebUtility.HtmlEncode(IndexUrl));
+        WriteHtml("\" data-base-path=\"");
+        WriteHtml(System.Net.WebUtility.HtmlEncode(BasePath.TrimEnd('/')));
         WriteHtml("\" data-no-results=\"");
         WriteHtml(System.Net.WebUtility.HtmlEncode(Translations.SearchNoResults));
         WriteHtml("\">");
