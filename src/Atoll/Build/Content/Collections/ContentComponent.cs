@@ -3,6 +3,7 @@ using Atoll.Components;
 using Atoll.Islands;
 using Atoll.Rendering;
 using Atoll.Slots;
+using System.Text.RegularExpressions;
 
 namespace Atoll.Build.Content.Collections;
 
@@ -35,17 +36,26 @@ namespace Atoll.Build.Content.Collections;
 /// </remarks>
 public sealed class ContentComponent : IAtollComponent
 {
+    // Matches <!--atoll-tag:N--> placeholders embedded in component ChildHtml strings.
+    // These are the original (pre-renumbering) placeholders left by the tag preprocessor
+    // inside nested component content. Index N maps directly into AllReferences.
+    private static readonly Regex ChildPlaceholderPattern =
+        new(@"<!--atoll-tag:(\d+)-->", RegexOptions.Compiled, TimeSpan.FromSeconds(5));
+
     private readonly string _html;
     private readonly IReadOnlyList<ContentFragment>? _fragments;
+    private readonly IReadOnlyList<ComponentReference> _allReferences;
 
     private ContentComponent(
         string html,
         IReadOnlyList<MarkdownHeading> headings,
-        IReadOnlyList<ContentFragment>? fragments)
+        IReadOnlyList<ContentFragment>? fragments,
+        IReadOnlyList<ComponentReference> allReferences)
     {
         _html = html;
         Headings = headings;
         _fragments = fragments;
+        _allReferences = allReferences;
     }
 
     /// <summary>
@@ -62,7 +72,11 @@ public sealed class ContentComponent : IAtollComponent
     public static ContentComponent FromRenderedContent(RenderedContent renderedContent)
     {
         ArgumentNullException.ThrowIfNull(renderedContent);
-        return new ContentComponent(renderedContent.Html, renderedContent.Headings, renderedContent.Fragments);
+        return new ContentComponent(
+            renderedContent.Html,
+            renderedContent.Headings,
+            renderedContent.Fragments,
+            renderedContent.AllReferences);
     }
 
     /// <summary>
@@ -78,7 +92,7 @@ public sealed class ContentComponent : IAtollComponent
     {
         ArgumentNullException.ThrowIfNull(html);
         ArgumentNullException.ThrowIfNull(headings);
-        return new ContentComponent(html, headings, fragments: null);
+        return new ContentComponent(html, headings, fragments: null, allReferences: []);
     }
 
     /// <summary>
@@ -90,7 +104,7 @@ public sealed class ContentComponent : IAtollComponent
     public static ContentComponent FromHtml(string html)
     {
         ArgumentNullException.ThrowIfNull(html);
-        return new ContentComponent(html, [], fragments: null);
+        return new ContentComponent(html, [], fragments: null, allReferences: []);
     }
 
     /// <summary>
@@ -127,7 +141,8 @@ public sealed class ContentComponent : IAtollComponent
                 case ComponentContentFragment componentFragment:
                     await RenderComponentFragmentAsync(
                         context.Destination,
-                        componentFragment.Reference);
+                        componentFragment.Reference,
+                        _allReferences);
                     break;
             }
         }
@@ -135,7 +150,8 @@ public sealed class ContentComponent : IAtollComponent
 
     private static async Task RenderComponentFragmentAsync(
         IRenderDestination destination,
-        ComponentReference reference)
+        ComponentReference reference,
+        IReadOnlyList<ComponentReference> allReferences)
     {
         var componentType = reference.ComponentType;
 
@@ -143,8 +159,11 @@ public sealed class ContentComponent : IAtollComponent
         var props = reference.Props;
 
         // Build slot collection from child HTML, if any.
+        // If the child HTML contains <!--atoll-tag:N--> placeholders from nested component
+        // tags, build a composite RenderFragment that interleaves HTML chunks with recursive
+        // component renders rather than emitting the placeholder comments verbatim.
         var slots = reference.ChildHtml is not null
-            ? SlotCollection.FromDefault(RenderFragment.FromHtml(reference.ChildHtml))
+            ? SlotCollection.FromDefault(BuildSlotFragment(reference.ChildHtml, allReferences))
             : SlotCollection.Empty;
 
         // Check if this component is an island (has a client directive attribute).
@@ -171,5 +190,56 @@ public sealed class ContentComponent : IAtollComponent
             var instance = (IAtollComponent)Activator.CreateInstance(componentType)!;
             await ComponentRenderer.RenderComponentAsync(instance, destination, props, slots);
         }
+    }
+
+    /// <summary>
+    /// Builds a <see cref="RenderFragment"/> from a child HTML string that may contain
+    /// <c>&lt;!--atoll-tag:N--&gt;</c> placeholders for nested components.
+    /// Placeholders are resolved by looking up the corresponding reference in
+    /// <paramref name="allReferences"/> and rendering it recursively.
+    /// </summary>
+    private static RenderFragment BuildSlotFragment(
+        string childHtml,
+        IReadOnlyList<ComponentReference> allReferences)
+    {
+        // Fast path: no nested placeholders — wrap as plain HTML.
+        if (!childHtml.Contains("<!--atoll-tag:", StringComparison.Ordinal))
+        {
+            return RenderFragment.FromHtml(childHtml);
+        }
+
+        // Split on <!--atoll-tag:N--> placeholders.
+        // Regex.Split with a capture group interleaves: [html, index, html, index, html, ...]
+        var parts = ChildPlaceholderPattern.Split(childHtml);
+        var fragmentParts = new List<RenderFragment>(parts.Length);
+
+        for (var i = 0; i < parts.Length; i++)
+        {
+            if (i % 2 == 0)
+            {
+                // Even positions are HTML chunks.
+                if (parts[i].Length > 0)
+                {
+                    fragmentParts.Add(RenderFragment.FromHtml(parts[i]));
+                }
+            }
+            else
+            {
+                // Odd positions are captured index values.
+                if (int.TryParse(parts[i], out var index) && index < allReferences.Count)
+                {
+                    var nestedRef = allReferences[index];
+                    // Capture for closure.
+                    var capturedRef = nestedRef;
+                    var capturedAllRefs = allReferences;
+                    fragmentParts.Add(RenderFragment.FromAsync(async dest =>
+                        await RenderComponentFragmentAsync(dest, capturedRef, capturedAllRefs)));
+                }
+            }
+        }
+
+        return fragmentParts.Count == 0
+            ? RenderFragment.Empty
+            : RenderFragment.Concat([.. fragmentParts]);
     }
 }

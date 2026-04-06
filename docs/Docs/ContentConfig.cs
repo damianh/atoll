@@ -2,6 +2,7 @@ using Atoll.Build.Content.Collections;
 using Atoll.Build.Content.Markdown;
 using Atoll.DrawIo.Islands;
 using Atoll.Lagoon.Components;
+using Atoll.Lagoon.Islands;
 using Atoll.Lagoon.Markdown;
 
 namespace Docs;
@@ -32,7 +33,9 @@ public sealed class ContentConfig : IContentConfiguration
             .Add<LinkCard>("link-card")
             .Add<LinkButton>("link-button")
             .Add<Icon>("icon")
-            .Add<DrawioDiagram>("drawio-diagram");
+            .Add<DrawioDiagram>("drawio-diagram")
+            .Add<Tabs>("tabs")
+            .Add<TabItem>("tab-item");
 
         config.Markdown = markdownOptions;
 

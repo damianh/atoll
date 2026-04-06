@@ -1,6 +1,7 @@
 using Atoll.Components;
 using Atoll.Islands;
 using Atoll.Lagoon.Components;
+using Atoll.Slots;
 
 namespace Atoll.Lagoon.Islands;
 
@@ -8,6 +9,27 @@ namespace Atoll.Lagoon.Islands;
 /// A tabbed interface island. The server renders all tab panels (SSR/no-JS fallback).
 /// Client-side JS handles tab switching and optional cross-group synchronisation via <see cref="SyncKey"/>.
 /// </summary>
+/// <remarks>
+/// <para>
+/// Supports two rendering modes:
+/// </para>
+/// <list type="bullet">
+///   <item>
+///     <description>
+///       <strong>Programmatic mode</strong>: Provide a non-empty <see cref="TabItems"/> list.
+///       The server renders the full tablist header and panels with ARIA attributes.
+///     </description>
+///   </item>
+///   <item>
+///     <description>
+///       <strong>Slot mode</strong>: Provide slot content containing <c>TabItem</c> sections
+///       (e.g. from markdown authoring). The outer wrapper is rendered server-side;
+///       the <c>tabs.js</c> island script progressively enhances the DOM by building
+///       the tablist header from <c>data-tab-label</c> attributes.
+///     </description>
+///   </item>
+/// </list>
+/// </remarks>
 [ClientLoad]
 public sealed class Tabs : VanillaJsIsland
 {
@@ -18,20 +40,34 @@ public sealed class Tabs : VanillaJsIsland
     [Parameter]
     public string? SyncKey { get; set; }
 
-    /// <summary>Gets or sets the tab items to render.</summary>
-    [Parameter(Required = true)]
+    /// <summary>Gets or sets the tab items to render in programmatic mode.</summary>
+    [Parameter]
     public IReadOnlyList<TabItemData> TabItems { get; set; } = [];
 
     /// <inheritdoc />
     protected override async Task RenderCoreAsync(RenderContext context)
     {
-        var prefix = Guid.NewGuid().ToString("N")[..8];
-
         var syncKeyAttr = SyncKey is not null
             ? $" data-sync-key=\"{HtmlEncode(SyncKey)}\""
             : string.Empty;
 
         WriteHtml($"<div class=\"tabs\"{syncKeyAttr}>");
+
+        if (TabItems.Count > 0)
+        {
+            await RenderProgrammaticAsync();
+        }
+        else if (context.Slots.HasDefaultSlot)
+        {
+            await context.RenderSlotAsync();
+        }
+
+        WriteHtml("</div>");
+    }
+
+    private async Task RenderProgrammaticAsync()
+    {
+        var prefix = Guid.NewGuid().ToString("N")[..8];
 
         // Tab header buttons
         WriteHtml("<div class=\"tabs-header\" role=\"tablist\">");
@@ -72,10 +108,9 @@ public sealed class Tabs : VanillaJsIsland
             await RenderAsync(tab.Content);
             WriteHtml("</div>");
         }
-
-        WriteHtml("</div>");
     }
 
     private static string HtmlEncode(string value) =>
         System.Net.WebUtility.HtmlEncode(value);
 }
+
