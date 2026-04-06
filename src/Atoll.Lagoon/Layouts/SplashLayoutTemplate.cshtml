@@ -19,12 +19,25 @@
                 @Model.Config.Title
             </a>
             <div class="docs-header-actions">
-                @{ await RenderComponentAsync<SearchDialog>(new Dictionary<string, object?>()); }
+                @{
+                    var searchIndexUrl = string.IsNullOrEmpty(Model.Config.BasePath)
+                        ? "/search-index.json"
+                        : Model.Config.BasePath.TrimEnd('/') + "/search-index.json";
+                    await RenderComponentAsync<SearchDialog>(new Dictionary<string, object?>
+                    {
+                        ["Translations"] = Model.Config.Translations,
+                        ["IndexUrl"] = searchIndexUrl,
+                        ["BasePath"] = Model.Config.BasePath,
+                    });
+                }
                 @foreach (var social in Model.Config.Social)
                 {
                     <a href="@social.Url" class="docs-social-link" rel="noopener noreferrer" target="_blank">@social.Label</a>
                 }
-                @{ await RenderComponentAsync<ThemeToggle>(new Dictionary<string, object?>()); }
+                @{ await RenderComponentAsync<ThemeToggle>(new Dictionary<string, object?>
+                {
+                    ["Translations"] = Model.Config.Translations,
+                }); }
             </div>
         </div>
     </header>
