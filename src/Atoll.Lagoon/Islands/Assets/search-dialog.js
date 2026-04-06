@@ -19,8 +19,20 @@ let index = null;
 async function loadIndex(element) {
     if (index) return index;
     const indexUrl = element.dataset.indexUrl || '/search-index.json';
+    const basePath = element.dataset.basePath || '';
     const resp = await fetch(indexUrl);
-    index = await resp.json();
+    const data = await resp.json();
+    // Prefix entry hrefs with the base path so links resolve correctly
+    // when the site is hosted under a sub-path (e.g. /atoll/).
+    if (basePath) {
+        const entries = data.entries || data;
+        for (const entry of entries) {
+            if (entry.href && entry.href.startsWith('/') && !entry.href.startsWith(basePath)) {
+                entry.href = basePath + entry.href;
+            }
+        }
+    }
+    index = data;
     return index;
 }
 
@@ -213,7 +225,7 @@ export default function init(element) {
             results && (results.innerHTML = '');
             return;
         }
-        const data = await loadIndex(element);
+        const data = await loadIndex(wrapper);
         const hits = search(data.entries || data, q);
         results && renderResults(results, hits, q, noResultsText);
     });
