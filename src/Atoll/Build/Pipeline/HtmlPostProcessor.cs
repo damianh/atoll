@@ -245,7 +245,10 @@ public sealed class HtmlPostProcessor
 
     private static bool RemoveInlineStyles(IDocument document)
     {
-        var styles = document.QuerySelectorAll("style").ToList();
+        // Only remove scoped component styles (those with data-atoll-scope) that have
+        // been extracted to the external CSS bundle. Inline <style> elements without
+        // the scope marker are author-injected and must be preserved.
+        var styles = document.QuerySelectorAll("style[data-atoll-scope]").ToList();
         if (styles.Count == 0)
         {
             return false;
