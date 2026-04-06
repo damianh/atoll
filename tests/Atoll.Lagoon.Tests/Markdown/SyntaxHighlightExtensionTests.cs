@@ -214,6 +214,18 @@ public sealed class SyntaxHighlightExtensionTests
         compFragment.Reference.ChildHtml.ShouldContain("tm-keyword");
     }
 
+    // --- Expressive Code line-level structure ---
+
+    [Fact]
+    public void ShouldWrapEachLineInEcLineDiv()
+    {
+        var md = "```csharp\nvar x = 1;\n```";
+        var html = RenderWithHighlighting(md);
+
+        html.ShouldContain("class=\"ec-line\"");
+        html.ShouldContain("class=\"ec-line-content\"");
+    }
+
     // ── Fixtures ──
 
     private sealed class SlotComponent : IAtollComponent

@@ -3,6 +3,11 @@
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
   </PropertyGroup>
   <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Atoll.Lagoon.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Atoll\Atoll.csproj" />
     <ProjectReference Include="..\Atoll.Mermaid\Atoll.Mermaid.csproj" />
   </ItemGroup>

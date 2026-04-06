@@ -16,7 +16,7 @@ namespace Atoll.Lagoon.Styles;
 /// sidebar nav, TOC, pagination, breadcrumbs, hero, and search dialog.
 /// </remarks>
 [GlobalStyle]
-[Styles(Reset + LightTokens + DarkTokens + Layout + ScrollbarStyles + Typography + Prose + CodeBlocks + SyntaxHighlightTokens + CodeCopyButtonStyles +
+[Styles(Reset + LightTokens + DarkTokens + Layout + ScrollbarStyles + Typography + Prose + CodeBlocks + SyntaxHighlightTokens + CodeCopyButtonStyles + ExpressiveCodeStyles +
         SidebarNav + TocNav + PaginationStyles + BreadcrumbStyles + HeroStyles + SplashStyles + SearchStyles +
         LanguagePickerStyles + UntranslatedNoticeStyles + AsideStyles + ContentFooterStyles + FooterLinkStyles)]
 public sealed class DocsTheme : AtollComponent
@@ -447,8 +447,227 @@ public sealed class DocsTheme : AtollComponent
         }
         """;
 
+    private const string ExpressiveCodeStyles = """
+        /* ---- Expressive Code: line-level structure ---- */
+        .ec-line {
+            display: block;
+        }
+        .ec-line-content {
+            display: inline;
+        }
+
+        /* ---- Expressive Code: frames ---- */
+        .ec-frame {
+            margin-bottom: 1.25rem;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            border: 1px solid var(--docs-border);
+            background: var(--docs-code-bg);
+        }
+        .ec-frame .highlight {
+            margin-bottom: 0;
+            border-radius: 0;
+            border: none;
+        }
+        .ec-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.75rem;
+            background: var(--docs-bg-subtle);
+            border-bottom: 1px solid var(--docs-border);
+            min-height: 2.25rem;
+        }
+        /* Editor frame tab */
+        .ec-tab {
+            display: flex;
+            align-items: center;
+            padding: 0.1rem 0.75rem;
+            background: var(--docs-code-bg);
+            border-radius: 0.25rem 0.25rem 0 0;
+            border: 1px solid var(--docs-border);
+            border-bottom: none;
+            font-size: 0.8rem;
+            color: var(--docs-text-muted);
+            font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+        }
+        .ec-title {
+            color: var(--docs-text);
+            font-size: 0.8rem;
+            font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 40ch;
+        }
+        /* Terminal dots (three circles using box-shadow trick) */
+        .ec-terminal-dots {
+            display: inline-block;
+            width: 0.75rem;
+            height: 0.75rem;
+            border-radius: 50%;
+            background: #ff5f57;
+            box-shadow: 1.375rem 0 0 #febc2e, 2.75rem 0 0 #28c840;
+            flex-shrink: 0;
+            margin-right: 2rem;
+        }
+        /* Copy button in frame header: static positioning inside flex row */
+        .ec-frame .code-copy-btn {
+            position: static;
+            margin-left: auto;
+            opacity: 0;
+            flex-shrink: 0;
+        }
+        .ec-header:hover .code-copy-btn,
+        .ec-frame .code-copy-btn:focus-visible {
+            opacity: 1;
+        }
+        /* Dark theme overrides */
+        [data-theme="dark"] .ec-frame {
+            border-color: var(--docs-border);
+        }
+        [data-theme="dark"] .ec-header {
+            background: var(--docs-bg-raised);
+            border-bottom-color: var(--docs-border);
+        }
+        [data-theme="dark"] .ec-tab {
+            background: var(--docs-code-bg);
+            border-color: var(--docs-border);
+        }
+
+        /* ---- Expressive Code: line markers ---- */
+        :root {
+            --ec-mark-rgb: 59, 130, 246;
+            --ec-ins-rgb: 34, 197, 94;
+            --ec-del-rgb: 239, 68, 68;
+        }
+        [data-theme="dark"] {
+            --ec-mark-rgb: 56, 132, 244;
+            --ec-ins-rgb: 63, 185, 80;
+            --ec-del-rgb: 248, 81, 73;
+        }
+        .ec-mark {
+            background: rgba(var(--ec-mark-rgb), 0.15);
+            box-shadow: inset 3px 0 0 rgba(var(--ec-mark-rgb), 0.5);
+        }
+        .ec-ins {
+            background: rgba(var(--ec-ins-rgb), 0.15);
+            box-shadow: inset 3px 0 0 rgba(var(--ec-ins-rgb), 0.5);
+        }
+        .ec-del {
+            background: rgba(var(--ec-del-rgb), 0.15);
+            box-shadow: inset 3px 0 0 rgba(var(--ec-del-rgb), 0.5);
+        }
+
+        /* ---- Expressive Code: inline text markers ---- */
+        mark.ec-text-marker {
+            background: #fef08a;
+            border-bottom: 2px solid #facc15;
+            border-radius: 0.2em;
+            padding: 0 0.1em;
+            color: inherit;
+        }
+        [data-theme="dark"] mark.ec-text-marker {
+            background: rgba(250, 204, 21, 0.25);
+            border-bottom: 2px solid rgba(250, 204, 21, 0.5);
+        }
+
+        /* ---- Expressive Code: collapsible sections ---- */
+        .ec-collapse-group {
+            display: block;
+        }
+        .ec-collapse-summary {
+            display: block;
+            list-style: none;
+            cursor: pointer;
+            padding: 0.2rem 1rem;
+            font-size: 0.8rem;
+            color: var(--docs-text-muted);
+            background: var(--docs-bg-subtle);
+            border-top: 1px solid var(--docs-border);
+            border-bottom: 1px solid var(--docs-border);
+            user-select: none;
+        }
+        .ec-collapse-summary::-webkit-details-marker { display: none; }
+        .ec-collapse-summary::before {
+            content: "▶ ";
+            font-size: 0.65em;
+            vertical-align: middle;
+        }
+        .ec-collapse-group[open] > .ec-collapse-summary::before {
+            content: "▼ ";
+        }
+        .ec-collapse-summary:hover {
+            color: var(--docs-text);
+            background: var(--docs-bg-raised);
+        }
+        [data-theme="dark"] .ec-collapse-summary {
+            background: var(--docs-bg-raised);
+        }
+        [data-theme="dark"] .ec-collapse-summary:hover {
+            background: var(--docs-bg-subtle);
+        }
+
+        /* ---- Expressive Code: word wrap ---- */
+        [data-wrap] pre,
+        [data-wrap].highlight {
+            white-space: pre-wrap;
+            word-break: break-all;
+            overflow-x: visible;
+        }
+        [data-wrap] .ec-line-content {
+            display: inline-block;
+            padding-left: var(--ec-indent, 0);
+            text-indent: calc(-1 * var(--ec-indent, 0));
+        }
+
+        /* ---- Expressive Code: line numbers ---- */
+        [data-line-numbers] {
+            counter-reset: ec-line-num;
+        }
+        [data-line-numbers] .ec-line {
+            counter-increment: ec-line-num;
+            display: flex;
+            align-items: baseline;
+        }
+        [data-line-numbers] .ec-line::before {
+            content: counter(ec-line-num);
+            display: inline-block;
+            min-width: 3ch;
+            text-align: right;
+            margin-right: 1.5ch;
+            color: var(--docs-text-faint);
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        /* ---- Expressive Code: responsive & print polish ---- */
+        /* Ensure frames don't overflow on small screens */
+        .ec-frame {
+            max-width: 100%;
+            min-width: 0;
+        }
+        /* Horizontal scrolling inside framed pre blocks */
+        .ec-frame pre.highlight {
+            overflow-x: auto;
+        }
+        /* Long titles: allow truncation on narrow headers */
+        .ec-header {
+            overflow: hidden;
+        }
+        /* Print: expand all collapsed sections */
+        @media print {
+            .ec-collapse-group[open] > .ec-collapse-content,
+            .ec-collapse-group > .ec-collapse-content {
+                display: block !important;
+            }
+            .ec-collapse-summary {
+                display: none;
+            }
+        }
+        """;
+
     private const string SidebarNav = """
-        /* ---- Sidebar navigation ---- */
         .docs-sidebar nav ul { list-style: none; }
         .docs-sidebar nav li { margin: 0.1rem 0; }
         .docs-sidebar nav a {
