@@ -190,14 +190,14 @@ public sealed class HtmlPostProcessorTests
     }
 
     [Fact]
-    public void ProcessShouldRemoveInlineStylesWhenEnabled()
+    public void ProcessShouldRemoveScopedInlineStylesWhenEnabled()
     {
         var html = """
             <!DOCTYPE html>
             <html>
             <head>
             <title>Test</title>
-            <style>.card { padding: 1rem; }</style>
+            <style data-atoll-scope="abc123">.card { padding: 1rem; }</style>
             </head>
             <body><div class="card">Content</div></body>
             </html>
@@ -210,7 +210,7 @@ public sealed class HtmlPostProcessorTests
 
         var result = processor.Process(html);
 
-        result.ShouldNotContain("<style>");
+        result.ShouldNotContain("<style");
         result.ShouldNotContain("padding");
     }
 
@@ -234,6 +234,34 @@ public sealed class HtmlPostProcessorTests
 
         result.ShouldContain("<style>");
         result.ShouldContain("padding");
+    }
+
+    [Fact]
+    public void ProcessShouldPreserveNonScopedStylesWhenRemoveInlineStylesEnabled()
+    {
+        var html = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+            <title>Test</title>
+            <style data-atoll-scope="s1">.scoped { color: red; }</style>
+            <style>.page-custom { display: none; }</style>
+            </head>
+            <body><div>Content</div></body>
+            </html>
+            """;
+
+        var processor = new HtmlPostProcessor(new HtmlPostProcessorOptions
+        {
+            RemoveInlineStyles = true,
+        });
+
+        var result = processor.Process(html);
+
+        result.ShouldNotContain("data-atoll-scope");
+        result.ShouldNotContain(".scoped");
+        result.ShouldContain("<style>");
+        result.ShouldContain(".page-custom");
     }
 
     [Fact]
@@ -372,15 +400,15 @@ public sealed class HtmlPostProcessorTests
     }
 
     [Fact]
-    public void ProcessShouldRemoveMultipleInlineStyles()
+    public void ProcessShouldRemoveMultipleScopedInlineStyles()
     {
         var html = """
             <!DOCTYPE html>
             <html>
             <head>
             <title>Test</title>
-            <style>.a { color: red; }</style>
-            <style>.b { color: blue; }</style>
+            <style data-atoll-scope="s1">.a { color: red; }</style>
+            <style data-atoll-scope="s2">.b { color: blue; }</style>
             </head>
             <body><div>Content</div></body>
             </html>
@@ -393,7 +421,7 @@ public sealed class HtmlPostProcessorTests
 
         var result = processor.Process(html);
 
-        result.ShouldNotContain("<style>");
+        result.ShouldNotContain("<style");
     }
 
     [Fact]
@@ -472,7 +500,7 @@ public sealed class HtmlPostProcessorTests
             <html>
             <head>
             <title>Test</title>
-            <style>.card { padding: 1rem; }</style>
+            <style data-atoll-scope="abc">.card { padding: 1rem; }</style>
             </head>
             <body><div>Content</div></body>
             </html>
@@ -481,6 +509,6 @@ public sealed class HtmlPostProcessorTests
         var result = processor.Process(html);
 
         result.ShouldContain("/_atoll/styles.css");
-        result.ShouldNotContain("<style>");
+        result.ShouldNotContain("<style");
     }
 }

@@ -18,8 +18,8 @@
     var tag = activeTag ? activeTag.getAttribute('data-filter-tag') : '';
     var author = authorSelect ? authorSelect.value : '';
 
-    // Walk sibling containers to find article cards
-    var container = root.parentElement;
+    // Find the nearest view-container ancestor (walks past the <atoll-island> wrapper)
+    var container = root.closest('[data-view-container]') || root.parentElement;
     if (!container) return;
     var cards = container.querySelectorAll('[data-tags], [data-author]');
     cards.forEach(function (card) {

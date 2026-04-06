@@ -288,14 +288,14 @@ public sealed class SsgOutputTests : IDisposable
     }
 
     [Fact]
-    public async Task PortfolioSsgWithPostProcessingShouldRemoveInlineStyles()
+    public async Task PortfolioSsgWithPostProcessingShouldPreserveNonScopedInlineStyles()
     {
         var ssgResult = await BuildPortfolioSiteAsync();
 
-        // The portfolio layout has inline <style> blocks
+        // The portfolio layout has non-scoped inline <style> blocks (author-injected)
         ssgResult.PageResults[0].Html.ShouldContain("<style>");
 
-        // Run post-processor
+        // Run post-processor — only scoped styles (data-atoll-scope) are removed
         var postProcessor = new HtmlPostProcessor(new HtmlPostProcessorOptions
         {
             CssHref = "/_atoll/styles.abc123.css",
@@ -303,7 +303,7 @@ public sealed class SsgOutputTests : IDisposable
         });
 
         var processed = postProcessor.Process(ssgResult.PageResults[0].Html);
-        processed.ShouldNotContain("<style>");
+        processed.ShouldContain("<style>");
         processed.ShouldContain("rel=\"stylesheet\"");
     }
 
