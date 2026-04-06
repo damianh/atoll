@@ -356,7 +356,7 @@ public sealed class DocsTheme : AtollComponent
             overflow-x: auto;
             margin-bottom: 1.25rem;
             font-size: 0.875rem;
-            line-height: 1.4;
+            line-height: 1;
         }
         .prose pre code {
             background: none;
