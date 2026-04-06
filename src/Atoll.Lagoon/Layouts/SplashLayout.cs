@@ -31,6 +31,16 @@ public sealed class SplashLayout : AtollComponent
     [Parameter]
     public string? PageDescription { get; set; }
 
+    /// <summary>Gets or sets the current page URL path (e.g. <c>/</c>).
+    /// Used to compute OG image and page URLs when <see cref="DocsConfig.OpenGraph"/> is configured.</summary>
+    [Parameter]
+    public string CurrentPath { get; set; } = "/";
+
+    /// <summary>Gets or sets the site base URL (e.g. <c>https://docs.example.com</c>).
+    /// Used to build absolute OG image and page URLs when <see cref="DocsConfig.OpenGraph"/> is configured.</summary>
+    [Parameter]
+    public string SiteUrl { get; set; } = "";
+
     /// <inheritdoc />
     protected override async Task RenderCoreAsync(RenderContext context)
     {
@@ -38,7 +48,7 @@ public sealed class SplashLayout : AtollComponent
             ? Config.LogoSrc
             : LagoonAssets.DefaultFaviconPath;
 
-        var model = new SplashLayoutModel(Config, PageTitle, PageDescription, logoSrc, Config.EnableMermaid);
+        var model = new SplashLayoutModel(Config, PageTitle, PageDescription, logoSrc, Config.EnableMermaid, CurrentPath, SiteUrl);
 
         // Pass the page content slot through to the Razor template.
         var pageSlot = context.Slots.GetSlotFragment(SlotCollection.DefaultSlotName);

@@ -155,6 +155,7 @@ public sealed class BuildCommandHandler
             await GenerateSearchIndexAsync(assembly, collectionQuery, outputDir);
             await ValidateLinksAsync(assembly, collectionQuery);
             await GenerateRedirectsAsync(assembly, collectionQuery, outputDir);
+            await GenerateOgImagesAsync(assembly, collectionQuery, outputDir, projectRoot);
         }
 
         // Report results
@@ -655,6 +656,129 @@ public sealed class BuildCommandHandler
         using var ms = new MemoryStream();
         stream.CopyTo(ms);
         return ms.ToArray();
+    }
+
+    /// <summary>
+    /// Generates OG images if the user's assembly implements
+    /// <c>Atoll.Lagoon.OpenGraph.IOgImageConfiguration</c>.
+    /// Uses reflection to avoid a hard dependency on <c>Atoll.Lagoon</c>.
+    /// </summary>
+    private static async Task GenerateOgImagesAsync(
+        Assembly assembly,
+        CollectionQuery collectionQuery,
+        string outputDirectory,
+        string projectRoot)
+    {
+        const string interfaceName = "Atoll.Lagoon.OpenGraph.IOgImageConfiguration";
+        const string generatorTypeName = "Atoll.Lagoon.OpenGraph.OgImageGenerator";
+
+        // Find an IOgImageConfiguration implementation in the user's assembly
+        Type? configType = null;
+        foreach (var type in assembly.GetTypes())
+        {
+            if (type.IsAbstract || type.IsInterface)
+            {
+                continue;
+            }
+
+            var iface = type.GetInterface(interfaceName);
+            if (iface is not null)
+            {
+                configType = type;
+                break;
+            }
+        }
+
+        if (configType is null)
+        {
+            return;
+        }
+
+        // Resolve OgImageGenerator from the assembly's dependencies
+        Type? generatorType = null;
+        foreach (var referencedAssembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            generatorType = referencedAssembly.GetType(generatorTypeName);
+            if (generatorType is not null)
+            {
+                break;
+            }
+        }
+
+        // Also try to find it via the assembly's output directory
+        if (generatorType is null)
+        {
+            var assemblyDir = Path.GetDirectoryName(assembly.Location);
+            if (assemblyDir is not null)
+            {
+                var lagoonDll = Path.Combine(assemblyDir, "Atoll.Lagoon.dll");
+                if (File.Exists(lagoonDll))
+                {
+                    try
+                    {
+                        var lagoonAssembly = Assembly.LoadFrom(lagoonDll);
+                        generatorType = lagoonAssembly.GetType(generatorTypeName);
+                    }
+                    catch
+                    {
+                        // Ignore load failures
+                    }
+                }
+            }
+        }
+
+        if (generatorType is null)
+        {
+            Console.WriteLine("  Warning: IOgImageConfiguration found but Atoll.Lagoon assembly could not be loaded.");
+            return;
+        }
+
+        // Create config instance
+        var configInstance = Activator.CreateInstance(configType)!;
+
+        // Create generator instance: new OgImageGenerator(outputDirectory, projectRoot)
+        var generator = Activator.CreateInstance(generatorType, outputDirectory, projectRoot)!;
+
+        // Find GenerateAsync(CollectionQuery, IOgImageConfiguration) — the 2-parameter overload
+        MethodInfo? generateMethod = null;
+        foreach (var method in generatorType.GetMethods())
+        {
+            if (method.Name != "GenerateAsync")
+            {
+                continue;
+            }
+
+            var parameters = method.GetParameters();
+            if (parameters.Length == 2
+                && parameters[0].ParameterType == typeof(CollectionQuery))
+            {
+                generateMethod = method;
+                break;
+            }
+        }
+
+        if (generateMethod is null)
+        {
+            Console.WriteLine("  Warning: Could not find GenerateAsync method on OgImageGenerator.");
+            return;
+        }
+
+        var task = (Task)generateMethod.Invoke(generator, [collectionQuery, configInstance])!;
+        await task;
+
+        // Get result stats via dynamic to avoid reflection on Task<T>.Result
+        dynamic taskResult = task;
+        int imageCount;
+        try
+        {
+            imageCount = (int)taskResult.Result.ImageCount;
+        }
+        catch
+        {
+            imageCount = 0;
+        }
+
+        Console.WriteLine($"  OG:     {imageCount} images generated");
     }
 
     /// <summary>

@@ -36,6 +36,26 @@ public sealed class DocsBaseHeadTests
         return destination.GetOutput();
     }
 
+    private static async Task<string> RenderHeadAsync(
+        DocsConfig config,
+        string pageTitle,
+        string? pageDescription,
+        string currentPath,
+        string siteUrl)
+    {
+        var destination = new StringRenderDestination();
+        var props = new Dictionary<string, object?>
+        {
+            ["Config"] = config,
+            ["PageTitle"] = pageTitle,
+            ["PageDescription"] = pageDescription,
+            ["CurrentPath"] = currentPath,
+            ["SiteUrl"] = siteUrl,
+        };
+        await ComponentRenderer.RenderComponentAsync<DocsBaseHead>(destination, props);
+        return destination.GetOutput();
+    }
+
     // --- PageHeadContent: null ---
 
     [Fact]
@@ -117,4 +137,118 @@ public sealed class DocsBaseHeadTests
         // Default favicon path from LagoonAssets
         html.ShouldContain("/_atoll/logo.png");
     }
+
+    // --- OG meta tags ---
+
+    [Fact]
+    public async Task ShouldNotRenderOgTagsWhenOpenGraphIsNull()
+    {
+        var config = MakeConfig();
+        // OpenGraph is null by default
+
+        var html = await RenderHeadAsync(config, "My Page", "My description", "/my-page", "https://example.com");
+
+        html.ShouldNotContain("og:title");
+        html.ShouldNotContain("og:image");
+        html.ShouldNotContain("twitter:card");
+    }
+
+    [Fact]
+    public async Task ShouldNotRenderOgTagsWhenSiteUrlIsEmpty()
+    {
+        var config = new DocsConfig
+        {
+            Title = "My Docs",
+            OpenGraph = new OpenGraphConfig(),
+        };
+
+        var html = await RenderHeadAsync(config, "My Page", "My description", "/my-page", siteUrl: "");
+
+        html.ShouldNotContain("og:title");
+        html.ShouldNotContain("og:image");
+    }
+
+    [Fact]
+    public async Task ShouldRenderOgTagsWhenOpenGraphIsConfigured()
+    {
+        var config = new DocsConfig
+        {
+            Title = "My Docs",
+            OpenGraph = new OpenGraphConfig(),
+        };
+
+        var html = await RenderHeadAsync(config, "My Page", "A great description", "/my-page", "https://example.com");
+
+        html.ShouldContain("og:title");
+        html.ShouldContain("og:description");
+        html.ShouldContain("og:image");
+        html.ShouldContain("og:url");
+        html.ShouldContain("og:site_name");
+        html.ShouldContain("twitter:card");
+        html.ShouldContain("twitter:title");
+        html.ShouldContain("twitter:description");
+        html.ShouldContain("twitter:image");
+    }
+
+    [Fact]
+    public async Task ShouldComputeCorrectOgImageUrl()
+    {
+        var config = new DocsConfig
+        {
+            Title = "My Docs",
+            OpenGraph = new OpenGraphConfig(),
+        };
+
+        var html = await RenderHeadAsync(config, "My Page", null, "/identityserver/overview", "https://docs.example.com");
+
+        html.ShouldContain("https://docs.example.com/og/identityserver/overview.png");
+    }
+
+    [Fact]
+    public async Task ShouldComputeCorrectOgPageUrl()
+    {
+        var config = new DocsConfig
+        {
+            Title = "My Docs",
+            OpenGraph = new OpenGraphConfig(),
+        };
+
+        var html = await RenderHeadAsync(config, "My Page", null, "/identityserver/overview", "https://docs.example.com");
+
+        html.ShouldContain("https://docs.example.com/identityserver/overview");
+    }
+
+    [Fact]
+    public async Task ShouldIncludeBasePathInOgImageUrl()
+    {
+        var config = new DocsConfig
+        {
+            Title = "My Docs",
+            BasePath = "/docs",
+            OpenGraph = new OpenGraphConfig(),
+        };
+
+        var html = await RenderHeadAsync(config, "My Page", null, "/guide/intro", "https://example.com");
+
+        html.ShouldContain("https://example.com/docs/og/guide/intro.png");
+    }
+
+    [Fact]
+    public async Task ShouldRenderOgTagsBeforeClosingHeadTag()
+    {
+        var config = new DocsConfig
+        {
+            Title = "My Docs",
+            OpenGraph = new OpenGraphConfig(),
+        };
+
+        var html = await RenderHeadAsync(config, "Page Title", "A description", "/page", "https://example.com");
+
+        var ogIndex = html.IndexOf("og:title", StringComparison.Ordinal);
+        var closeHeadIndex = html.IndexOf("</head>", StringComparison.Ordinal);
+
+        ogIndex.ShouldBeGreaterThan(0);
+        ogIndex.ShouldBeLessThan(closeHeadIndex);
+    }
 }
+

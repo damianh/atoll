@@ -82,6 +82,11 @@ public sealed class DocsLayout : AtollComponent
     [Parameter]
     public DateTimeOffset? LastUpdated { get; set; }
 
+    /// <summary>Gets or sets the site base URL (e.g. <c>https://docs.example.com</c>).
+    /// Used to build absolute OG image and page URLs when <see cref="DocsConfig.OpenGraph"/> is configured.</summary>
+    [Parameter]
+    public string SiteUrl { get; set; } = "";
+
     /// <inheritdoc />
     protected override async Task RenderCoreAsync(RenderContext context)
     {
@@ -140,7 +145,9 @@ public sealed class DocsLayout : AtollComponent
             currentVersionPath,
             editHref,
             LastUpdated,
-            Config.EnableMermaid);
+            Config.EnableMermaid,
+            CurrentPath,
+            SiteUrl);
 
         // Pass the page content slot through to the Razor template.
         var pageSlot = context.Slots.GetSlotFragment(SlotCollection.DefaultSlotName);

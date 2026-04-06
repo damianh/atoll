@@ -11,9 +11,14 @@ namespace Atoll.Lagoon.Layouts;
 /// <param name="PageDescription">Optional page-specific meta description.</param>
 /// <param name="LogoSrc">The resolved logo image URL (custom or default fallback).</param>
 /// <param name="EnableMermaid">Whether to inject the Mermaid initialization script.</param>
+/// <param name="CurrentPath">The current page URL path, used for OG image URL computation.</param>
+/// <param name="SiteUrl">The site base URL, used for absolute OG URLs.</param>
 public sealed record SplashLayoutModel(
     DocsConfig Config,
     string PageTitle,
     string? PageDescription,
     string LogoSrc,
-    bool EnableMermaid);
+    bool EnableMermaid,
+    string CurrentPath,
+    string SiteUrl);
+

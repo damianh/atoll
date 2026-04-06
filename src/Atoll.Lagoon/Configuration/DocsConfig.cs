@@ -142,4 +142,12 @@ public sealed class DocsConfig
     /// When <c>null</c> (default), no config-based redirects are active.
     /// </summary>
     public IReadOnlyDictionary<string, string>? Redirects { get; set; }
+
+    /// <summary>
+    /// Gets or sets the OpenGraph image generation configuration.
+    /// When set, branded 1200×630 PNG images are generated at build time for each documentation page
+    /// and OG/Twitter Card meta tags are automatically rendered in the document head.
+    /// When <c>null</c>, no OG image generation occurs and no OG meta tags are rendered.
+    /// </summary>
+    public OpenGraphConfig? OpenGraph { get; set; }
 }
