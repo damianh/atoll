@@ -31,10 +31,16 @@ Reef is the official articles and blog theme addon for Atoll. Add it to your pro
 
 ## Quick start
 
-### 1. Add the project reference
+### 1. Add the NuGet package
+
+```bash
+dotnet add package Atoll.Reef
+```
+
+Or add directly to your `.csproj`:
 
 ```xml
-<ProjectReference Include="..\..\src\Atoll.Reef\Atoll.Reef.csproj" />
+<PackageReference Include="Atoll.Reef" Version="0.1.*" />
 ```
 
 ### 2. Define a content collection

@@ -4,6 +4,11 @@
 
 # Atoll
 
+[![CI](https://github.com/damianh/atoll/actions/workflows/ci.yml/badge.svg)](https://github.com/damianh/atoll/actions/workflows/ci.yml)
+[![NuGet](https://img.shields.io/nuget/v/Atoll.svg)](https://www.nuget.org/packages/Atoll)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/Atoll.svg)](https://www.nuget.org/packages/Atoll)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A .NET-native framework inspired by [Astro](https://astro.build). Atoll brings server-first HTML rendering, islands architecture, content collections, and static site generation to the .NET ecosystem.
 
 ## Why Atoll?
@@ -27,14 +32,20 @@ Atoll applies Astro's core philosophy to .NET: **ship zero JavaScript by default
 
 ## Architecture
 
-Atoll is organized into focused libraries:
+Atoll is organized into focused NuGet packages:
 
-```
-Atoll                Components, rendering, routing, islands, CSS scoping, slots,
-                     head management, content collections, Markdown, SSG, asset pipeline
-Atoll.Middleware     ASP.NET Core hosting integration, request middleware, dev server, live reload
-Atoll.Cli            CLI commands (build, dev, new, preview)
-```
+| Package | Description |
+|---|---|
+| [`Atoll`](https://www.nuget.org/packages/Atoll) | Components, rendering, routing, islands, CSS scoping, slots, head management, content collections, Markdown, SSG, asset pipeline |
+| [`Atoll.Middleware`](https://www.nuget.org/packages/Atoll.Middleware) | ASP.NET Core hosting integration, request middleware, dev server, live reload |
+| [`Atoll.Cli`](https://www.nuget.org/packages/Atoll.Cli) | CLI tool — `dotnet tool install -g Atoll.Cli` |
+| [`Atoll.Lagoon`](https://www.nuget.org/packages/Atoll.Lagoon) | Documentation theme (inspired by Astro Starlight) |
+| [`Atoll.Reef`](https://www.nuget.org/packages/Atoll.Reef) | Articles and blog theme |
+| [`Atoll.Mermaid`](https://www.nuget.org/packages/Atoll.Mermaid) | Mermaid diagram support |
+| [`Atoll.DrawIo`](https://www.nuget.org/packages/Atoll.DrawIo) | Draw.io diagram support |
+| [`Atoll.Giscus`](https://www.nuget.org/packages/Atoll.Giscus) | Giscus comments integration |
+| [`Atoll.Annotations`](https://www.nuget.org/packages/Atoll.Annotations) | Inline text-selection feedback |
+| [`Atoll.Templates`](https://www.nuget.org/packages/Atoll.Templates) | `dotnet new` project templates |
 
 ### Request flow
 
@@ -100,6 +111,36 @@ MySite/
 ├── Pages/               # Routable page components
 ├── BlogPostSchema.cs    # Content collection schema
 └── MySite.csproj
+```
+
+## Installation
+
+Install packages from NuGet. Most sites need the core package plus a theme:
+
+```bash
+# Core + middleware (for dev server and ASP.NET Core hosting)
+dotnet add package Atoll.Middleware
+
+# Documentation theme
+dotnet add package Atoll.Lagoon
+
+# Blog/articles theme
+dotnet add package Atoll.Reef
+
+# CLI tool (global)
+dotnet tool install -g Atoll.Cli
+
+# Project templates
+dotnet new install Atoll.Templates
+```
+
+Or add package references directly to your `.csproj`:
+
+```xml
+<ItemGroup>
+  <PackageReference Include="Atoll.Middleware" Version="0.1.*" />
+  <PackageReference Include="Atoll.Lagoon" Version="0.1.*" />
+</ItemGroup>
 ```
 
 ## Building

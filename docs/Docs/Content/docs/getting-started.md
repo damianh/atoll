@@ -23,7 +23,13 @@ You need the [.NET 10 SDK](https://dotnet.microsoft.com/download) or later insta
    cd MySite
    ```
 
-   Add the Atoll project reference:
+   Add the Atoll NuGet package:
+
+   ```bash
+   dotnet add package Atoll.Middleware
+   ```
+
+   Your `.csproj` should look like:
 
    ```xml
    <Project Sdk="Microsoft.NET.Sdk">
@@ -31,7 +37,7 @@ You need the [.NET 10 SDK](https://dotnet.microsoft.com/download) or later insta
        <TargetFramework>net10.0</TargetFramework>
      </PropertyGroup>
      <ItemGroup>
-       <ProjectReference Include="path/to/src/Atoll.Middleware/Atoll.Middleware.csproj" />
+       <PackageReference Include="Atoll.Middleware" Version="0.1.*" />
      </ItemGroup>
    </Project>
    ```

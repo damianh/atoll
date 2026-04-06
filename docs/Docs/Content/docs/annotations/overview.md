@@ -19,10 +19,16 @@ The `Atoll.Annotations` plugin lets readers select text on any page, write a com
 
 ## Installation
 
-Add a project reference to `Atoll.Annotations`:
+Add the `Atoll.Annotations` NuGet package:
+
+```bash
+dotnet add package Atoll.Annotations
+```
+
+Or add directly to your `.csproj`:
 
 ```xml
-<ProjectReference Include="..\..\src\Atoll.Annotations\Atoll.Annotations.csproj" />
+<PackageReference Include="Atoll.Annotations" Version="0.1.*" />
 ```
 
 Register the island asset provider so the embedded JavaScript is copied to the output directory during build:

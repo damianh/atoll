@@ -10,7 +10,7 @@ seriesOrder: 1
 
 # Building a Plugin for Atoll, Part 1: Project Setup
 
-In this series we walk through building a real Atoll plugin from scratch. Part 1 covers project scaffolding, adding the `Atoll` project reference, and creating your first `AtollComponent`.
+In this series we walk through building a real Atoll plugin from scratch. Part 1 covers project scaffolding, adding the `Atoll` NuGet package, and creating your first `AtollComponent`.
 
 ## Creating the project
 
@@ -19,7 +19,7 @@ Start by adding a new class library targeting `net10.0`:
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <ProjectReference Include="..\Atoll\Atoll.csproj" />
+    <PackageReference Include="Atoll" Version="0.1.*" />
   </ItemGroup>
 </Project>
 ```
