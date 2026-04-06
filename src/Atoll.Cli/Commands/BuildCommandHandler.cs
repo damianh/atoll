@@ -94,6 +94,9 @@ public sealed class BuildCommandHandler
             await WriteIslandAssetsAsync(assembly, outputDir);
         }
 
+        // Write core framework assets (_atoll/island.js, _atoll/directives.js, _atoll/logo.png)
+        await WriteCoreFrameworkAssetsAsync(assembly, outputDir);
+
         // Post-process HTML
         var cssHref = assetResult.Css.HasContent
             ? "/" + assetResult.Css.OutputPath.Replace('\\', '/')
@@ -570,6 +573,88 @@ public sealed class BuildCommandHandler
 
         Console.WriteLine();
         Console.WriteLine($"  Error: Link validation failed — {errorCount} broken link(s) detected.");
+    }
+
+    /// <summary>
+    /// Writes core Atoll framework assets to the output directory:
+    /// <c>_atoll/island.js</c>, <c>_atoll/directives.js</c>, and (if Atoll.Lagoon
+    /// is referenced) <c>_atoll/logo.png</c>. These are embedded resources served
+    /// dynamically by the dev server but must be written to disk for SSG output.
+    /// </summary>
+    private static async Task WriteCoreFrameworkAssetsAsync(Assembly? userAssembly, string outputDirectory)
+    {
+        var atollDir = Path.Combine(outputDirectory, "_atoll");
+        Directory.CreateDirectory(atollDir);
+
+        var count = 0;
+
+        // island.js
+        var islandJs = IslandScriptProvider.GetIslandScript();
+        await File.WriteAllTextAsync(Path.Combine(atollDir, "island.js"), islandJs);
+        count++;
+
+        // directives.js
+        var directivesJs = IslandScriptProvider.GetDirectivesScript();
+        await File.WriteAllTextAsync(Path.Combine(atollDir, "directives.js"), directivesJs);
+        count++;
+
+        // logo.png — loaded via reflection to avoid a hard dependency on Atoll.Lagoon
+        var logoPng = GetLagoonLogoPng(userAssembly);
+        if (logoPng is not null)
+        {
+            await File.WriteAllBytesAsync(Path.Combine(atollDir, "logo.png"), logoPng);
+            count++;
+        }
+
+        Console.WriteLine($"  Core:    {count} framework asset(s) written");
+    }
+
+    /// <summary>
+    /// Loads the Atoll logo PNG from the <c>Atoll.Lagoon</c> assembly via reflection.
+    /// Returns <c>null</c> if the assembly is not referenced or the resource is missing.
+    /// </summary>
+    private static byte[]? GetLagoonLogoPng(Assembly? userAssembly)
+    {
+        // Try to find Atoll.Lagoon in already-loaded assemblies first
+        var lagoonAssembly = AppDomain.CurrentDomain.GetAssemblies()
+            .FirstOrDefault(a => a.GetName().Name == "Atoll.Lagoon");
+
+        // If not found, try loading from the user assembly's output directory
+        if (lagoonAssembly is null && userAssembly is not null)
+        {
+            var assemblyDir = Path.GetDirectoryName(userAssembly.Location);
+            if (assemblyDir is not null)
+            {
+                var lagoonDll = Path.Combine(assemblyDir, "Atoll.Lagoon.dll");
+                if (File.Exists(lagoonDll))
+                {
+                    try
+                    {
+                        lagoonAssembly = Assembly.LoadFrom(lagoonDll);
+                    }
+                    catch
+                    {
+                        // Ignore load failures
+                    }
+                }
+            }
+        }
+
+        if (lagoonAssembly is null)
+        {
+            return null;
+        }
+
+        const string resourceName = "Atoll.Lagoon.Assets.logo.png";
+        using var stream = lagoonAssembly.GetManifestResourceStream(resourceName);
+        if (stream is null)
+        {
+            return null;
+        }
+
+        using var ms = new MemoryStream();
+        stream.CopyTo(ms);
+        return ms.ToArray();
     }
 
     /// <summary>
