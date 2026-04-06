@@ -197,6 +197,7 @@ public sealed class DocsTheme : AtollComponent
             position: sticky;
             top: var(--docs-header-height);
             height: calc(100vh - var(--docs-header-height));
+            z-index: 10;
         }
         .docs-main {
             grid-column: 2;
