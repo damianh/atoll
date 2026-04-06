@@ -1,0 +1,216 @@
+@inherits Atoll.Components.AtollLayoutSlice<Atoll.Lagoon.Layouts.DocsLayoutModel>
+@using Atoll.Lagoon.Components
+@using Atoll.Lagoon.Islands
+@using Atoll.Lagoon.Layouts
+<!DOCTYPE html>
+<html lang="@Model.Lang" dir="@Model.Dir">
+@{ await RenderComponentAsync<DocsBaseHead>(new Dictionary<string, object?>
+{
+    ["Config"] = Model.Config,
+    ["PageTitle"] = Model.PageTitle,
+    ["PageDescription"] = Model.PageDescription,
+    ["PageHeadContent"] = Model.PageHeadContent,
+}); }
+<body>
+    <header class="docs-header">
+        <div class="docs-header-inner">
+            @{ await RenderComponentAsync<MobileNav>(new Dictionary<string, object?>
+            {
+                ["Translations"] = Model.Translations,
+            }); }
+            <a href="/" class="docs-brand">
+                <img src="@Model.LogoSrc" alt="@Model.Config.LogoAlt" class="docs-logo" />
+                @Model.Config.Title
+            </a>
+            <div class="docs-header-actions">
+                @{ await RenderComponentAsync<SearchDialog>(new Dictionary<string, object?>
+                {
+                    ["Translations"] = Model.Translations,
+                    ["IndexUrl"] = Model.SearchIndexUrl,
+                }); }
+                @foreach (var social in Model.Config.Social)
+                {
+                    <a href="@social.Url" class="docs-social-link" rel="noopener noreferrer" target="_blank">@social.Label</a>
+                }
+                @if (Model.Config.Locales is not null && Model.Config.Locales.Count > 1 && Model.Locale is not null)
+                {
+                    await RenderComponentAsync<LanguagePicker>(new Dictionary<string, object?>
+                    {
+                        ["Locales"] = Model.Config.Locales,
+                        ["CurrentLocaleKey"] = Model.Locale.Key,
+                        ["CurrentContentPath"] = Model.Locale.ContentPath,
+                        ["BasePath"] = Model.Config.BasePath,
+                        ["Translations"] = Model.Translations,
+                    });
+                }
+                @if (Model.Config.Versions is not null && Model.Config.Versions.Count > 1 && Model.Version is not null)
+                {
+                    await RenderComponentAsync<VersionPicker>(new Dictionary<string, object?>
+                    {
+                        ["Versions"] = Model.Config.Versions,
+                        ["CurrentVersionKey"] = Model.Version.Key,
+                        ["CurrentContentPath"] = Model.Version.ContentPath,
+                        ["LocalePrefix"] = Model.LocalePathPrefix,
+                        ["BasePath"] = Model.Config.BasePath,
+                        ["Translations"] = Model.Translations,
+                    });
+                }
+                @{ await RenderComponentAsync<ThemeToggle>(new Dictionary<string, object?>
+                {
+                    ["Translations"] = Model.Translations,
+                }); }
+            </div>
+        </div>
+    </header>
+    <div class="docs-body">
+        <aside class="docs-sidebar" id="mobile-nav-menu" aria-label="@Model.Translations.SiteNavigationLabel">
+            @{ await RenderComponentAsync<Sidebar>(new Dictionary<string, object?>
+            {
+                ["Items"] = Model.SidebarItems,
+                ["Translations"] = Model.Translations,
+                ["ChevronPosition"] = Model.Config.SidebarChevronPosition,
+            }); }
+        </aside>
+        <script src="/scripts/atoll-sidebar-state.js"></script>
+        <main class="docs-main" id="main-content">
+            @if (Model.BreadcrumbItems.Count > 0)
+            {
+                await RenderComponentAsync<Breadcrumbs>(new Dictionary<string, object?>
+                {
+                    ["Items"] = Model.BreadcrumbItems,
+                    ["Translations"] = Model.Translations,
+                });
+            }
+            @if (Model.IsUntranslatedContent && Model.Locale is not null)
+            {
+                <div class="untranslated-notice">@{
+                    WriteLiteral(Atoll.Rendering.HtmlEncoder.Encode(Model.Translations.UntranslatedContentNotice));
+                }</div>
+            }
+            @if (Model.Version?.Config.IsDeprecated == true)
+            {
+                var deprecationMessage = Model.Version.Config.DeprecationMessage ?? Model.Translations.OutdatedVersionNotice;
+                <div class="deprecated-version-notice">@{
+                    WriteLiteral(Atoll.Rendering.HtmlEncoder.Encode(deprecationMessage));
+                } <a href="@Model.CurrentVersionPath">@Model.Translations.OutdatedVersionLinkText</a></div>
+            }
+            <article class="docs-article prose">
+                @{ await RenderBodyAsync(); }
+            </article>
+            @if (Model.EditHref is not null || Model.LastUpdated is not null)
+            {
+                <div class="docs-content-footer">
+                    @if (Model.EditHref is not null)
+                    {
+                        <a href="@Model.EditHref" class="docs-edit-link" target="_blank" rel="noopener noreferrer">@Model.Translations.EditPageLabel</a>
+                    }
+                    @if (Model.LastUpdated is not null)
+                    {
+                        var isoDate = Model.LastUpdated.Value.ToString("O");
+                        var displayDate = Model.LastUpdated.Value.ToString("yyyy-MM-dd");
+                        <p class="docs-last-updated">
+                            <span>@Model.Translations.LastUpdatedLabel:</span> <time datetime="@isoDate">@displayDate</time>
+                        </p>
+                    }
+                </div>
+            }
+            @if (Model.Previous is not null || Model.Next is not null)
+            {
+                await RenderComponentAsync<Pagination>(new Dictionary<string, object?>
+                {
+                    ["Previous"] = Model.Previous,
+                    ["Next"] = Model.Next,
+                    ["Translations"] = Model.Translations,
+                });
+            }
+        </main>
+        <aside class="docs-toc" aria-label="@Model.Translations.TocLabel">
+            <p class="docs-toc-heading">@Model.Translations.TocLabel</p>
+            @{ await RenderComponentAsync<TableOfContents>(new Dictionary<string, object?>
+            {
+                ["Headings"] = Model.Headings,
+                ["MinLevel"] = Model.Config.TableOfContents.MinHeadingLevel,
+                ["MaxLevel"] = Model.Config.TableOfContents.MaxHeadingLevel,
+                ["Translations"] = Model.Translations,
+            }); }
+            <script>
+            (function(){
+                var toc = document.querySelector('.docs-toc nav');
+                if (!toc) return;
+                var links = Array.from(toc.querySelectorAll('a[href^="#"]'));
+                if (!links.length) return;
+                var headings = [];
+                for (var i = 0; i < links.length; i++){
+                    var el = document.getElementById(links[i].getAttribute('href').slice(1));
+                    if (el) headings.push({ el: el, link: links[i] });
+                }
+                if (!headings.length) return;
+                var active = null;
+                function setCurrent(entry){
+                    if (active === entry) return;
+                    if (active) active.link.removeAttribute('aria-current');
+                    active = entry;
+                    if (active) active.link.setAttribute('aria-current', 'true');
+                }
+                var offset = parseFloat(getComputedStyle(document.documentElement)
+                    .getPropertyValue('--docs-header-height')) || 56;
+                // Convert rem to px
+                offset = offset * parseFloat(getComputedStyle(document.documentElement).fontSize) + 16;
+                function onScroll(){
+                    // At the bottom of the page, activate the last heading
+                    if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 2){
+                        setCurrent(headings[headings.length - 1]);
+                        return;
+                    }
+                    var best = headings[0];
+                    for (var i = 0; i < headings.length; i++){
+                        if (headings[i].el.getBoundingClientRect().top <= offset){
+                            best = headings[i];
+                        } else {
+                            break;
+                        }
+                    }
+                    setCurrent(best);
+                }
+                var ticking = false;
+                window.addEventListener('scroll', function(){
+                    if (!ticking){
+                        ticking = true;
+                        requestAnimationFrame(function(){ onScroll(); ticking = false; });
+                    }
+                }, { passive: true });
+                onScroll();
+            })();
+            </script>
+        </aside>
+    </div>
+    <footer class="docs-footer">
+        @if (Model.Config.Footer is not null)
+        {
+            if (!string.IsNullOrEmpty(Model.Config.Footer.Text))
+            {
+                WriteLiteral(Model.Config.Footer.Text);
+            }
+            if (Model.Config.Footer.Links.Count > 0)
+            {
+                <ul class="docs-footer-links">
+                    @foreach (var link in Model.Config.Footer.Links)
+                    {
+                        <li><a href="@link.Href">@link.Label</a></li>
+                    }
+                </ul>
+            }
+        }
+        else
+        {
+            <p>@{
+                WriteLiteral(Atoll.Rendering.HtmlEncoder.Encode(Model.Translations.BuiltWithLabel));
+            } <a href="https://github.com/damianh/atoll">Atoll</a> &mdash; a .NET-native framework inspired by Astro.</p>
+        }
+    </footer>
+    @if (Model.EnableMermaid)
+    {
+        <script src="/scripts/atoll-docs-mermaid-init.js" type="module"></script>
+    }
+</body>
+</html>

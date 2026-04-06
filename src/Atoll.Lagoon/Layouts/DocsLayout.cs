@@ -1,13 +1,11 @@
 using Atoll.Build.Content.Markdown;
 using Atoll.Components;
-using Atoll.Islands;
 using Atoll.Lagoon.Assets;
-using Atoll.Lagoon.Components;
 using Atoll.Lagoon.Configuration;
 using Atoll.Lagoon.I18n;
-using Atoll.Lagoon.Islands;
 using Atoll.Lagoon.Navigation;
 using Atoll.Lagoon.Versioning;
+using Atoll.Slots;
 
 namespace Atoll.Lagoon.Layouts;
 
@@ -21,6 +19,7 @@ namespace Atoll.Lagoon.Layouts;
 /// (<see cref="PageTitle"/>, <see cref="PageDescription"/>, <see cref="PageHeadContent"/>,
 /// <see cref="Headings"/>, <see cref="SidebarItems"/>, <see cref="Previous"/>,
 /// <see cref="Next"/>, <see cref="BreadcrumbItems"/>), then place page content in the default slot.
+/// Rendering is delegated to <c>DocsLayoutTemplate.cshtml</c>.
 /// </remarks>
 public sealed class DocsLayout : AtollComponent
 {
@@ -93,343 +92,81 @@ public sealed class DocsLayout : AtollComponent
         var translations = locale?.Config.Translations ?? Config.Translations;
 
         // Resolve version from the content path after locale resolution.
-        // When locales are configured, version operates on locale.ContentPath; otherwise on the full CurrentPath.
         var contentPathForVersion = locale?.ContentPath ?? CurrentPath;
         var version = VersionResolver.Resolve(contentPathForVersion, Config.Versions);
 
         // Compute version- and locale-aware search index URL.
-        // Pattern: {basePath}/{localePrefix}/{versionPrefix}/search-index.json
         var localePathPrefix = locale is not null && !string.IsNullOrEmpty(locale.PathPrefix) ? locale.PathPrefix : "";
         var versionPathPrefix = version is not null && !string.IsNullOrEmpty(version.PathPrefix) ? version.PathPrefix : "";
-        string searchIndexUrl;
+        var searchIndexUrl = ComputeSearchIndexUrl(localePathPrefix, versionPathPrefix);
+
+        var logoSrc = !string.IsNullOrEmpty(Config.LogoSrc)
+            ? Config.LogoSrc
+            : LagoonAssets.DefaultFaviconPath;
+
+        // Compute edit link URL.
+        string? editHref = null;
+        if (Config.EditUrl is not null && PageSlug is not null)
+        {
+            editHref = Config.EditUrl.TrimEnd('/') + "/" + PageSlug.TrimStart('/');
+        }
+
+        // Compute path to current version for deprecated version notices.
+        string? currentVersionPath = null;
+        if (version?.Config.IsDeprecated == true)
+        {
+            currentVersionPath = VersionPathHelper.PrefixPath(version.ContentPath, "", localePathPrefix, Config.BasePath);
+        }
+
+        var model = new DocsLayoutModel(
+            Config,
+            PageTitle,
+            PageDescription,
+            PageHeadContent,
+            effectiveLang,
+            effectiveDir,
+            translations,
+            searchIndexUrl,
+            logoSrc,
+            locale,
+            localePathPrefix,
+            version,
+            Headings,
+            SidebarItems,
+            Previous,
+            Next,
+            BreadcrumbItems,
+            IsUntranslatedContent,
+            currentVersionPath,
+            editHref,
+            LastUpdated,
+            Config.EnableMermaid);
+
+        // Pass the page content slot through to the Razor template.
+        var pageSlot = context.Slots.GetSlotFragment(SlotCollection.DefaultSlotName);
+        var templateSlots = SlotCollection.FromDefault(pageSlot);
+
+        await ComponentRenderer.RenderSliceAsync<DocsLayoutTemplate, DocsLayoutModel>(
+            context.Destination,
+            model,
+            templateSlots);
+    }
+
+    private string ComputeSearchIndexUrl(string localePathPrefix, string versionPathPrefix)
+    {
         if (!string.IsNullOrEmpty(localePathPrefix) || !string.IsNullOrEmpty(versionPathPrefix))
         {
             var baseTrimmed = Config.BasePath.TrimEnd('/');
             var localeTrimmed = localePathPrefix.TrimEnd('/');
             var versionTrimmed = versionPathPrefix.TrimEnd('/');
-            searchIndexUrl = baseTrimmed + localeTrimmed + versionTrimmed + "/search-index.json";
-        }
-        else if (!string.IsNullOrEmpty(Config.BasePath))
-        {
-            searchIndexUrl = Config.BasePath.TrimEnd('/') + "/search-index.json";
-        }
-        else
-        {
-            searchIndexUrl = "/search-index.json";
+            return baseTrimmed + localeTrimmed + versionTrimmed + "/search-index.json";
         }
 
-        WriteHtml("<!DOCTYPE html>");
-        WriteHtml($"<html lang=\"{HtmlEncode(effectiveLang)}\" dir=\"{HtmlEncode(effectiveDir)}\">");
-
-        // <head>
-        await RenderAsync(ComponentRenderer.ToFragment<DocsBaseHead>(new Dictionary<string, object?>
+        if (!string.IsNullOrEmpty(Config.BasePath))
         {
-            ["Config"] = Config,
-            ["PageTitle"] = PageTitle,
-            ["PageDescription"] = PageDescription,
-            ["PageHeadContent"] = PageHeadContent,
-        }));
-
-        WriteHtml("<body>");
-
-        // Header
-        WriteHtml("<header class=\"docs-header\">");
-        WriteHtml("<div class=\"docs-header-inner\">");
-
-        // Mobile nav toggle island (only activates on mobile viewport)
-        await IslandRenderer.RenderIslandAsync<MobileNav>(
-            context.Destination,
-            new MobileNav().CreateMetadata()!,
-            new Dictionary<string, object?>
-            {
-                ["Translations"] = translations,
-            },
-            Atoll.Slots.SlotCollection.Empty);
-
-        // Logo / site title
-        WriteHtml("<a href=\"/\" class=\"docs-brand\">");
-        if (!string.IsNullOrEmpty(Config.LogoSrc))
-        {
-            WriteHtml($"<img src=\"{HtmlEncode(Config.LogoSrc)}\" alt=\"{HtmlEncode(Config.LogoAlt)}\" class=\"docs-logo\" />");
-        }
-        else
-        {
-            WriteHtml($"<img src=\"{LagoonAssets.DefaultFaviconPath}\" alt=\"{HtmlEncode(Config.LogoAlt)}\" class=\"docs-logo\" />");
+            return Config.BasePath.TrimEnd('/') + "/search-index.json";
         }
 
-        WriteText(Config.Title);
-        WriteHtml("</a>");
-
-        // Header right: search + theme toggle + social
-        WriteHtml("<div class=\"docs-header-actions\">");
-
-        // Search dialog island
-        await IslandRenderer.RenderIslandAsync<SearchDialog>(
-            context.Destination,
-            new SearchDialog().CreateMetadata()!,
-            new Dictionary<string, object?>
-            {
-                ["Translations"] = translations,
-                ["IndexUrl"] = searchIndexUrl,
-            },
-            Atoll.Slots.SlotCollection.Empty);
-
-        // Social links
-        foreach (var social in Config.Social)
-        {
-            WriteHtml($"<a href=\"{HtmlEncode(social.Url)}\" class=\"docs-social-link\" rel=\"noopener noreferrer\" target=\"_blank\">");
-            WriteText(social.Label);
-            WriteHtml("</a>");
-        }
-
-        // Language picker (only for multi-locale sites)
-        if (Config.Locales is not null && Config.Locales.Count > 1 && locale is not null)
-        {
-            await RenderAsync(ComponentRenderer.ToFragment<LanguagePicker>(new Dictionary<string, object?>
-            {
-                ["Locales"] = Config.Locales,
-                ["CurrentLocaleKey"] = locale.Key,
-                ["CurrentContentPath"] = locale.ContentPath,
-                ["BasePath"] = Config.BasePath,
-                ["Translations"] = translations,
-            }));
-        }
-
-        // Version picker (only for multi-version sites)
-        if (Config.Versions is not null && Config.Versions.Count > 1 && version is not null)
-        {
-            await RenderAsync(ComponentRenderer.ToFragment<VersionPicker>(new Dictionary<string, object?>
-            {
-                ["Versions"] = Config.Versions,
-                ["CurrentVersionKey"] = version.Key,
-                ["CurrentContentPath"] = version.ContentPath,
-                ["LocalePrefix"] = localePathPrefix,
-                ["BasePath"] = Config.BasePath,
-                ["Translations"] = translations,
-            }));
-        }
-
-        // Theme toggle island
-        await IslandRenderer.RenderIslandAsync<ThemeToggle>(
-            context.Destination,
-            new ThemeToggle().CreateMetadata()!,
-            new Dictionary<string, object?>
-            {
-                ["Translations"] = translations,
-            },
-            Atoll.Slots.SlotCollection.Empty);
-
-        WriteHtml("</div>"); // .docs-header-actions
-        WriteHtml("</div>"); // .docs-header-inner
-        WriteHtml("</header>");
-
-        // Body: sidebar + main + TOC
-        WriteHtml("<div class=\"docs-body\">");
-
-        // Sidebar (also serves as the mobile-nav-menu target)
-        WriteHtml($"<aside class=\"docs-sidebar\" id=\"mobile-nav-menu\" aria-label=\"{HtmlEncode(translations.SiteNavigationLabel)}\">");
-        await RenderAsync(ComponentRenderer.ToFragment<Sidebar>(new Dictionary<string, object?>
-        {
-            ["Items"] = SidebarItems,
-            ["Translations"] = translations,
-            ["ChevronPosition"] = Config.SidebarChevronPosition,
-        }));
-        WriteHtml("</aside>");
-        WriteHtml("<script src=\"/scripts/atoll-sidebar-state.js\"></script>");
-
-        // Main content
-        WriteHtml("<main class=\"docs-main\" id=\"main-content\">");
-
-        // Breadcrumbs
-        if (BreadcrumbItems.Count > 0)
-        {
-            await RenderAsync(ComponentRenderer.ToFragment<Breadcrumbs>(new Dictionary<string, object?>
-            {
-                ["Items"] = BreadcrumbItems,
-                ["Translations"] = translations,
-            }));
-        }
-
-        // Article slot
-        if (IsUntranslatedContent && locale is not null)
-        {
-            WriteHtml("<div class=\"untranslated-notice\">");
-            WriteText(translations.UntranslatedContentNotice);
-            WriteHtml("</div>");
-        }
-
-        // Deprecated version notice
-        if (version?.Config.IsDeprecated == true)
-        {
-            var deprecationMessage = version.Config.DeprecationMessage ?? translations.OutdatedVersionNotice;
-            var currentVersionPath = VersionPathHelper.PrefixPath(version.ContentPath, "", localePathPrefix, Config.BasePath);
-            WriteHtml("<div class=\"deprecated-version-notice\">");
-            WriteText(deprecationMessage);
-            WriteHtml($" <a href=\"{HtmlEncode(currentVersionPath)}\">");
-            WriteText(translations.OutdatedVersionLinkText);
-            WriteHtml("</a>");
-            WriteHtml("</div>");
-        }
-
-        WriteHtml("<article class=\"docs-article prose\">");
-        await RenderSlotAsync();
-        WriteHtml("</article>");
-
-        // Content footer: edit link + last updated
-        var hasEditLink = Config.EditUrl is not null && PageSlug is not null;
-        var hasLastUpdated = LastUpdated is not null;
-        if (hasEditLink || hasLastUpdated)
-        {
-            WriteHtml("<div class=\"docs-content-footer\">");
-            if (hasEditLink)
-            {
-                var editHref = Config.EditUrl!.TrimEnd('/') + "/" + PageSlug!.TrimStart('/');
-                WriteHtml($"<a href=\"{HtmlEncode(editHref)}\" class=\"docs-edit-link\" target=\"_blank\" rel=\"noopener noreferrer\">");
-                WriteText(translations.EditPageLabel);
-                WriteHtml("</a>");
-            }
-            if (hasLastUpdated)
-            {
-                var isoDate = LastUpdated!.Value.ToString("O");
-                var displayDate = LastUpdated!.Value.ToString("yyyy-MM-dd");
-                WriteHtml("<p class=\"docs-last-updated\">");
-                WriteHtml($"<span>{HtmlEncode(translations.LastUpdatedLabel)}:</span> ");
-                WriteHtml($"<time datetime=\"{HtmlEncode(isoDate)}\">{HtmlEncode(displayDate)}</time>");
-                WriteHtml("</p>");
-            }
-            WriteHtml("</div>");
-        }
-
-        // Pagination
-        if (Previous is not null || Next is not null)
-        {
-            await RenderAsync(ComponentRenderer.ToFragment<Pagination>(new Dictionary<string, object?>
-            {
-                ["Previous"] = Previous,
-                ["Next"] = Next,
-                ["Translations"] = translations,
-            }));
-        }
-
-        WriteHtml("</main>");
-
-        // Table of contents sidebar (desktop only)
-        WriteHtml($"<aside class=\"docs-toc\" aria-label=\"{HtmlEncode(translations.TocLabel)}\">");
-        WriteHtml($"<p class=\"docs-toc-heading\">");
-        WriteText(translations.TocLabel);
-        WriteHtml("</p>");
-        await RenderAsync(ComponentRenderer.ToFragment<TableOfContents>(new Dictionary<string, object?>
-        {
-            ["Headings"] = Headings,
-            ["MinLevel"] = Config.TableOfContents.MinHeadingLevel,
-            ["MaxLevel"] = Config.TableOfContents.MaxHeadingLevel,
-            ["Translations"] = translations,
-        }));
-        WriteHtml(TocScrollTrackingScript);
-        WriteHtml("</aside>");
-
-        WriteHtml("</div>"); // .docs-body
-
-        // Footer
-        WriteHtml("<footer class=\"docs-footer\">");
-        if (Config.Footer is not null)
-        {
-            // Custom footer: render text and/or links
-            if (!string.IsNullOrEmpty(Config.Footer.Text))
-            {
-                WriteHtml(Config.Footer.Text);
-            }
-            if (Config.Footer.Links.Count > 0)
-            {
-                WriteHtml("<ul class=\"docs-footer-links\">");
-                foreach (var link in Config.Footer.Links)
-                {
-                    WriteHtml("<li>");
-                    WriteHtml($"<a href=\"{HtmlEncode(link.Href)}\">");
-                    WriteText(link.Label);
-                    WriteHtml("</a>");
-                    WriteHtml("</li>");
-                }
-                WriteHtml("</ul>");
-            }
-        }
-        else
-        {
-            // Default footer
-            WriteHtml("<p>");
-            WriteText(translations.BuiltWithLabel);
-            WriteHtml(" <a href=\"https://github.com/damianh/atoll\">Atoll</a> &mdash; a .NET-native framework inspired by Astro.</p>");
-        }
-        WriteHtml("</footer>");
-
-        // Mermaid support (conditionally injected)
-        if (Config.EnableMermaid)
-        {
-            WriteHtml("<script src=\"/scripts/atoll-docs-mermaid-init.js\" type=\"module\"></script>");
-        }
-
-        WriteHtml("</body>");
-        WriteHtml("</html>");
+        return "/search-index.json";
     }
-
-    private static string HtmlEncode(string value) =>
-        System.Net.WebUtility.HtmlEncode(value);
-
-    /// <summary>
-    /// Inline script that highlights the current ToC link as the user scrolls.
-    /// Listens to the <c>scroll</c> event and finds the topmost heading that has
-    /// scrolled past the header, then sets <c>aria-current="true"</c> on the
-    /// corresponding ToC link. Also handles anchor click navigation.
-    /// </summary>
-    private const string TocScrollTrackingScript = """
-        <script>
-        (function(){
-            var toc = document.querySelector('.docs-toc nav');
-            if (!toc) return;
-            var links = Array.from(toc.querySelectorAll('a[href^="#"]'));
-            if (!links.length) return;
-            var headings = [];
-            for (var i = 0; i < links.length; i++){
-                var el = document.getElementById(links[i].getAttribute('href').slice(1));
-                if (el) headings.push({ el: el, link: links[i] });
-            }
-            if (!headings.length) return;
-            var active = null;
-            function setCurrent(entry){
-                if (active === entry) return;
-                if (active) active.link.removeAttribute('aria-current');
-                active = entry;
-                if (active) active.link.setAttribute('aria-current', 'true');
-            }
-            var offset = parseFloat(getComputedStyle(document.documentElement)
-                .getPropertyValue('--docs-header-height')) || 56;
-            // Convert rem to px
-            offset = offset * parseFloat(getComputedStyle(document.documentElement).fontSize) + 16;
-            function onScroll(){
-                // At the bottom of the page, activate the last heading
-                if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 2){
-                    setCurrent(headings[headings.length - 1]);
-                    return;
-                }
-                var best = headings[0];
-                for (var i = 0; i < headings.length; i++){
-                    if (headings[i].el.getBoundingClientRect().top <= offset){
-                        best = headings[i];
-                    } else {
-                        break;
-                    }
-                }
-                setCurrent(best);
-            }
-            var ticking = false;
-            window.addEventListener('scroll', function(){
-                if (!ticking){
-                    ticking = true;
-                    requestAnimationFrame(function(){ onScroll(); ticking = false; });
-                }
-            }, { passive: true });
-            onScroll();
-        })();
-        </script>
-        """;
 }
