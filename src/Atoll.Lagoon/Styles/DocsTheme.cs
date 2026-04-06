@@ -16,7 +16,7 @@ namespace Atoll.Lagoon.Styles;
 /// sidebar nav, TOC, pagination, breadcrumbs, hero, and search dialog.
 /// </remarks>
 [GlobalStyle]
-[Styles(Reset + LightTokens + DarkTokens + Layout + Typography + Prose + CodeBlocks + SyntaxHighlightTokens +
+[Styles(Reset + LightTokens + DarkTokens + Layout + ScrollbarStyles + Typography + Prose + CodeBlocks + SyntaxHighlightTokens + CodeCopyButtonStyles +
         SidebarNav + TocNav + PaginationStyles + BreadcrumbStyles + HeroStyles + SplashStyles + SearchStyles +
         LanguagePickerStyles + UntranslatedNoticeStyles + AsideStyles + ContentFooterStyles + FooterLinkStyles)]
 public sealed class DocsTheme : AtollComponent
@@ -81,6 +81,10 @@ public sealed class DocsTheme : AtollComponent
             --aside-danger-border: #ef4444;
             --aside-danger-bg: #fef2f2;
             --aside-danger-text: #991b1b;
+            /* Scrollbar */
+            --docs-scrollbar-thumb: #c1c1c1;
+            --docs-scrollbar-thumb-hover: #a8a8a8;
+            --docs-scrollbar-track: transparent;
             /* Dimensions */
             --docs-sidebar-width: 16rem;
             --docs-toc-width: 14rem;
@@ -116,6 +120,10 @@ public sealed class DocsTheme : AtollComponent
             --docs-code-text: #e6edf3;
             --docs-code-inline-bg: #343942;
             --docs-code-inline-text: #f78166;
+            /* Scrollbar */
+            --docs-scrollbar-thumb: #484f58;
+            --docs-scrollbar-thumb-hover: #6e7681;
+            --docs-scrollbar-track: transparent;
             /* Aside variants */
             --aside-note-border: #58a6ff;
             --aside-note-bg: #161b22;
@@ -238,6 +246,47 @@ public sealed class DocsTheme : AtollComponent
         }
         """;
 
+    private const string ScrollbarStyles = """
+        /* ---- Scrollbar theming ---- */
+
+        /* Modern browsers (Firefox, Chrome 121+) */
+        .docs-sidebar,
+        .docs-toc,
+        #search-results,
+        .prose pre {
+            scrollbar-width: thin;
+            scrollbar-color: var(--docs-scrollbar-thumb) var(--docs-scrollbar-track);
+        }
+
+        /* WebKit / Blink (Chrome < 121, Safari, Edge) */
+        .docs-sidebar::-webkit-scrollbar,
+        .docs-toc::-webkit-scrollbar,
+        #search-results::-webkit-scrollbar,
+        .prose pre::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .docs-sidebar::-webkit-scrollbar-track,
+        .docs-toc::-webkit-scrollbar-track,
+        #search-results::-webkit-scrollbar-track,
+        .prose pre::-webkit-scrollbar-track {
+            background: var(--docs-scrollbar-track);
+        }
+        .docs-sidebar::-webkit-scrollbar-thumb,
+        .docs-toc::-webkit-scrollbar-thumb,
+        #search-results::-webkit-scrollbar-thumb,
+        .prose pre::-webkit-scrollbar-thumb {
+            background-color: var(--docs-scrollbar-thumb);
+            border-radius: 4px;
+        }
+        .docs-sidebar::-webkit-scrollbar-thumb:hover,
+        .docs-toc::-webkit-scrollbar-thumb:hover,
+        #search-results::-webkit-scrollbar-thumb:hover,
+        .prose pre::-webkit-scrollbar-thumb:hover {
+            background-color: var(--docs-scrollbar-thumb-hover);
+        }
+        """;
+
     private const string Typography = """
         /* ---- Typography ---- */
         h1, h2, h3, h4, h5, h6 {
@@ -351,6 +400,51 @@ public sealed class DocsTheme : AtollComponent
         [data-theme="dark"] .highlight code .tm-punctuation { color: #89ddff; }
         [data-theme="dark"] .highlight code .tm-namespace { color: #ffcb6b; }
         [data-theme="dark"] .highlight code .tm-preprocessor { color: #546e7a; }
+        """;
+
+    private const string CodeCopyButtonStyles = """
+        /* ---- Code copy button ---- */
+        .code-block-wrapper {
+            position: relative;
+        }
+        .code-copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            padding: 0;
+            border: 1px solid var(--docs-border);
+            border-radius: 0.375rem;
+            background: var(--docs-bg-subtle);
+            color: var(--docs-text-muted);
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+        }
+        .code-block-wrapper:hover .code-copy-btn,
+        .code-copy-btn:focus-visible {
+            opacity: 1;
+        }
+        .code-copy-btn:hover {
+            background: var(--docs-bg-raised);
+            color: var(--docs-text);
+        }
+        .code-copy-btn svg {
+            width: 1rem;
+            height: 1rem;
+            flex-shrink: 0;
+        }
+        .code-copy-btn .check-icon { display: none; }
+        .code-copy-btn.copied .copy-icon { display: none; }
+        .code-copy-btn.copied .check-icon { display: block; }
+        .code-copy-btn.copied {
+            color: var(--aside-tip-text);
+            opacity: 1;
+        }
         """;
 
     private const string SidebarNav = """

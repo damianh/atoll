@@ -73,6 +73,28 @@ internal sealed class SyntaxHighlightCodeBlockRenderer : HtmlObjectRenderer<Code
     // making both LoadGrammar and TokenizeLine unsafe for concurrent access.
     private static readonly object GrammarLoadLock = new();
 
+    // Copy-to-clipboard button injected next to each highlighted <pre> block.
+    // Uses the Clipboard API with a brief "Copied!" feedback state. The SVG icons
+    // are inlined to avoid external asset dependencies.
+    private const string CopyButton = """
+        <button type="button" class="code-copy-btn" aria-label="Copy code" onclick="
+            let c=this.closest('.code-block-wrapper').querySelector('code');
+            navigator.clipboard.writeText(c.innerText).then(()=>{
+                this.classList.add('copied');
+                setTimeout(()=>this.classList.remove('copied'),2000);
+            })">
+            <svg class="copy-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+            </svg>
+        </button>
+        """;
+
     private readonly IMarkdownObjectRenderer _fallback;
 
     /// <summary>
@@ -140,6 +162,7 @@ internal sealed class SyntaxHighlightCodeBlockRenderer : HtmlObjectRenderer<Code
         IGrammar grammar,
         string lang)
     {
+        renderer.Write("""<div class="code-block-wrapper">""");
         renderer.Write("<pre class=\"highlight\"><code class=\"language-");
         renderer.Write(lang.ToLowerInvariant());
         renderer.Write("\">");
@@ -171,6 +194,8 @@ internal sealed class SyntaxHighlightCodeBlockRenderer : HtmlObjectRenderer<Code
         }
 
         renderer.Write("</code></pre>");
+        renderer.Write(CopyButton);
+        renderer.Write("</div>");
         renderer.WriteLine();
     }
 
