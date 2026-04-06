@@ -12,11 +12,16 @@ namespace Atoll.Lagoon.Components;
 /// <see cref="ChevronPosition"/>.
 /// </summary>
 /// <remarks>
+/// <para>
 /// Each group consumes one index from the shared <see cref="Counter"/>, emitting
 /// it as a <c>data-index</c> attribute on the <c>&lt;details&gt;</c> element and
 /// on an <c>&lt;sl-sidebar-restore&gt;</c> custom element inside the group.
 /// The client-side script uses these indices to restore open/closed state from
 /// <c>sessionStorage</c> without a flash of wrong state.
+/// </para>
+/// <para>
+/// Rendering is delegated to <c>SidebarGroupTemplate.cshtml</c>.
+/// </para>
 /// </remarks>
 public sealed class SidebarGroup : AtollComponent
 {
@@ -43,46 +48,14 @@ public sealed class SidebarGroup : AtollComponent
     protected override async Task RenderCoreAsync(RenderContext context)
     {
         var groupIndex = Counter.Next();
-        var open = Group.IsActive ? " open" : "";
-        var activeAttr = Group.IsActive ? " data-active" : "";
         var positionClass = ChevronPosition == SidebarChevronPosition.Start
             ? "sidebar-chevron-start"
             : "sidebar-chevron-end";
 
-        WriteHtml($"<details class=\"{positionClass}\" data-index=\"{groupIndex}\"{activeAttr}{open}><summary>");
-        WriteText(Group.Label);
-        if (Group.Badge is not null)
-        {
-            var badgeClass = SidebarLink.BadgeCssClass(Group.Badge.Variant);
-            WriteHtml($" <span class=\"{badgeClass}\">{System.Net.WebUtility.HtmlEncode(Group.Badge.Text)}</span>");
-        }
+        var model = new SidebarGroupModel(Group, groupIndex, positionClass, ChevronPosition, Counter);
 
-        WriteHtml("""<span class="sidebar-chevron" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>""");
-        WriteHtml($"</summary><sl-sidebar-restore data-index=\"{groupIndex}\"></sl-sidebar-restore><ul>");
-
-        foreach (var child in Group.Items)
-        {
-            if (child.IsGroup)
-            {
-                WriteHtml("<li class=\"sidebar-group-item\">");
-                var groupFragment = ComponentRenderer.ToFragment<SidebarGroup>(
-                    new Dictionary<string, object?>
-                    {
-                        ["Group"] = child,
-                        ["ChevronPosition"] = ChevronPosition,
-                        ["Counter"] = Counter,
-                    });
-                await RenderAsync(groupFragment);
-                WriteHtml("</li>");
-            }
-            else
-            {
-                var linkFragment = ComponentRenderer.ToFragment<SidebarLink>(
-                    new Dictionary<string, object?> { ["Item"] = child });
-                await RenderAsync(linkFragment);
-            }
-        }
-
-        WriteHtml("</ul></details>");
+        await ComponentRenderer.RenderSliceAsync<SidebarGroupTemplate, SidebarGroupModel>(
+            context.Destination,
+            model);
     }
 }

@@ -1,0 +1,39 @@
+@inherits Atoll.Components.AtollSlice<Atoll.Lagoon.Components.SidebarGroupModel>
+@{
+    var group = Model.Group;
+    var groupIndex = Model.GroupIndex;
+    var activeAttr = group.IsActive ? " data-active" : "";
+    var open = group.IsActive ? " open" : "";
+}
+@{WriteLiteral($"<details class=\"{Model.PositionClass}\" data-index=\"{groupIndex}\"{activeAttr}{open}>");}
+<summary>@group.Label@if (group.Badge is not null)
+    {
+        var badgeClass = Atoll.Lagoon.Components.SidebarLink.BadgeCssClass(group.Badge.Variant);
+        WriteLiteral($" <span class=\"{badgeClass}\">{System.Net.WebUtility.HtmlEncode(group.Badge.Text)}</span>");
+    }<span class="sidebar-chevron" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></summary>
+@{WriteLiteral($"<sl-sidebar-restore data-index=\"{groupIndex}\"></sl-sidebar-restore>");}
+<ul>
+    @foreach (var child in group.Items)
+    {
+        if (child.IsGroup)
+        {
+            <li class="sidebar-group-item">
+                @{
+                    await RenderComponentAsync<Atoll.Lagoon.Components.SidebarGroup>(
+                        new Dictionary<string, object?>
+                        {
+                            ["Group"] = child,
+                            ["ChevronPosition"] = Model.ChevronPosition,
+                            ["Counter"] = Model.Counter,
+                        });
+                }
+            </li>
+        }
+        else
+        {
+            await RenderComponentAsync<Atoll.Lagoon.Components.SidebarLink>(
+                new Dictionary<string, object?> { ["Item"] = child });
+        }
+    }
+</ul>
+</details>

@@ -1,0 +1,57 @@
+@inherits Atoll.Components.AtollSlice<Atoll.Lagoon.Components.TableOfContentsModel>
+@{
+    var encodedLabel = System.Net.WebUtility.HtmlEncode(Model.Translations.TocLabel);
+    WriteLiteral($"<nav aria-label=\"{encodedLabel}\">");
+}
+<ul>
+    @{ RenderItems(Model.FilteredHeadings, Model.MinLevel); }
+</ul>
+@{ WriteLiteral("</nav>"); }
+
+@functions {
+    private void RenderItems(List<Atoll.Build.Content.Markdown.MarkdownHeading> headings, int currentDepth)
+    {
+        var i = 0;
+        while (i < headings.Count)
+        {
+            var heading = headings[i];
+
+            if (heading.Depth < currentDepth)
+            {
+                return;
+            }
+
+            if (heading.Depth == currentDepth)
+            {
+                var anchor = heading.Id is not null ? $"#{heading.Id}" : "";
+                var encodedAnchor = System.Net.WebUtility.HtmlEncode(anchor);
+                var encodedText = System.Net.WebUtility.HtmlEncode(heading.Text);
+
+                WriteLiteral($"<li><a href=\"{encodedAnchor}\">{encodedText}</a>");
+
+                // Collect children (deeper headings immediately following this one).
+                var children = new List<Atoll.Build.Content.Markdown.MarkdownHeading>();
+                var j = i + 1;
+                while (j < headings.Count && headings[j].Depth > currentDepth)
+                {
+                    children.Add(headings[j]);
+                    j++;
+                }
+
+                if (children.Count > 0)
+                {
+                    WriteLiteral("<ul>");
+                    RenderItems(children, currentDepth + 1);
+                    WriteLiteral("</ul>");
+                }
+
+                WriteLiteral("</li>");
+                i = j;
+            }
+            else
+            {
+                i++;
+            }
+        }
+    }
+}

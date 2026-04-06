@@ -9,6 +9,9 @@ namespace Atoll.Lagoon.Components;
 /// by <see cref="MarkdownRenderer"/>. Filters headings by configurable min/max depth
 /// and renders a nested <c>&lt;nav&gt;</c> / <c>&lt;ul&gt;</c> with anchor links.
 /// </summary>
+/// <remarks>
+/// Rendering is delegated to <c>TableOfContentsTemplate.cshtml</c>.
+/// </remarks>
 public sealed class TableOfContents : AtollComponent
 {
     /// <summary>
@@ -37,7 +40,7 @@ public sealed class TableOfContents : AtollComponent
     public UiTranslations Translations { get; set; } = UiTranslations.Default;
 
     /// <inheritdoc />
-    protected override Task RenderCoreAsync(RenderContext context)
+    protected override async Task RenderCoreAsync(RenderContext context)
     {
         var filtered = Headings
             .Where(h => h.Depth >= MinLevel && h.Depth <= MaxLevel)
@@ -45,61 +48,13 @@ public sealed class TableOfContents : AtollComponent
 
         if (filtered.Count == 0)
         {
-            return Task.CompletedTask;
+            return;
         }
 
-        WriteHtml($"<nav aria-label=\"{System.Net.WebUtility.HtmlEncode(Translations.TocLabel)}\"><ul>");
-        RenderItems(filtered, MinLevel);
-        WriteHtml("</ul></nav>");
-        return Task.CompletedTask;
-    }
+        var model = new TableOfContentsModel(filtered, MinLevel, Translations);
 
-    private void RenderItems(List<MarkdownHeading> headings, int currentDepth)
-    {
-        var i = 0;
-        while (i < headings.Count)
-        {
-            var heading = headings[i];
-
-            if (heading.Depth < currentDepth)
-            {
-                // Heading is shallower — caller should handle it.
-                return;
-            }
-
-            if (heading.Depth == currentDepth)
-            {
-                var anchor = heading.Id is not null ? $"#{heading.Id}" : "";
-                WriteHtml("<li>");
-                WriteHtml($"<a href=\"{System.Net.WebUtility.HtmlEncode(anchor)}\">");
-                WriteText(heading.Text);
-                WriteHtml("</a>");
-
-                // Check if next headings are deeper (children).
-                var children = new List<MarkdownHeading>();
-                var j = i + 1;
-                while (j < headings.Count && headings[j].Depth > currentDepth)
-                {
-                    children.Add(headings[j]);
-                    j++;
-                }
-
-                if (children.Count > 0)
-                {
-                    WriteHtml("<ul>");
-                    RenderItems(children, currentDepth + 1);
-                    WriteHtml("</ul>");
-                }
-
-                WriteHtml("</li>");
-                i = j; // skip past the children
-            }
-            else
-            {
-                // heading.Depth > currentDepth — shouldn't happen in a well-formed list,
-                // but handle gracefully by treating as same level.
-                i++;
-            }
-        }
+        await ComponentRenderer.RenderSliceAsync<TableOfContentsTemplate, TableOfContentsModel>(
+            context.Destination,
+            model);
     }
 }

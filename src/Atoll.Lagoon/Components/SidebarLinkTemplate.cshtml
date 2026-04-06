@@ -1,0 +1,11 @@
+@inherits Atoll.Components.AtollSlice<Atoll.Lagoon.Components.SidebarLinkModel>
+@{
+    var item = Model.Item;
+    var ariaCurrent = item.IsCurrent ? " aria-current=\"page\"" : "";
+    var activeClass = item.IsActive ? " class=\"active\"" : "";
+}
+@{WriteLiteral($"<li{activeClass}><a href=\"{System.Net.WebUtility.HtmlEncode(item.Href!)}\"");}@{WriteLiteral(ariaCurrent);}@{WriteLiteral(">");}@item.Label@if (item.Badge is not null)
+{
+    var badgeClass = Atoll.Lagoon.Components.SidebarLink.BadgeCssClass(item.Badge.Variant);
+    WriteLiteral($" <span class=\"{badgeClass}\">{System.Net.WebUtility.HtmlEncode(item.Badge.Text)}</span>");
+}@{WriteLiteral("</a></li>");}

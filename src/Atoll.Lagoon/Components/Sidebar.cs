@@ -21,6 +21,9 @@ namespace Atoll.Lagoon.Components;
 /// structural fingerprint of the sidebar. The client script discards persisted
 /// state when the hash changes (e.g. after a config change).
 /// </para>
+/// <para>
+/// Rendering is delegated to <c>SidebarTemplate.cshtml</c>.
+/// </para>
 /// </remarks>
 public sealed class Sidebar : AtollComponent
 {
@@ -44,37 +47,13 @@ public sealed class Sidebar : AtollComponent
     {
         var hash = ComputeHash(Items);
         var navLabel = System.Net.WebUtility.HtmlEncode(Translations.SidebarNavLabel);
-        WriteHtml($"<nav aria-label=\"{navLabel}\" data-hash=\"{hash}\">");
-        WriteHtml(RestoreScript);
-        WriteHtml("<ul>");
-
         var counter = new GroupIndexCounter();
-        foreach (var item in Items)
-        {
-            if (item.IsGroup)
-            {
-                WriteHtml("<li class=\"sidebar-group-item\">");
-                var groupFragment = ComponentRenderer.ToFragment<SidebarGroup>(
-                    new Dictionary<string, object?>
-                    {
-                        ["Group"] = item,
-                        ["ChevronPosition"] = ChevronPosition,
-                        ["Counter"] = counter,
-                    });
-                await RenderAsync(groupFragment);
-                WriteHtml("</li>");
-            }
-            else
-            {
-                var linkFragment = ComponentRenderer.ToFragment<SidebarLink>(
-                    new Dictionary<string, object?> { ["Item"] = item });
-                await RenderAsync(linkFragment);
-            }
-        }
 
-        WriteHtml("</ul>");
-        WriteHtml(ScrollRestoreScript);
-        WriteHtml("</nav>");
+        var model = new SidebarModel(Items, hash, navLabel, ChevronPosition, counter);
+
+        await ComponentRenderer.RenderSliceAsync<SidebarTemplate, SidebarModel>(
+            context.Destination,
+            model);
     }
 
     // ── Hash computation ─────────────────────────────────────────────────────
@@ -103,65 +82,4 @@ public sealed class Sidebar : AtollComponent
             AppendHash(item.Items, ref hash);
         }
     }
-
-    // ── Inline scripts ───────────────────────────────────────────────────────
-
-    /// <summary>
-    /// Inline script emitted BEFORE the <c>&lt;ul&gt;</c>. Runs synchronously so the
-    /// <c>sl-sidebar-restore</c> custom element is defined before any
-    /// <c>&lt;details&gt;</c> elements are parsed.
-    /// </summary>
-    private const string RestoreScript = """
-        <script>
-        (function(){
-          try{
-            if(window.matchMedia('(max-width:768px)').matches)return;
-            var key='atoll:sidebar-state';
-            var raw=sessionStorage.getItem(key);
-            if(!raw)return;
-            var state=JSON.parse(raw);
-            var nav=document.querySelector('.docs-sidebar nav[data-hash]');
-            if(!nav||nav.getAttribute('data-hash')!==state.hash){sessionStorage.removeItem(key);return;}
-            window.__atollSidebarState=state;
-          }catch(e){}
-        })();
-        if(!customElements.get('sl-sidebar-restore')){
-          customElements.define('sl-sidebar-restore',class extends HTMLElement{
-            connectedCallback(){
-              try{
-                var state=window.__atollSidebarState;
-                if(!state||!state.open)return;
-                var i=parseInt(this.dataset.index);
-                if(isNaN(i)||i>=state.open.length)return;
-                var val=state.open[i];
-                if(val===null||val===undefined)return;
-                var details=this.closest('details');
-                if(!details)return;
-                if(details.hasAttribute('data-active'))return;
-                if(val)details.setAttribute('open','');
-                else details.removeAttribute('open');
-              }catch(e){}
-            }
-          });
-        }
-        </script>
-        """;
-
-    /// <summary>
-    /// Inline script emitted AFTER the <c>&lt;/ul&gt;</c>. Restores sidebar scroll
-    /// position from the persisted state.
-    /// </summary>
-    private const string ScrollRestoreScript = """
-        <script>
-        (function(){
-          try{
-            if(window.matchMedia('(max-width:768px)').matches)return;
-            var state=window.__atollSidebarState;
-            if(!state||typeof state.scroll!=='number')return;
-            var aside=document.querySelector('.docs-sidebar');
-            if(aside)aside.scrollTop=state.scroll;
-          }catch(e){}
-        })();
-        </script>
-        """;
 }
