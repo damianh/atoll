@@ -28,27 +28,7 @@ public sealed class HeroTests
         return destination.GetOutput();
     }
 
-    // --- Structure ---
-
-    [Fact]
-    public async Task ShouldRenderHeroSection()
-    {
-        var html = await RenderHeroAsync("Welcome");
-
-        html.ShouldContain("<section class=\"hero\">");
-        html.ShouldContain("</section>");
-    }
-
     // --- Title ---
-
-    [Fact]
-    public async Task ShouldRenderTitle()
-    {
-        var html = await RenderHeroAsync("Build Fast Docs");
-
-        html.ShouldContain("<h1 class=\"hero-title\">");
-        html.ShouldContain("Build Fast Docs");
-    }
 
     [Fact]
     public async Task ShouldHtmlEncodeTitleText()

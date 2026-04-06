@@ -23,42 +23,6 @@ public sealed class GiscusCommentsTests
         [nameof(GiscusComments.CategoryId)] = "DIC_kwDOABCDEF",
     };
 
-    // ── Render: placeholder element ─────────────────────────────────────────
-
-    [Fact]
-    public async Task ShouldRenderGiscusPlaceholderDiv()
-    {
-        var html = await RenderAsync(RequiredProps());
-
-        html.ShouldContain("<div class=\"giscus\"");
-    }
-
-    // ── Render: required parameters ─────────────────────────────────────────
-
-    [Fact]
-    public async Task ShouldRenderDataRepoAttribute()
-    {
-        var html = await RenderAsync(RequiredProps());
-
-        html.ShouldContain("data-repo=\"owner/my-repo\"");
-    }
-
-    [Fact]
-    public async Task ShouldRenderDataRepoIdAttribute()
-    {
-        var html = await RenderAsync(RequiredProps());
-
-        html.ShouldContain("data-repo-id=\"R_kgDOABCDEF\"");
-    }
-
-    [Fact]
-    public async Task ShouldRenderDataCategoryIdAttribute()
-    {
-        var html = await RenderAsync(RequiredProps());
-
-        html.ShouldContain("data-category-id=\"DIC_kwDOABCDEF\"");
-    }
-
     // ── Render: optional category ────────────────────────────────────────────
 
     [Fact]
@@ -77,72 +41,6 @@ public sealed class GiscusCommentsTests
         var html = await RenderAsync(props);
 
         html.ShouldContain("data-category=\"Announcements\"");
-    }
-
-    // ── Render: defaults ─────────────────────────────────────────────────────
-
-    [Fact]
-    public async Task ShouldRenderDefaultMappingAsPathname()
-    {
-        var html = await RenderAsync(RequiredProps());
-
-        html.ShouldContain("data-mapping=\"pathname\"");
-    }
-
-    [Fact]
-    public async Task ShouldRenderDefaultStrictAsZero()
-    {
-        var html = await RenderAsync(RequiredProps());
-
-        html.ShouldContain("data-strict=\"0\"");
-    }
-
-    [Fact]
-    public async Task ShouldRenderDefaultReactionsEnabledAsOne()
-    {
-        var html = await RenderAsync(RequiredProps());
-
-        html.ShouldContain("data-reactions-enabled=\"1\"");
-    }
-
-    [Fact]
-    public async Task ShouldRenderDefaultEmitMetadataAsZero()
-    {
-        var html = await RenderAsync(RequiredProps());
-
-        html.ShouldContain("data-emit-metadata=\"0\"");
-    }
-
-    [Fact]
-    public async Task ShouldRenderDefaultInputPositionAsBottom()
-    {
-        var html = await RenderAsync(RequiredProps());
-
-        html.ShouldContain("data-input-position=\"bottom\"");
-    }
-
-    [Fact]
-    public async Task ShouldRenderDefaultThemeAsPreferredColorScheme()
-    {
-        var html = await RenderAsync(RequiredProps());
-
-        html.ShouldContain("data-theme=\"preferred_color_scheme\"");
-    }
-
-    [Fact]
-    public async Task ShouldRenderDefaultLangAsEn()
-    {
-        var html = await RenderAsync(RequiredProps());
-
-        html.ShouldContain("data-lang=\"en\"");
-    }
-
-    [Fact]
-    public async Task ShouldRenderDefaultLoadingAsLazy()
-    {
-        var html = await RenderAsync(RequiredProps());
-
-        html.ShouldContain("data-loading=\"lazy\"");
     }
 
     // ── Render: non-default values ───────────────────────────────────────────

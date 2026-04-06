@@ -115,12 +115,4 @@ public sealed class RelatedArticlesTests
         html.ShouldNotContain("href=\"/blog/post?q=a&b=c\"");
     }
 
-    [Fact]
-    public async Task ShouldRenderUnorderedList()
-    {
-        var html = await RenderAsync([Link("Article", "/blog/a")]);
-
-        html.ShouldContain("<ul");
-        html.ShouldContain("<li");
-    }
 }

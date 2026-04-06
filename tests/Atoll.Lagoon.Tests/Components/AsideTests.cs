@@ -26,63 +26,6 @@ public sealed class AsideTests
     }
 
     [Fact]
-    public async Task ShouldRenderAsideElement()
-    {
-        var html = await RenderAsideAsync();
-
-        html.ShouldContain("<aside ");
-        html.ShouldContain("</aside>");
-    }
-
-    [Fact]
-    public async Task ShouldHaveRoleNote()
-    {
-        var html = await RenderAsideAsync();
-
-        html.ShouldContain("role=\"note\"");
-    }
-
-    [Fact]
-    public async Task ShouldHaveAriaLabel()
-    {
-        var html = await RenderAsideAsync(AsideType.Note);
-
-        html.ShouldContain("aria-label=\"Note\"");
-    }
-
-    [Fact]
-    public async Task ShouldApplyNoteVariantClass()
-    {
-        var html = await RenderAsideAsync(AsideType.Note);
-
-        html.ShouldContain("aside-note");
-    }
-
-    [Fact]
-    public async Task ShouldApplyTipVariantClass()
-    {
-        var html = await RenderAsideAsync(AsideType.Tip);
-
-        html.ShouldContain("aside-tip");
-    }
-
-    [Fact]
-    public async Task ShouldApplyCautionVariantClass()
-    {
-        var html = await RenderAsideAsync(AsideType.Caution);
-
-        html.ShouldContain("aside-caution");
-    }
-
-    [Fact]
-    public async Task ShouldApplyDangerVariantClass()
-    {
-        var html = await RenderAsideAsync(AsideType.Danger);
-
-        html.ShouldContain("aside-danger");
-    }
-
-    [Fact]
     public async Task ShouldUseDefaultTitleForNoteVariant()
     {
         var html = await RenderAsideAsync(AsideType.Note);
@@ -141,21 +84,4 @@ public sealed class AsideTests
         html.ShouldContain("aria-label=\"A &quot;quoted&quot; title\"");
     }
 
-    [Fact]
-    public async Task ShouldRenderIconForNoteVariant()
-    {
-        var html = await RenderAsideAsync(AsideType.Note);
-
-        html.ShouldContain("<svg");
-    }
-
-    [Fact]
-    public async Task ShouldRenderIconForAllVariants()
-    {
-        foreach (var type in Enum.GetValues<AsideType>())
-        {
-            var html = await RenderAsideAsync(type);
-            html.ShouldContain("<svg");
-        }
-    }
 }

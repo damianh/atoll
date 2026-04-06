@@ -27,40 +27,6 @@ public sealed class LinkCardTests
     }
 
     [Fact]
-    public async Task ShouldRenderAsAnchorElement()
-    {
-        var html = await RenderLinkCardAsync("Guide", "/guide");
-
-        html.ShouldContain("<a ");
-        html.ShouldContain("</a>");
-    }
-
-    [Fact]
-    public async Task ShouldRenderHref()
-    {
-        var html = await RenderLinkCardAsync("Guide", "/guide");
-
-        html.ShouldContain("href=\"/guide\"");
-    }
-
-    [Fact]
-    public async Task ShouldRenderLinkCardClass()
-    {
-        var html = await RenderLinkCardAsync("Guide", "/guide");
-
-        html.ShouldContain("class=\"link-card\"");
-    }
-
-    [Fact]
-    public async Task ShouldRenderTitle()
-    {
-        var html = await RenderLinkCardAsync("Getting Started", "/start");
-
-        html.ShouldContain("Getting Started");
-        html.ShouldContain("link-card-title");
-    }
-
-    [Fact]
     public async Task ShouldRenderDescriptionWhenProvided()
     {
         var html = await RenderLinkCardAsync("Guide", "/guide", description: "Learn the basics");

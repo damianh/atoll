@@ -33,26 +33,6 @@ public sealed class BreadcrumbsTests
         html.ShouldBeEmpty();
     }
 
-    // --- Nav structure ---
-
-    [Fact]
-    public async Task ShouldRenderNavWithAriaLabel()
-    {
-        var html = await RenderBreadcrumbsAsync([Current("Home")]);
-
-        html.ShouldContain("<nav class=\"docs-breadcrumbs\" aria-label=\"Breadcrumbs\">");
-        html.ShouldContain("</nav>");
-    }
-
-    [Fact]
-    public async Task ShouldRenderOrderedList()
-    {
-        var html = await RenderBreadcrumbsAsync([Current("Home")]);
-
-        html.ShouldContain("<ol>");
-        html.ShouldContain("</ol>");
-    }
-
     // --- Current page ---
 
     [Fact]

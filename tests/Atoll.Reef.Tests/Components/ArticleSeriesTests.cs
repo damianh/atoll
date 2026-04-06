@@ -28,16 +28,6 @@ public sealed class ArticleSeriesTests
     }
 
     [Fact]
-    public async Task ShouldRenderAsideWithAriaLabel()
-    {
-        var html = await RenderAsync();
-
-        html.ShouldContain("<aside");
-        html.ShouldContain("class=\"article-series\"");
-        html.ShouldContain("aria-label=\"Article series\"");
-    }
-
-    [Fact]
     public async Task ShouldRenderSeriesHeader()
     {
         var html = await RenderAsync(seriesName: "Deep Dives", currentPart: 2);

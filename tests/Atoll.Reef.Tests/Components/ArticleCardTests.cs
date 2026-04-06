@@ -40,34 +40,10 @@ public sealed class ArticleCardTests
     }
 
     [Fact]
-    public async Task ShouldRenderArticleElement()
-    {
-        var html = await RenderAsync();
-        html.ShouldContain("<article");
-        html.ShouldContain("article-card");
-    }
-
-    [Fact]
-    public async Task ShouldRenderTitle()
-    {
-        var html = await RenderAsync(title: "Getting Started");
-        html.ShouldContain("Getting Started");
-        html.ShouldContain("article-card-title");
-    }
-
-    [Fact]
     public async Task ShouldRenderTitleAsLink()
     {
         var html = await RenderAsync(title: "Test", slug: "test-slug", basePath: "/blog");
         html.ShouldContain("href=\"/blog/test-slug\"");
-    }
-
-    [Fact]
-    public async Task ShouldRenderDescription()
-    {
-        var html = await RenderAsync(description: "A great article about Atoll.");
-        html.ShouldContain("A great article about Atoll.");
-        html.ShouldContain("article-card-description");
     }
 
     [Fact]

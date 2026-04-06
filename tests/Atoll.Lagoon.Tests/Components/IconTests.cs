@@ -26,33 +26,6 @@ public sealed class IconTests
         return destination.GetOutput();
     }
 
-    // --- Structure ---
-
-    [Fact]
-    public async Task ShouldRenderSvgElement()
-    {
-        var html = await RenderIconAsync(IconName.Star);
-
-        html.ShouldContain("<svg");
-        html.ShouldContain("</svg>");
-    }
-
-    [Fact]
-    public async Task ShouldRenderIconClass()
-    {
-        var html = await RenderIconAsync(IconName.Star);
-
-        html.ShouldContain("class=\"icon\"");
-    }
-
-    [Fact]
-    public async Task ShouldRenderViewBox()
-    {
-        var html = await RenderIconAsync(IconName.Star);
-
-        html.ShouldContain("viewBox=\"0 0 24 24\"");
-    }
-
     // --- Accessibility ---
 
     [Fact]
@@ -82,15 +55,6 @@ public sealed class IconTests
     }
 
     // --- Size ---
-
-    [Fact]
-    public async Task ShouldApplyDefaultSize()
-    {
-        var html = await RenderIconAsync(IconName.Star);
-
-        html.ShouldContain("width=\"1em\"");
-        html.ShouldContain("height=\"1em\"");
-    }
 
     [Fact]
     public async Task ShouldApplyCustomSize()

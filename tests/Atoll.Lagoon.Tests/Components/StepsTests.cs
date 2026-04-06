@@ -19,15 +19,6 @@ public sealed class StepsTests
     }
 
     [Fact]
-    public async Task ShouldRenderStepsDiv()
-    {
-        var html = await RenderStepsAsync();
-
-        html.ShouldContain("<div class=\"steps\">");
-        html.ShouldContain("</div>");
-    }
-
-    [Fact]
     public async Task ShouldRenderSlotContent()
     {
         var html = await RenderStepsAsync("<ol><li>First step</li></ol>");

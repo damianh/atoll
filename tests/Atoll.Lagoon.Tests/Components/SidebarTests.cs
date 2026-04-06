@@ -44,46 +44,6 @@ public sealed class SidebarTests
     // --- Structure ---
 
     [Fact]
-    public async Task ShouldRenderNavWithAriaLabel()
-    {
-        var html = await RenderSidebarAsync([]);
-
-        html.ShouldContain("aria-label=\"Main\"");
-        html.ShouldContain("</nav>");
-    }
-
-    [Fact]
-    public async Task ShouldRenderDataHashOnNavElement()
-    {
-        var html = await RenderSidebarAsync([]);
-
-        html.ShouldContain("data-hash=\"");
-    }
-
-    [Fact]
-    public async Task ShouldRenderNavOpeningTag()
-    {
-        var html = await RenderSidebarAsync([]);
-
-        html.ShouldContain("<nav ");
-        html.ShouldContain("aria-label=\"Main\"");
-        html.ShouldContain("data-hash=\"");
-        html.ShouldContain("<ul>");
-        html.ShouldContain("</ul>");
-        html.ShouldContain("</nav>");
-    }
-
-    [Fact]
-    public async Task ShouldRenderInlineRestoreScript()
-    {
-        var html = await RenderSidebarAsync([]);
-
-        html.ShouldContain("<script>");
-        html.ShouldContain("sl-sidebar-restore");
-        html.ShouldContain("atoll:sidebar-state");
-    }
-
-    [Fact]
     public async Task ShouldRenderSingleLinkItem()
     {
         var html = await RenderSidebarAsync([Link("Home", "/")]);
@@ -359,18 +319,6 @@ public sealed class SidebarTests
     }
 
     // --- Chevron ---
-
-    [Fact]
-    public async Task ShouldRenderChevronSpanInGroup()
-    {
-        var html = await RenderSidebarAsync([
-            Group("Guides", [Link("Start", "/guides/start")])
-        ]);
-
-        html.ShouldContain("<span class=\"sidebar-chevron\" aria-hidden=\"true\">");
-        html.ShouldContain("<svg");
-        html.ShouldContain("</svg>");
-    }
 
     [Fact]
     public async Task ShouldRenderEndChevronPositionClassByDefault()

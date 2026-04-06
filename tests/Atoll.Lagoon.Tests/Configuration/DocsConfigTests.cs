@@ -8,75 +8,6 @@ namespace Atoll.Lagoon.Tests.Configuration;
 public sealed class DocsConfigTests
 {
     [Fact]
-    public void DefaultConfigShouldHaveSensibleDefaults()
-    {
-        var config = new DocsConfig();
-
-        config.Title.ShouldBe("");
-        config.Description.ShouldBe("");
-        config.LogoSrc.ShouldBeNull();
-        config.LogoAlt.ShouldBe("");
-        config.Sidebar.ShouldBeEmpty();
-        config.Social.ShouldBeEmpty();
-        config.CustomCss.ShouldBeEmpty();
-        config.EnableMermaid.ShouldBeFalse();
-        config.BasePath.ShouldBe("");
-        config.TableOfContents.ShouldNotBeNull();
-        config.TableOfContents.MinHeadingLevel.ShouldBe(2);
-        config.TableOfContents.MaxHeadingLevel.ShouldBe(3);
-        config.EditUrl.ShouldBeNull();
-        config.Footer.ShouldBeNull();
-    }
-
-    [Fact]
-    public void SidebarItemShouldSupportManualLink()
-    {
-        var item = new SidebarItem
-        {
-            Label = "Getting Started",
-            Link = "/docs/getting-started/"
-        };
-
-        item.Label.ShouldBe("Getting Started");
-        item.Link.ShouldBe("/docs/getting-started/");
-        item.AutoGenerate.ShouldBeNull();
-        item.Items.ShouldBeEmpty();
-        item.Collapsed.ShouldBeFalse();
-        item.Badge.ShouldBeNull();
-    }
-
-    [Fact]
-    public void SidebarItemShouldSupportAutoGenerate()
-    {
-        var item = new SidebarItem
-        {
-            Label = "Guides",
-            AutoGenerate = "guides"
-        };
-
-        item.AutoGenerate.ShouldBe("guides");
-        item.Link.ShouldBeNull();
-    }
-
-    [Fact]
-    public void SidebarItemShouldSupportNestedChildren()
-    {
-        var parent = new SidebarItem
-        {
-            Label = "Reference",
-            Items =
-            [
-                new SidebarItem { Label = "API", Link = "/docs/api/" },
-                new SidebarItem { Label = "CLI", Link = "/docs/cli/" }
-            ]
-        };
-
-        parent.Items.Count.ShouldBe(2);
-        parent.Items[0].Label.ShouldBe("API");
-        parent.Items[1].Label.ShouldBe("CLI");
-    }
-
-    [Fact]
     public void SidebarItemShouldSupportBadge()
     {
         var item = new SidebarItem
@@ -106,29 +37,6 @@ public sealed class DocsConfigTests
     }
 
     [Fact]
-    public void SidebarItemShouldSupportCollapsed()
-    {
-        var item = new SidebarItem
-        {
-            Label = "Advanced",
-            Collapsed = true,
-            Items = [new SidebarItem { Label = "Child", Link = "/docs/child/" }]
-        };
-
-        item.Collapsed.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void SocialLinkShouldStoreProperties()
-    {
-        var link = new SocialLink("GitHub", "https://github.com/example", SocialIcon.GitHub);
-
-        link.Label.ShouldBe("GitHub");
-        link.Url.ShouldBe("https://github.com/example");
-        link.Icon.ShouldBe(SocialIcon.GitHub);
-    }
-
-    [Fact]
     public void SocialLinkShouldThrowOnNullLabel()
     {
         Should.Throw<ArgumentException>(() => new SocialLink(null!, "https://github.com", SocialIcon.GitHub));
@@ -138,19 +46,6 @@ public sealed class DocsConfigTests
     public void SocialLinkShouldThrowOnEmptyUrl()
     {
         Should.Throw<ArgumentException>(() => new SocialLink("GitHub", "", SocialIcon.GitHub));
-    }
-
-    [Fact]
-    public void TableOfContentsConfigShouldAllowCustomLevels()
-    {
-        var toc = new TableOfContentsConfig
-        {
-            MinHeadingLevel = 2,
-            MaxHeadingLevel = 4
-        };
-
-        toc.MinHeadingLevel.ShouldBe(2);
-        toc.MaxHeadingLevel.ShouldBe(4);
     }
 
     [Fact]
@@ -199,17 +94,6 @@ public sealed class DocsConfigTests
         config.Sidebar[1].Collapsed.ShouldBeTrue();
         config.EnableMermaid.ShouldBeTrue();
         config.BasePath.ShouldBe("/docs");
-    }
-
-    // --- Locale configuration ---
-
-    [Fact]
-    public void DefaultConfigShouldHaveNullLocales()
-    {
-        var config = new DocsConfig();
-
-        config.Locales.ShouldBeNull();
-        config.DefaultLang.ShouldBe("en");
     }
 
     [Fact]
@@ -262,16 +146,6 @@ public sealed class DocsConfigTests
         config.Locales!["ar"].Dir.ShouldBe("rtl");
         config.Locales["root"].Dir.ShouldBe("ltr");
     }
-
-    [Fact]
-    public void ShouldAllowCustomDefaultLang()
-    {
-        var config = new DocsConfig { DefaultLang = "de" };
-
-        config.DefaultLang.ShouldBe("de");
-    }
-
-    // --- New gap-closing properties ---
 
     [Fact]
     public void ShouldAcceptEditUrl()

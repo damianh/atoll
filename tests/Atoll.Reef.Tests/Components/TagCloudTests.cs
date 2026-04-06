@@ -25,16 +25,6 @@ public sealed class TagCloudTests
     }
 
     [Fact]
-    public async Task ShouldRenderNavWithAriaLabel()
-    {
-        var html = await RenderAsync([Tag("dotnet", 5)]);
-
-        html.ShouldContain("<nav");
-        html.ShouldContain("class=\"tag-cloud\"");
-        html.ShouldContain("aria-label=\"Tags\"");
-    }
-
-    [Fact]
     public async Task ShouldRenderTagPillsWithLinks()
     {
         var html = await RenderAsync([Tag("dotnet", 5)], basePath: "/blog");

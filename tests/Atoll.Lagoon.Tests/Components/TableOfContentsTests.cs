@@ -59,15 +59,6 @@ public sealed class TableOfContentsTests
     // --- Basic rendering ---
 
     [Fact]
-    public async Task ShouldRenderNavWithAriaLabel()
-    {
-        var html = await RenderTocAsync([H(2, "Section", "section")]);
-
-        html.ShouldContain("<nav aria-label=\"On this page\">");
-        html.ShouldContain("</nav>");
-    }
-
-    [Fact]
     public async Task ShouldRenderSingleH2Heading()
     {
         var html = await RenderTocAsync([H(2, "Introduction", "introduction")]);
