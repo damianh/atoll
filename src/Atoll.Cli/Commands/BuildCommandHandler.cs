@@ -7,6 +7,7 @@ using Atoll.Build.Ssg;
 using Atoll.Configuration;
 using Atoll.Css;
 using Atoll.Islands;
+using Atoll.Redirects;
 using Atoll.Routing;
 using Atoll.Routing.FileSystem;
 
@@ -128,6 +129,14 @@ public sealed class BuildCommandHandler
         var manifestWriter = new BuildManifestWriter(outputDir);
         var manifest = BuildManifestWriter.BuildFrom(ssgResult, assetResult, ssgOptions);
         await manifestWriter.WriteAsync(manifest);
+
+        // Write redirects.json for SSG deployments.
+        // The redirect map is populated by the user site via RedirectCollector.Collect().
+        // When the loaded assembly exposes an IRedirectMapProvider, use it;
+        // otherwise write an empty redirects.json as a stable artifact.
+        var redirectMap = BuildRedirectMapFromAssembly(assembly);
+        var redirectsWriter = new RedirectsFileWriter(outputDir);
+        await redirectsWriter.WriteAsync(redirectMap);
 
         // Generate _headers file for Netlify / Cloudflare Pages deployments
         if (config.Build.Cache.GenerateHeadersFile)
@@ -617,6 +626,59 @@ public sealed class BuildCommandHandler
 
         // Static page: "About" -> "about.cs"
         return ToKebabCase(name) + ".cs";
+    }
+
+    /// <summary>
+    /// Attempts to build a <see cref="RedirectMap"/> from the loaded user assembly.
+    /// If the assembly's types include an <c>IRedirectMapProvider</c> implementation,
+    /// its <c>GetRedirectMap()</c> method is called via reflection. Otherwise,
+    /// <see cref="RedirectMap.Empty"/> is returned so that a stable (empty)
+    /// <c>redirects.json</c> is always written to the output directory.
+    /// </summary>
+    private static RedirectMap BuildRedirectMapFromAssembly(Assembly? assembly)
+    {
+        if (assembly is null)
+        {
+            return RedirectMap.Empty;
+        }
+
+        const string interfaceName = "Atoll.Redirects.IRedirectMapProvider";
+
+        foreach (var type in assembly.GetExportedTypes())
+        {
+            if (type.IsAbstract || type.IsInterface)
+            {
+                continue;
+            }
+
+            var iface = type.GetInterface(interfaceName);
+            if (iface is null)
+            {
+                continue;
+            }
+
+            try
+            {
+                var instance = Activator.CreateInstance(type)!;
+                var method = type.GetMethod("GetRedirectMap");
+                if (method is not null)
+                {
+                    var result = method.Invoke(instance, null);
+                    if (result is RedirectMap map)
+                    {
+                        return map;
+                    }
+                }
+            }
+            catch
+            {
+                // If reflection-based loading fails, fall back to empty map
+            }
+
+            break;
+        }
+
+        return RedirectMap.Empty;
     }
 
     /// <summary>

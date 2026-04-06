@@ -133,4 +133,13 @@ public sealed class DocsConfig
     /// When <c>null</c>, the default "Built with Atoll" footer is rendered.
     /// </summary>
     public FooterConfig? Footer { get; set; }
+
+    /// <summary>
+    /// Gets or sets config-based redirect mappings.
+    /// Keys are source paths (e.g. <c>"/old-page"</c>), values are redirect target paths
+    /// (e.g. <c>"/new-page"</c>). Paths are base-relative and do not include
+    /// <see cref="BasePath"/>.
+    /// When <c>null</c> (default), no config-based redirects are active.
+    /// </summary>
+    public IReadOnlyDictionary<string, string>? Redirects { get; set; }
 }
