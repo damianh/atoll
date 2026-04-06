@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Atoll\Atoll.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Islands\Assets\annotations-init.js"
+      LogicalName="Atoll.Annotations.Islands.Assets.annotations-init.js" />
+  </ItemGroup>
+</Project>

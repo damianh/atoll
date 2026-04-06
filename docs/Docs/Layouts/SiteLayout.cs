@@ -1,3 +1,4 @@
+using Atoll.Annotations;
 using Atoll.Build.Content.Collections;
 using Atoll.Build.Content.Markdown;
 using Atoll.Components;
@@ -86,5 +87,16 @@ public sealed class SiteLayout : AtollComponent
         var addonSlots = SlotCollection.FromDefault(pageSlot);
         var addonFragment = ComponentRenderer.ToFragment<AddonLayout>(addonProps, addonSlots);
         await RenderAsync(addonFragment);
+
+        // Render the text-annotation island so readers can select text and
+        // submit contextual feedback as a GitHub Discussion.
+        var annotationProps = new Dictionary<string, object?>
+        {
+            [nameof(TextAnnotation.Repo)] = "damianh/atoll",
+            [nameof(TextAnnotation.Target)] = AnnotationTarget.Discussion,
+            [nameof(TextAnnotation.Category)] = "General",
+        };
+        var annotationFragment = ComponentRenderer.ToFragment<TextAnnotation>(annotationProps);
+        await RenderAsync(annotationFragment);
     }
 }

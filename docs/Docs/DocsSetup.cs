@@ -123,6 +123,14 @@ public static class DocsSetup
                     new SidebarItem { Label = "Overview",  Link = "/docs/giscus/overview" },
                 ],
             },
+            new SidebarItem
+            {
+                Label = "Annotations Plugin",
+                Items =
+                [
+                    new SidebarItem { Label = "Overview",  Link = "/docs/annotations/overview" },
+                ],
+            },
         ],
     };
 }
