@@ -15,6 +15,8 @@
     <PackageReference Include="AngleSharp" />
     <PackageReference Include="RazorSlices" />
     <PackageReference Include="TextMateSharp.Grammars" />
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Islands\Assets\search-dialog.js"

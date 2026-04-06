@@ -32,6 +32,8 @@ namespace Atoll.Lagoon.Layouts;
 /// <param name="EditHref">The composed edit URL for the page, or <c>null</c> if not applicable.</param>
 /// <param name="LastUpdated">The last-modified timestamp, or <c>null</c>.</param>
 /// <param name="EnableMermaid">Whether to inject the Mermaid initialization script.</param>
+/// <param name="CurrentPath">The current page URL path (e.g. <c>/identityserver/overview/big-picture</c>).</param>
+/// <param name="SiteUrl">The site base URL (e.g. <c>https://docs.example.com</c>), used for absolute OG URLs.</param>
 public sealed record DocsLayoutModel(
     DocsConfig Config,
     string PageTitle,
@@ -54,4 +56,7 @@ public sealed record DocsLayoutModel(
     string? CurrentVersionPath,
     string? EditHref,
     DateTimeOffset? LastUpdated,
-    bool EnableMermaid);
+    bool EnableMermaid,
+    string CurrentPath,
+    string SiteUrl);
+

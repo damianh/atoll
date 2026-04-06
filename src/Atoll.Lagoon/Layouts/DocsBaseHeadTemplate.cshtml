@@ -15,6 +15,28 @@
 {
     <link rel="stylesheet" href="@css" />
 }
+@if (Model.OgImageUrl is not null)
+{
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="@Model.OgTitle" />
+    @if (!string.IsNullOrEmpty(Model.OgDescription))
+    {
+        <meta property="og:description" content="@Model.OgDescription" />
+    }
+    @if (Model.OgUrl is not null)
+    {
+        <meta property="og:url" content="@Model.OgUrl" />
+    }
+    <meta property="og:image" content="@Model.OgImageUrl" />
+    <meta property="og:site_name" content="@Model.SiteName" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="@Model.OgTitle" />
+    @if (!string.IsNullOrEmpty(Model.OgDescription))
+    {
+        <meta name="twitter:description" content="@Model.OgDescription" />
+    }
+    <meta name="twitter:image" content="@Model.OgImageUrl" />
+}
 @if (!string.IsNullOrEmpty(Model.PageHeadContent))
 {
     WriteLiteral(Model.PageHeadContent);
