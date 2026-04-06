@@ -1,4 +1,4 @@
-<mxfile version="21.0.0">
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/28.1.2 Chrome/138.0.7204.243 Electron/37.4.0 Safari/537.36" version="28.1.2" pages="2">
   <diagram name="Overview" id="overview">
     <mxGraphModel>
       <root>
@@ -23,44 +23,46 @@
     </mxGraphModel>
   </diagram>
   <diagram name="Architecture" id="architecture">
-    <mxGraphModel>
+    <mxGraphModel dx="1589" dy="1024" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
-        <!-- Layer: Infrastructure -->
         <mxCell id="1" value="Infrastructure" parent="0" />
-        <mxCell id="10" value="" style="fillColor=#f5f5f5;strokeColor=#cccccc;rounded=1;" vertex="1" parent="1">
+        <mxCell id="10" value="" style="fillColor=#f5f5f5;strokeColor=#cccccc;rounded=1;" parent="1" vertex="1">
           <mxGeometry x="30" y="30" width="500" height="220" as="geometry" />
         </mxCell>
-        <!-- Layer: Components -->
         <mxCell id="2" value="Components" parent="0" />
-        <mxCell id="20" value="Atoll Core" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" vertex="1" parent="2">
+        <mxCell id="20" value="Atoll Core" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" parent="2" vertex="1">
           <mxGeometry x="60" y="70" width="120" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="21" value="Lagoon" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=13;" vertex="1" parent="2">
+        <mxCell id="21" value="Lagoon" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=13;" parent="2" vertex="1">
           <mxGeometry x="220" y="70" width="120" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="22" value="Reef" style="rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=13;" vertex="1" parent="2">
+        <mxCell id="22" value="Reef" style="rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=13;" parent="2" vertex="1">
           <mxGeometry x="380" y="70" width="120" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="23" value="DrawIO" style="rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=13;" vertex="1" parent="2">
+        <mxCell id="23" value="DrawIO" style="rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=13;" parent="2" vertex="1">
           <mxGeometry x="60" y="160" width="120" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="24" value="Giscus" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=13;" vertex="1" parent="2">
+        <mxCell id="24" value="Giscus" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=13;" parent="2" vertex="1">
           <mxGeometry x="220" y="160" width="120" height="50" as="geometry" />
         </mxCell>
-        <!-- Layer: Connections -->
         <mxCell id="3" value="Connections" parent="0" />
-        <mxCell id="30" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="20" target="21" parent="3">
+        <mxCell id="30" style="edgeStyle=orthogonalEdgeStyle;" parent="3" source="20" target="21" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="31" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="21" target="22" parent="3">
+        <mxCell id="31" style="edgeStyle=orthogonalEdgeStyle;" parent="3" source="21" target="22" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="32" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="20" target="23" parent="3">
+        <mxCell id="32" style="edgeStyle=orthogonalEdgeStyle;" parent="3" source="20" target="23" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="33" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="20" target="24" parent="3">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="33" style="edgeStyle=orthogonalEdgeStyle;" parent="3" source="20" target="24" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="95" />
+              <mxPoint x="200" y="185" />
+            </Array>
+          </mxGeometry>
         </mxCell>
       </root>
     </mxGraphModel>

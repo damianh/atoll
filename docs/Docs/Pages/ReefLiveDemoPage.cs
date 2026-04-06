@@ -19,7 +19,7 @@ namespace Docs.Pages;
 [PageRoute("/docs/reef/live-demo")]
 public sealed class ReefLiveDemoPage : AtollComponent, IAtollPage
 {
-    private static readonly IReadOnlyList<ArticleListItem> SampleArticles =
+    internal static readonly IReadOnlyList<ArticleListItem> SampleArticles =
     [
         new("Getting Started with Atoll",
             "getting-started-with-atoll",
@@ -85,8 +85,7 @@ public sealed class ReefLiveDemoPage : AtollComponent, IAtollPage
             .OrderBy(a => a)
             .ToList();
 
-        // Use "#" as base path so article and tag links are inert (no 404 navigation)
-        const string basePath = "#";
+        const string basePath = "/docs/reef/live-demo";
 
         // Inject scoped CSS: view-panel visibility, filter tag styling, demo link
         // neutralisation, and reef variable bridge
@@ -138,12 +137,6 @@ public sealed class ReefLiveDemoPage : AtollComponent, IAtollPage
                 background: var(--reef-bg-raised);
                 color: var(--reef-text);
                 font-size: 0.8rem;
-            }
-
-            /* Neutralise demo links — articles and tags are sample-only */
-            .reef-demo a[href^="#/"] {
-                pointer-events: none;
-                cursor: default;
             }
 
             .reef-demo {
@@ -230,7 +223,7 @@ public sealed class ReefLiveDemoPage : AtollComponent, IAtollPage
     /// </summary>
     private async Task WriteFilterableArticles(RenderContext context, string viewKind)
     {
-        const string basePath = "#";
+        const string basePath = "/docs/reef/live-demo";
 
         if (viewKind == "grid")
         {
