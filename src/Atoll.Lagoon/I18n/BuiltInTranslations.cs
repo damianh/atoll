@@ -35,6 +35,9 @@ public static class BuiltInTranslations
         BuiltWithLabel = "Créé avec",
         LanguageSelectLabel = "Sélectionner la langue",
         UntranslatedContentNotice = "Cette page n'a pas encore été traduite.",
+        VersionSelectLabel = "Sélectionner la version",
+        OutdatedVersionNotice = "Vous consultez la documentation pour une version antérieure.",
+        OutdatedVersionLinkText = "Voir la dernière version",
     };
 
     /// <summary>Gets the Spanish (es) translations — Latin American Spanish.</summary>
@@ -61,6 +64,9 @@ public static class BuiltInTranslations
         BuiltWithLabel = "Creado con",
         LanguageSelectLabel = "Seleccionar idioma",
         UntranslatedContentNotice = "Esta página aún no ha sido traducida.",
+        VersionSelectLabel = "Seleccionar versión",
+        OutdatedVersionNotice = "Estás viendo la documentación de una versión anterior.",
+        OutdatedVersionLinkText = "Ver la última versión",
     };
 
     /// <summary>Gets the German (de) translations.</summary>
@@ -87,6 +93,9 @@ public static class BuiltInTranslations
         BuiltWithLabel = "Erstellt mit",
         LanguageSelectLabel = "Sprache auswählen",
         UntranslatedContentNotice = "Diese Seite wurde noch nicht übersetzt.",
+        VersionSelectLabel = "Version auswählen",
+        OutdatedVersionNotice = "Sie sehen die Dokumentation für eine ältere Version.",
+        OutdatedVersionLinkText = "Neueste Version anzeigen",
     };
 
     /// <summary>Gets the Japanese (ja) translations.</summary>
@@ -113,6 +122,9 @@ public static class BuiltInTranslations
         BuiltWithLabel = "構築ツール",
         LanguageSelectLabel = "言語を選択",
         UntranslatedContentNotice = "このページはまだ翻訳されていません。",
+        VersionSelectLabel = "バージョンを選択",
+        OutdatedVersionNotice = "古いバージョンのドキュメントを表示しています。",
+        OutdatedVersionLinkText = "最新バージョンを表示",
     };
 
     /// <summary>Gets the Arabic (ar) translations. Note: Arabic is a right-to-left (RTL) language.</summary>
@@ -139,6 +151,9 @@ public static class BuiltInTranslations
         BuiltWithLabel = "أنشئ بواسطة",
         LanguageSelectLabel = "اختر اللغة",
         UntranslatedContentNotice = "لم تتم ترجمة هذه الصفحة بعد.",
+        VersionSelectLabel = "اختر الإصدار",
+        OutdatedVersionNotice = "أنت تشاهد وثائق إصدار قديم.",
+        OutdatedVersionLinkText = "عرض أحدث إصدار",
     };
 
     /// <summary>Gets the Chinese Simplified (zh-CN) translations.</summary>
@@ -165,6 +180,9 @@ public static class BuiltInTranslations
         BuiltWithLabel = "构建工具",
         LanguageSelectLabel = "选择语言",
         UntranslatedContentNotice = "此页面尚未翻译。",
+        VersionSelectLabel = "选择版本",
+        OutdatedVersionNotice = "您正在查看旧版本的文档。",
+        OutdatedVersionLinkText = "查看最新版本",
     };
 
     /// <summary>Gets the Brazilian Portuguese (pt-BR) translations.</summary>
@@ -191,6 +209,9 @@ public static class BuiltInTranslations
         BuiltWithLabel = "Criado com",
         LanguageSelectLabel = "Selecionar idioma",
         UntranslatedContentNotice = "Esta página ainda não foi traduzida.",
+        VersionSelectLabel = "Selecionar versão",
+        OutdatedVersionNotice = "Você está visualizando a documentação de uma versão mais antiga.",
+        OutdatedVersionLinkText = "Ver versão mais recente",
     };
 
     /// <summary>

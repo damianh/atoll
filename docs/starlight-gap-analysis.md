@@ -28,6 +28,7 @@ Lagoon vs [Astro Starlight](https://starlight.astro.build) — extracted from th
 | Favicon configuration | `DocsConfig.FaviconHref` — sets the `<link rel="icon">` in `DocsBaseHead`; falls back to default Atoll logo | `favicon` option in site config |
 | Internationalisation (i18n) | `LocaleConfig`, `UiTranslations`, `BuiltInTranslations`, `LanguagePicker` — 8 built-in languages, locale routing, UI string translation, RTL support | 30+ languages, locale routing, UI string translation, RTL support |
 | Content components | `Aside`, `Card`, `CardGrid`, `Steps`, `Tabs`, `FileTree`, `LinkCard`, `LinkButton`, `Icon` — 10 content components for rich documentation authoring | Cards, Tabs, Asides/Callouts, Steps, FileTree, LinkCards, CardGrids, LinkButtons, Icons |
+| Versioned documentation | `VersionConfig`, `VersionPicker`, `VersionResolver` — version selector dropdown, per-version sidebars, deprecated version notices, version-scoped search indices | `starlight-versions` plugin |
 
 ## Notable Gaps
 
@@ -38,13 +39,12 @@ Significant features that may block adoption depending on project requirements.
 | Component overrides | Replace any built-in UI component by path | No override mechanism | Layout/UI not customisable without forking Lagoon source |
 | Plugin system | Plugin API for extending Starlight at build and runtime | No plugin architecture | Extensions must be built as standalone Atoll components |
 | Expressive Code blocks | Syntax highlighting with frames, markers, diffs, and collapsible sections | Standard code blocks only | Rich code block features must be built manually |
-| Versioned documentation | Version selector for multiple doc versions simultaneously | Not implemented | No way to serve multiple versions side-by-side |
 | Route data API | Typed `StarlightPage` route data accessible in components | No equivalent API | Components cannot access structured page metadata |
 
 ## Summary
 
-**Parity**: 22 features fully covered (including all 6 previously identified minor gaps, i18n, and content components).
+**Parity**: 23 features fully covered (including all 6 previously identified minor gaps, i18n, content components, and versioned documentation).
 **Minor gaps**: 0 — all closed.
-**Notable gaps**: 5 — significant features that affect extensibility, code block richness, and versioning.
+**Notable gaps**: 4 — significant features that affect extensibility and code block richness.
 
-Lagoon covers the core requirements for a .NET documentation site, including multi-language support and rich content components. The notable gaps primarily affect projects needing deep UI customisation, a plugin architecture, or multi-version documentation.
+Lagoon covers the core requirements for a .NET documentation site, including multi-language support, rich content components, and multi-version documentation. The notable gaps primarily affect projects needing deep UI customisation or a plugin architecture.

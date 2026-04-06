@@ -80,6 +80,24 @@ The resulting JSON is an array of entries, each with `title`, `href`, `descripti
 
 The dialog opens on button click, `Ctrl+K` (Windows/Linux), or `⌘K` (macOS). Results support arrow-key navigation; `Enter` navigates to the selected result. `Escape` closes the dialog.
 
+## Version-scoped search indices
+
+When versioned documentation is enabled, generate a separate `search-index.json` for each version by using the `GenerateAsync` overload that accepts a `versionPrefix`:
+
+```csharp
+// Generate index for an archived version (writes to dist/v1.0/search-index.json)
+await generator.GenerateAsync(v1Documents, localePrefix: "", versionPrefix: "v1.0");
+
+// Generate index for locale + version (writes to dist/fr/v1.0/search-index.json)
+await generator.GenerateAsync(frV1Documents, localePrefix: "fr", versionPrefix: "v1.0");
+```
+
+`DocsLayout` automatically computes the correct `IndexUrl` for the active version and locale combination, so `SearchDialog` always fetches the right index.
+
+> **Note:** `ISearchIndexConfiguration` is not modified by versioning. Version-scoped search is a caller-level concern: filter your documents by version before passing them to the generator.
+
+See [Versioned Documentation](./versioning) for full configuration details.
+
 ## Base path support
 
 When your site is hosted at a sub-path (e.g. `https://example.com/docs/`), the search index is written to `dist/search-index.json` but served at `/docs/search-index.json`.

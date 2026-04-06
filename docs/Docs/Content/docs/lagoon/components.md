@@ -220,6 +220,14 @@ new HeroAction("View Source", "https://github.com/...", HeroActionVariant.Second
 
 These classes are used in your wrapper layout to compute the values passed to `DocsLayout`.
 
+### `VersionPicker`
+
+Renders a `<select>` dropdown that lets users navigate between documentation versions. `DocsLayout` renders `VersionPicker` automatically when `DocsConfig.Versions` contains two or more entries — you do not need to add it yourself.
+
+`VersionPicker` renders nothing when `Versions` is `null` or contains only a single entry.
+
+See [Versioned Documentation](./versioning) for full configuration details.
+
 ### `SidebarBuilder`
 
 Resolves `DocsConfig.Sidebar` into a `ResolvedSidebarItem` tree, marking the active item and populating auto-generated groups from content entries:

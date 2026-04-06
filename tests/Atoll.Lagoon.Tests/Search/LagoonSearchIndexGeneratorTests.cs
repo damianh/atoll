@@ -258,6 +258,71 @@ public sealed class LagoonSearchIndexGeneratorTests : IDisposable
         File.Exists(expectedPath).ShouldBeTrue();
     }
 
+    // ── Per-version search index overload ──
+
+    [Fact]
+    public async Task GenerateAsyncWithVersionPrefixShouldWriteToVersionSubdirectory()
+    {
+        var documents = new[]
+        {
+            new SearchDocumentInput("Doc v1", "/v1.0/guide/"),
+        };
+        var generator = new LagoonSearchIndexGenerator(_outputDir);
+
+        var result = await generator.GenerateAsync(documents, "", "v1.0");
+
+        var expectedPath = Path.Combine(_outputDir, "v1.0", "search-index.json");
+        result.OutputPath.ShouldBe(expectedPath);
+        File.Exists(expectedPath).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task GenerateAsyncWithLocaleAndVersionPrefixShouldWriteToNestedSubdirectory()
+    {
+        var documents = new[]
+        {
+            new SearchDocumentInput("Doc FR v1", "/fr/v1.0/guide/"),
+        };
+        var generator = new LagoonSearchIndexGenerator(_outputDir);
+
+        var result = await generator.GenerateAsync(documents, "fr", "v1.0");
+
+        var expectedPath = Path.Combine(_outputDir, "fr", "v1.0", "search-index.json");
+        result.OutputPath.ShouldBe(expectedPath);
+        File.Exists(expectedPath).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task GenerateAsyncWithEmptyVersionPrefixShouldBehaveAsExisting()
+    {
+        var documents = new[]
+        {
+            new SearchDocumentInput("Doc", "/guide/"),
+        };
+        var generator = new LagoonSearchIndexGenerator(_outputDir);
+
+        var result = await generator.GenerateAsync(documents, "", "");
+
+        result.OutputPath.ShouldBe(SearchIndexPath(_outputDir));
+        File.Exists(SearchIndexPath(_outputDir)).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task GenerateAsyncWithVersionPrefixShouldStripLeadingSlash()
+    {
+        var documents = new[]
+        {
+            new SearchDocumentInput("Doc", "/v2.0/guide/"),
+        };
+        var generator = new LagoonSearchIndexGenerator(_outputDir);
+
+        var result = await generator.GenerateAsync(documents, "", "/v2.0");
+
+        var expectedPath = Path.Combine(_outputDir, "v2.0", "search-index.json");
+        result.OutputPath.ShouldBe(expectedPath);
+        File.Exists(expectedPath).ShouldBeTrue();
+    }
+
     // ── Helpers ──
 
     private static CollectionQuery CreateEmptyQuery()

@@ -81,6 +81,9 @@ Colour-coded sidebar badges — note, tip, success, caution, danger.
 :::card{title="Custom Footer"}
 Replace the default footer with custom text and navigation links.
 :::
+:::card{title="Versioned Documentation"}
+Opt-in multi-version docs with version selector, per-version sidebars, deprecated notices, and version-scoped search.
+:::
 :::
 
 ## Quick start

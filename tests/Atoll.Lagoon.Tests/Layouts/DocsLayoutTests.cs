@@ -4,6 +4,7 @@ using Atoll.Lagoon.Configuration;
 using Atoll.Lagoon.I18n;
 using Atoll.Lagoon.Layouts;
 using Atoll.Lagoon.Navigation;
+using Atoll.Lagoon.Versioning;
 using Atoll.Rendering;
 using Atoll.Slots;
 using Shouldly;
@@ -872,5 +873,182 @@ public sealed class DocsLayoutTests
 
         html.ShouldContain("<footer class=\"docs-footer\">");
         html.ShouldNotContain(DefaultFooterMarker);
+    }
+
+    // --- Version picker ---
+
+    [Fact]
+    public async Task ShouldNotRenderVersionPickerWhenVersionsIsNull()
+    {
+        var config = MakeConfig();
+
+        var html = await RenderLayoutAsync(config, currentPath: "/intro");
+
+        html.ShouldNotContain("version-picker");
+    }
+
+    [Fact]
+    public async Task ShouldNotRenderVersionPickerWhenSingleVersion()
+    {
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            Versions = new Dictionary<string, VersionConfig>
+            {
+                ["current"] = new() { Label = "Latest", Slug = "current" },
+            },
+        };
+
+        var html = await RenderLayoutAsync(config, currentPath: "/intro");
+
+        html.ShouldNotContain("version-picker");
+    }
+
+    [Fact]
+    public async Task ShouldRenderVersionPickerWhenMultipleVersions()
+    {
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            Versions = new Dictionary<string, VersionConfig>
+            {
+                ["current"] = new() { Label = "Latest", Slug = "current" },
+                ["v1.0"] = new() { Label = "v1.0", Slug = "v1.0" },
+            },
+        };
+
+        var html = await RenderLayoutAsync(config, currentPath: "/intro");
+
+        html.ShouldContain("class=\"version-picker\"");
+        html.ShouldContain("Latest");
+        html.ShouldContain("v1.0");
+    }
+
+    [Fact]
+    public async Task ShouldRenderDeprecatedVersionNotice()
+    {
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            Versions = new Dictionary<string, VersionConfig>
+            {
+                ["current"] = new() { Label = "Latest", Slug = "current" },
+                ["v1.0"] = new() { Label = "v1.0", Slug = "v1.0", IsDeprecated = true },
+            },
+        };
+
+        var html = await RenderLayoutAsync(config, currentPath: "/v1.0/intro");
+
+        html.ShouldContain("class=\"deprecated-version-notice\"");
+        html.ShouldContain("You are viewing documentation for an older version.");
+        html.ShouldContain("View latest version");
+    }
+
+    [Fact]
+    public async Task ShouldNotRenderDeprecatedVersionNoticeForCurrentVersion()
+    {
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            Versions = new Dictionary<string, VersionConfig>
+            {
+                ["current"] = new() { Label = "Latest", Slug = "current" },
+                ["v1.0"] = new() { Label = "v1.0", Slug = "v1.0", IsDeprecated = true },
+            },
+        };
+
+        var html = await RenderLayoutAsync(config, currentPath: "/intro");
+
+        html.ShouldNotContain("deprecated-version-notice");
+    }
+
+    [Fact]
+    public async Task ShouldRenderCustomDeprecationMessage()
+    {
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            Versions = new Dictionary<string, VersionConfig>
+            {
+                ["current"] = new() { Label = "Latest", Slug = "current" },
+                ["v1.0"] = new() { Label = "v1.0", Slug = "v1.0", IsDeprecated = true, DeprecationMessage = "This version is no longer supported." },
+            },
+        };
+
+        var html = await RenderLayoutAsync(config, currentPath: "/v1.0/intro");
+
+        html.ShouldContain("class=\"deprecated-version-notice\"");
+        html.ShouldContain("This version is no longer supported.");
+        // Verify the custom message appears inside the notice div, not just the default text
+        var noticeStart = html.IndexOf("class=\"deprecated-version-notice\"", StringComparison.Ordinal);
+        var noticeEnd = html.IndexOf("</div>", noticeStart, StringComparison.Ordinal);
+        var noticeHtml = html.Substring(noticeStart, noticeEnd - noticeStart);
+        noticeHtml.ShouldContain("This version is no longer supported.");
+        noticeHtml.ShouldNotContain("You are viewing documentation for an older version.");
+    }
+
+    [Fact]
+    public async Task ShouldRenderVersionPickerWithLocale()
+    {
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            Locales = new Dictionary<string, LocaleConfig>
+            {
+                ["root"] = new() { Label = "English", Lang = "en" },
+                ["fr"] = new() { Label = "French", Lang = "fr" },
+            },
+            Versions = new Dictionary<string, VersionConfig>
+            {
+                ["current"] = new() { Label = "Latest", Slug = "current" },
+                ["v1.0"] = new() { Label = "v1.0", Slug = "v1.0" },
+            },
+        };
+
+        var html = await RenderLayoutAsync(config, currentPath: "/fr/intro");
+
+        html.ShouldContain("class=\"language-picker\"");
+        html.ShouldContain("class=\"version-picker\"");
+    }
+
+    [Fact]
+    public async Task ShouldUseVersionScopedSearchIndexUrl()
+    {
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            Versions = new Dictionary<string, VersionConfig>
+            {
+                ["current"] = new() { Label = "Latest", Slug = "current" },
+                ["v1.0"] = new() { Label = "v1.0", Slug = "v1.0" },
+            },
+        };
+
+        var html = await RenderLayoutAsync(config, currentPath: "/v1.0/intro");
+
+        html.ShouldContain("data-index-url=\"/v1.0/search-index.json\"");
+    }
+
+    [Fact]
+    public async Task ShouldUseLocaleAndVersionScopedSearchIndexUrl()
+    {
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            Locales = new Dictionary<string, LocaleConfig>
+            {
+                ["root"] = new() { Label = "English", Lang = "en" },
+                ["fr"] = new() { Label = "French", Lang = "fr" },
+            },
+            Versions = new Dictionary<string, VersionConfig>
+            {
+                ["current"] = new() { Label = "Latest", Slug = "current" },
+                ["v1.0"] = new() { Label = "v1.0", Slug = "v1.0" },
+            },
+        };
+
+        var html = await RenderLayoutAsync(config, currentPath: "/fr/v1.0/intro");
+
+        html.ShouldContain("data-index-url=\"/fr/v1.0/search-index.json\"");
     }
 }

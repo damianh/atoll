@@ -26,6 +26,8 @@ All Lagoon options live in a single `DocsConfig` instance. Create one in a stati
 | `Footer` | `FooterConfig?` | `null` | Custom footer content. When `null`, the default "Built with Atoll" footer is rendered |
 | `FaviconHref` | `string?` | `null` | URL or path to the site favicon. When `null`, the built-in Atoll logo is used |
 | `BasePath` | `string` | `""` | URL prefix when hosting at a sub-path (e.g. `"/docs"`) |
+| `Locales` | `IReadOnlyDictionary<string, LocaleConfig>?` | `null` | Locale configuration for multi-language sites. See [Internationalisation](./i18n) |
+| `Versions` | `IReadOnlyDictionary<string, VersionConfig>?` | `null` | Version configuration for multi-version documentation. See [Versioned Documentation](./versioning) |
 
 ## `SidebarItem` properties
 

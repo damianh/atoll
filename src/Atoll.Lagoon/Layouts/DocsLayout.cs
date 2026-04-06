@@ -7,6 +7,7 @@ using Atoll.Lagoon.Configuration;
 using Atoll.Lagoon.I18n;
 using Atoll.Lagoon.Islands;
 using Atoll.Lagoon.Navigation;
+using Atoll.Lagoon.Versioning;
 
 namespace Atoll.Lagoon.Layouts;
 
@@ -91,12 +92,31 @@ public sealed class DocsLayout : AtollComponent
         var effectiveDir = locale?.Config.Dir ?? "ltr";
         var translations = locale?.Config.Translations ?? Config.Translations;
 
-        // Compute locale-aware search index URL.
-        var searchIndexUrl = locale is not null && !string.IsNullOrEmpty(locale.PathPrefix)
-            ? LocalePathHelper.PrefixPath("/search-index.json", locale.PathPrefix, Config.BasePath)
-            : !string.IsNullOrEmpty(Config.BasePath)
-                ? Config.BasePath.TrimEnd('/') + "/search-index.json"
-                : "/search-index.json";
+        // Resolve version from the content path after locale resolution.
+        // When locales are configured, version operates on locale.ContentPath; otherwise on the full CurrentPath.
+        var contentPathForVersion = locale?.ContentPath ?? CurrentPath;
+        var version = VersionResolver.Resolve(contentPathForVersion, Config.Versions);
+
+        // Compute version- and locale-aware search index URL.
+        // Pattern: {basePath}/{localePrefix}/{versionPrefix}/search-index.json
+        var localePathPrefix = locale is not null && !string.IsNullOrEmpty(locale.PathPrefix) ? locale.PathPrefix : "";
+        var versionPathPrefix = version is not null && !string.IsNullOrEmpty(version.PathPrefix) ? version.PathPrefix : "";
+        string searchIndexUrl;
+        if (!string.IsNullOrEmpty(localePathPrefix) || !string.IsNullOrEmpty(versionPathPrefix))
+        {
+            var baseTrimmed = Config.BasePath.TrimEnd('/');
+            var localeTrimmed = localePathPrefix.TrimEnd('/');
+            var versionTrimmed = versionPathPrefix.TrimEnd('/');
+            searchIndexUrl = baseTrimmed + localeTrimmed + versionTrimmed + "/search-index.json";
+        }
+        else if (!string.IsNullOrEmpty(Config.BasePath))
+        {
+            searchIndexUrl = Config.BasePath.TrimEnd('/') + "/search-index.json";
+        }
+        else
+        {
+            searchIndexUrl = "/search-index.json";
+        }
 
         WriteHtml("<!DOCTYPE html>");
         WriteHtml($"<html lang=\"{HtmlEncode(effectiveLang)}\" dir=\"{HtmlEncode(effectiveDir)}\">");
@@ -175,6 +195,20 @@ public sealed class DocsLayout : AtollComponent
             }));
         }
 
+        // Version picker (only for multi-version sites)
+        if (Config.Versions is not null && Config.Versions.Count > 1 && version is not null)
+        {
+            await RenderAsync(ComponentRenderer.ToFragment<VersionPicker>(new Dictionary<string, object?>
+            {
+                ["Versions"] = Config.Versions,
+                ["CurrentVersionKey"] = version.Key,
+                ["CurrentContentPath"] = version.ContentPath,
+                ["LocalePrefix"] = localePathPrefix,
+                ["BasePath"] = Config.BasePath,
+                ["Translations"] = translations,
+            }));
+        }
+
         // Theme toggle island
         await IslandRenderer.RenderIslandAsync<ThemeToggle>(
             context.Destination,
@@ -221,6 +255,19 @@ public sealed class DocsLayout : AtollComponent
         {
             WriteHtml("<div class=\"untranslated-notice\">");
             WriteText(translations.UntranslatedContentNotice);
+            WriteHtml("</div>");
+        }
+
+        // Deprecated version notice
+        if (version?.Config.IsDeprecated == true)
+        {
+            var deprecationMessage = version.Config.DeprecationMessage ?? translations.OutdatedVersionNotice;
+            var currentVersionPath = VersionPathHelper.PrefixPath(version.ContentPath, "", localePathPrefix, Config.BasePath);
+            WriteHtml("<div class=\"deprecated-version-notice\">");
+            WriteText(deprecationMessage);
+            WriteHtml($" <a href=\"{HtmlEncode(currentVersionPath)}\">");
+            WriteText(translations.OutdatedVersionLinkText);
+            WriteHtml("</a>");
             WriteHtml("</div>");
         }
 

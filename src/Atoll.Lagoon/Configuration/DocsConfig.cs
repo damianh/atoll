@@ -1,4 +1,5 @@
 using Atoll.Lagoon.I18n;
+using Atoll.Lagoon.Versioning;
 
 namespace Atoll.Lagoon.Configuration;
 
@@ -94,6 +95,15 @@ public sealed class DocsConfig
     /// When <c>null</c> or empty, the site operates in single-language mode (backward compatible).
     /// </summary>
     public IReadOnlyDictionary<string, LocaleConfig>? Locales { get; set; }
+
+    /// <summary>
+    /// Gets or sets the version configuration for multi-version documentation sites.
+    /// Keys are version slugs (e.g. <c>"v1.0"</c>, <c>"v2.0"</c>) or <c>"current"</c> for the default (latest) version.
+    /// The <c>"current"</c> version has no URL prefix; archived versions are served under
+    /// <c>/{version}/{page}</c> (or <c>/{locale}/{version}/{page}</c> when locales are also configured).
+    /// When <c>null</c>, the site operates in single-version mode and rendering is identical to before (backward compatible).
+    /// </summary>
+    public IReadOnlyDictionary<string, VersionConfig>? Versions { get; set; }
 
     /// <summary>
     /// Gets or sets the default BCP-47 language tag used when no locale configuration is present.

@@ -37,6 +37,7 @@ These features exist in Lagoon and are fully documented in this section.
 | Sidebar badge variants | `SidebarBadge` + `BadgeVariant` enum | 6 colour variants: Default, Note, Tip, Success, Caution, Danger |
 | Custom footer | `FooterConfig` + `FooterLink` | Configurable footer text and navigation links |
 | Favicon configuration | `DocsConfig.FaviconHref` | Custom favicon path or URL |
+| Versioned documentation | `VersionConfig`, `VersionPicker`, `VersionResolver` — version selector dropdown, per-version sidebars, deprecated version notices, version-scoped search indices | `starlight-versions` plugin |
 
 ## Minor gaps
 
@@ -51,11 +52,10 @@ Significant features that Starlight has but Lagoon does not currently support. T
 | Component overrides | Replace any built-in UI component by path | No override mechanism | Layout and UI are not customisable without forking |
 | Plugin system | Plugin API for extending Starlight at build and runtime | No plugin architecture | — |
 | Expressive Code blocks | Syntax highlighting with frames, markers, diffs, and collapsible sections | Standard code blocks only | — |
-| Versioned documentation | Version selector for multiple doc versions simultaneously | Not implemented | — |
 | Route data API | Typed `StarlightPage` route data accessible in components | No equivalent API | — |
 
 ## Summary
 
-Lagoon covers the core of what you need to build a .NET documentation site: layout, navigation, search, dark mode, i18n, content components, and a responsive design. If your project requires component customisation or a plugin architecture, you will hit the notable gaps above.
+Lagoon covers the core of what you need to build a .NET documentation site: layout, navigation, search, dark mode, i18n, content components, versioned documentation, and a responsive design. If your project requires component customisation or a plugin architecture, you will hit the notable gaps above.
 
 Use the [GitHub issues](https://github.com/damianh/atoll/issues) page to request features or track progress.

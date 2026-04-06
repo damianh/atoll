@@ -73,7 +73,7 @@ public sealed class LagoonSearchIndexGenerator
         IEnumerable<SearchDocumentInput> documents)
     {
         ArgumentNullException.ThrowIfNull(documents);
-        return await GenerateFromDocumentsAsync(documents, "");
+        return await GenerateFromDocumentsAsync(documents, "", "");
     }
 
     /// <summary>
@@ -93,12 +93,41 @@ public sealed class LagoonSearchIndexGenerator
     {
         ArgumentNullException.ThrowIfNull(documents);
         ArgumentNullException.ThrowIfNull(localePrefix);
-        return await GenerateFromDocumentsAsync(documents, localePrefix);
+        return await GenerateFromDocumentsAsync(documents, localePrefix, "");
+    }
+
+    /// <summary>
+    /// Generates the search index from a collection of <see cref="SearchDocumentInput"/> items and
+    /// writes it to a locale- and version-specific subdirectory
+    /// (e.g., <c>fr/v1.0/search-index.json</c>).
+    /// </summary>
+    /// <param name="documents">The documents to include in the search index.</param>
+    /// <param name="localePrefix">
+    /// The locale prefix (e.g., <c>"fr"</c>), or empty for the root locale.
+    /// </param>
+    /// <param name="versionPrefix">
+    /// The version prefix (e.g., <c>"v1.0"</c>), or empty for the current version.
+    /// When non-empty (and localePrefix is empty), the index is written to
+    /// <c>{outputDirectory}/{versionPrefix}/search-index.json</c>.
+    /// When both are non-empty, the index is written to
+    /// <c>{outputDirectory}/{localePrefix}/{versionPrefix}/search-index.json</c>.
+    /// </param>
+    /// <returns>A <see cref="SearchIndexGenerationResult"/> with stats about the generated index.</returns>
+    public async Task<SearchIndexGenerationResult> GenerateAsync(
+        IEnumerable<SearchDocumentInput> documents,
+        string localePrefix,
+        string versionPrefix)
+    {
+        ArgumentNullException.ThrowIfNull(documents);
+        ArgumentNullException.ThrowIfNull(localePrefix);
+        ArgumentNullException.ThrowIfNull(versionPrefix);
+        return await GenerateFromDocumentsAsync(documents, localePrefix, versionPrefix);
     }
 
     private async Task<SearchIndexGenerationResult> GenerateFromDocumentsAsync(
         IEnumerable<SearchDocumentInput> documents,
-        string localePrefix)
+        string localePrefix,
+        string versionPrefix)
     {
         var sw = Stopwatch.StartNew();
 
@@ -110,7 +139,7 @@ public sealed class LagoonSearchIndexGenerator
 
         var index = builder.Build();
 
-        var targetDirectory = ResolveOutputDirectory(localePrefix);
+        var targetDirectory = ResolveOutputDirectory(localePrefix, versionPrefix);
         await _writer.WriteAsync(index, targetDirectory);
 
         sw.Stop();
@@ -118,14 +147,22 @@ public sealed class LagoonSearchIndexGenerator
         return new SearchIndexGenerationResult(index.Entries.Count, outputPath, sw.Elapsed);
     }
 
-    private string ResolveOutputDirectory(string localePrefix)
+    private string ResolveOutputDirectory(string localePrefix, string versionPrefix)
     {
-        if (string.IsNullOrEmpty(localePrefix))
+        var normalizedLocale = localePrefix.Trim('/');
+        var normalizedVersion = versionPrefix.Trim('/');
+
+        if (string.IsNullOrEmpty(normalizedLocale) && string.IsNullOrEmpty(normalizedVersion))
         {
             return _outputDirectory;
         }
 
-        var normalized = localePrefix.Trim('/');
-        return Path.Combine(_outputDirectory, normalized);
+        var combined = Path.Combine(
+            new[] { _outputDirectory }
+                .Concat(normalizedLocale.Length > 0 ? [normalizedLocale] : [])
+                .Concat(normalizedVersion.Length > 0 ? [normalizedVersion] : [])
+                .ToArray());
+
+        return combined;
     }
 }

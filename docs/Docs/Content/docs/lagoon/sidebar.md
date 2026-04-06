@@ -164,6 +164,35 @@ var sidebarItems = new SidebarBuilder(config.Sidebar, entries).Build(currentHref
 
 Pass the resolved `sidebarItems` to `DocsLayout` via the `SidebarItems` parameter.
 
+## Per-version sidebars
+
+When versioned documentation is enabled, you can define a different sidebar for each version by setting `VersionConfig.Sidebar`. When `null`, the version falls back to `DocsConfig.Sidebar`.
+
+```csharp
+Versions = new Dictionary<string, VersionConfig>
+{
+    ["current"] = new VersionConfig { Label = "Latest" },
+    ["v1.0"] = new VersionConfig
+    {
+        Label    = "v1.0",
+        Sidebar  =
+        [
+            new SidebarItem { Label = "Introduction", Link = "/docs/v1.0/intro" },
+            new SidebarItem { Label = "Getting Started", Link = "/docs/v1.0/getting-started" },
+        ],
+    },
+}
+```
+
+At render time, `SidebarBuilder` accepts `versionPrefix` and `versionKey` parameters so it can filter auto-generated entries to the current version and prefix all hrefs correctly. Use the 6-parameter `Build()` overload when both locale and version resolution are active:
+
+```csharp
+var sidebarItems = new SidebarBuilder(config.Sidebar, entries)
+    .Build(currentHref, localePrefix, basePath, localeKey, versionPrefix, versionKey);
+```
+
+See [Versioned Documentation](./versioning) for full configuration details.
+
 ## Nested groups
 
 Groups can be nested to any depth:
