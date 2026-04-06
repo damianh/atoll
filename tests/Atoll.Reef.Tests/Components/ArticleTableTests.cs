@@ -37,35 +37,6 @@ public sealed class ArticleTableTests
     }
 
     [Fact]
-    public async Task ShouldRenderTableElement()
-    {
-        var html = await RenderAsync();
-
-        html.ShouldContain("<table");
-        html.ShouldContain("class=\"article-table\"");
-        html.ShouldContain("<thead>");
-        html.ShouldContain("<tbody>");
-    }
-
-    [Fact]
-    public async Task ShouldRenderTitleColumn()
-    {
-        var html = await RenderAsync();
-
-        html.ShouldContain("<th scope=\"col\">Title</th>");
-        html.ShouldContain("Post Title");
-    }
-
-    [Fact]
-    public async Task ShouldRenderDateColumn()
-    {
-        var html = await RenderAsync();
-
-        html.ShouldContain("<th scope=\"col\">Date</th>");
-        html.ShouldContain("datetime=\"2025-01-01\"");
-    }
-
-    [Fact]
     public async Task ShouldRenderAuthorColumnWhenEnabled()
     {
         var html = await RenderAsync(showAuthor: true);

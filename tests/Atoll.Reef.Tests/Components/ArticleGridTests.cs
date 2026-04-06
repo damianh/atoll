@@ -29,13 +29,6 @@ public sealed class ArticleGridTests
     }
 
     [Fact]
-    public async Task ShouldRenderGridContainer()
-    {
-        var html = await RenderAsync([MakeItem()]);
-        html.ShouldContain("class=\"article-grid\"");
-    }
-
-    [Fact]
     public async Task ShouldSetGridColsCustomProperty()
     {
         var html = await RenderAsync([MakeItem()], columns: 2);

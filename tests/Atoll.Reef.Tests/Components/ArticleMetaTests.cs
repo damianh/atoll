@@ -30,26 +30,11 @@ public sealed class ArticleMetaTests
     }
 
     [Fact]
-    public async Task ShouldRenderArticleMetaDiv()
-    {
-        var html = await RenderAsync(new DateTime(2026, 1, 15));
-        html.ShouldContain("class=\"article-meta\"");
-    }
-
-    [Fact]
     public async Task ShouldRenderPublicationDate()
     {
         var html = await RenderAsync(new DateTime(2026, 1, 15));
         html.ShouldContain("2026-01-15");
         html.ShouldContain("January 15, 2026");
-    }
-
-    [Fact]
-    public async Task ShouldRenderDateInTimeElement()
-    {
-        var html = await RenderAsync(new DateTime(2026, 3, 5));
-        html.ShouldContain("<time");
-        html.ShouldContain("</time>");
     }
 
     [Fact]

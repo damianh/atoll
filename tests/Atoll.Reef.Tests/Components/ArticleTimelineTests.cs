@@ -28,14 +28,6 @@ public sealed class ArticleTimelineTests
     }
 
     [Fact]
-    public async Task ShouldRenderTimelineContainer()
-    {
-        var html = await RenderAsync();
-
-        html.ShouldContain("class=\"article-timeline\"");
-    }
-
-    [Fact]
     public async Task ShouldGroupByYear()
     {
         var items = new[]

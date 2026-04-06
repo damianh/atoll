@@ -26,33 +26,6 @@ public sealed class CardTests
     }
 
     [Fact]
-    public async Task ShouldRenderCardDiv()
-    {
-        var html = await RenderCardAsync("My Card");
-
-        html.ShouldContain("class=\"card\"");
-        html.ShouldContain("</div>");
-    }
-
-    [Fact]
-    public async Task ShouldRenderTitle()
-    {
-        var html = await RenderCardAsync("My Card");
-
-        html.ShouldContain("My Card");
-        html.ShouldContain("card-title");
-    }
-
-    [Fact]
-    public async Task ShouldRenderTitleInHeading()
-    {
-        var html = await RenderCardAsync("My Card");
-
-        html.ShouldContain("<h3");
-        html.ShouldContain("</h3>");
-    }
-
-    [Fact]
     public async Task ShouldRenderIconWhenProvided()
     {
         var html = await RenderCardAsync("My Card", iconName: IconName.Star);

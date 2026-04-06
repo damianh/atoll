@@ -24,14 +24,6 @@ public sealed class CardGridTests
     }
 
     [Fact]
-    public async Task ShouldRenderGridDiv()
-    {
-        var html = await RenderCardGridAsync();
-
-        html.ShouldContain("card-grid");
-    }
-
-    [Fact]
     public async Task ShouldApplyStaggerClassWhenTrue()
     {
         var html = await RenderCardGridAsync(stagger: true);

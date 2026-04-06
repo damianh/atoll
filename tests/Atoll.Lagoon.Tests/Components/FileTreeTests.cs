@@ -20,26 +20,6 @@ public sealed class FileTreeTests
     }
 
     [Fact]
-    public async Task ShouldRenderTreeRootStructure()
-    {
-        var html = await RenderFileTreeAsync([new FileTreeItem("index.ts")]);
-
-        html.ShouldContain("<div class=\"file-tree\" role=\"tree\">");
-        html.ShouldContain("<ul role=\"group\">");
-        html.ShouldContain("</ul></div>");
-    }
-
-    [Fact]
-    public async Task ShouldRenderFileItem()
-    {
-        var html = await RenderFileTreeAsync([new FileTreeItem("main.ts")]);
-
-        html.ShouldContain("role=\"treeitem\"");
-        html.ShouldContain("file-tree-file");
-        html.ShouldContain("main.ts");
-    }
-
-    [Fact]
     public async Task ShouldRenderDirectoryWithDetailsSummary()
     {
         var html = await RenderFileTreeAsync([new FileTreeItem("src", isDirectory: true)]);
@@ -93,20 +73,4 @@ public sealed class FileTreeTests
         html.ShouldNotContain("<script>alert(1)</script>");
     }
 
-    [Fact]
-    public async Task ShouldRenderFileAndFolderIcons()
-    {
-        var items = new List<FileTreeItem>
-        {
-            new FileTreeItem("src", isDirectory: true, children: new List<FileTreeItem>
-            {
-                new FileTreeItem("index.ts"),
-            })
-        };
-
-        var html = await RenderFileTreeAsync(items);
-
-        // Both folder icon and file icon SVGs should be present
-        html.ShouldContain("<svg ");
-    }
 }

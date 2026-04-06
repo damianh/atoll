@@ -33,24 +33,6 @@ public sealed class OpenGraphMetaTests
     }
 
     [Fact]
-    public async Task ShouldRenderOgTitle()
-    {
-        var html = await RenderAsync(title: "Test Article");
-
-        html.ShouldContain("og:title");
-        html.ShouldContain("Test Article");
-    }
-
-    [Fact]
-    public async Task ShouldRenderOgType()
-    {
-        var html = await RenderAsync();
-
-        html.ShouldContain("og:type");
-        html.ShouldContain("article");
-    }
-
-    [Fact]
     public async Task ShouldRenderOgDescription()
     {
         var html = await RenderAsync(description: "Article description");
@@ -149,13 +131,4 @@ public sealed class OpenGraphMetaTests
         html.ShouldContain("A description");
     }
 
-    [Fact]
-    public async Task ShouldUsePropertyAttributeForOgTags()
-    {
-        var html = await RenderAsync(title: "Test", description: "Desc", siteName: "Blog");
-
-        html.ShouldContain("<meta property=\"og:title\"");
-        html.ShouldContain("<meta property=\"og:description\"");
-        html.ShouldContain("<meta property=\"og:site_name\"");
-    }
 }

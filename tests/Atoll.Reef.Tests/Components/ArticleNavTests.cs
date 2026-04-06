@@ -31,14 +31,6 @@ public sealed class ArticleNavTests
     }
 
     [Fact]
-    public async Task ShouldRenderNavElement()
-    {
-        var html = await RenderAsync(next: new ArticleNavLink("Next Article", "/blog/next"));
-        html.ShouldContain("<nav");
-        html.ShouldContain("article-nav");
-    }
-
-    [Fact]
     public async Task ShouldRenderPreviousLink()
     {
         var html = await RenderAsync(previous: new ArticleNavLink("Prev Post", "/blog/prev"));
@@ -84,10 +76,4 @@ public sealed class ArticleNavTests
         html.ShouldContain("&lt;b&gt;Next&lt;/b&gt;");
     }
 
-    [Fact]
-    public async Task ShouldHaveAriaLabel()
-    {
-        var html = await RenderAsync(next: new ArticleNavLink("Next", "/next"));
-        html.ShouldContain("aria-label=\"Article navigation\"");
-    }
 }

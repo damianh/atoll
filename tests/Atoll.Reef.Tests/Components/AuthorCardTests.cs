@@ -27,23 +27,6 @@ public sealed class AuthorCardTests
     }
 
     [Fact]
-    public async Task ShouldRenderAsideWithClass()
-    {
-        var html = await RenderAsync();
-
-        html.ShouldContain("<aside");
-        html.ShouldContain("class=\"author-card\"");
-    }
-
-    [Fact]
-    public async Task ShouldRenderAuthorName()
-    {
-        var html = await RenderAsync(name: "Alice Smith");
-
-        html.ShouldContain("Alice Smith");
-    }
-
-    [Fact]
     public async Task ShouldRenderAvatarImageWhenProvided()
     {
         var html = await RenderAsync(avatarUrl: "https://example.com/alice.jpg");

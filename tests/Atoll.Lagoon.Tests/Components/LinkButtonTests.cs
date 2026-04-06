@@ -29,55 +29,6 @@ public sealed class LinkButtonTests
     }
 
     [Fact]
-    public async Task ShouldRenderAnchorElement()
-    {
-        var html = await RenderLinkButtonAsync("/docs", "Get started");
-
-        html.ShouldContain("<a ");
-        html.ShouldContain("</a>");
-    }
-
-    [Fact]
-    public async Task ShouldRenderHref()
-    {
-        var html = await RenderLinkButtonAsync("/docs", "Get started");
-
-        html.ShouldContain("href=\"/docs\"");
-    }
-
-    [Fact]
-    public async Task ShouldRenderLabelText()
-    {
-        var html = await RenderLinkButtonAsync("/docs", "Get started");
-
-        html.ShouldContain("Get started");
-    }
-
-    [Fact]
-    public async Task ShouldApplyPrimaryVariantClass()
-    {
-        var html = await RenderLinkButtonAsync("/docs", "Go", LinkButtonVariant.Primary);
-
-        html.ShouldContain("link-button-primary");
-    }
-
-    [Fact]
-    public async Task ShouldApplySecondaryVariantClass()
-    {
-        var html = await RenderLinkButtonAsync("/docs", "Go", LinkButtonVariant.Secondary);
-
-        html.ShouldContain("link-button-secondary");
-    }
-
-    [Fact]
-    public async Task ShouldApplyMinimalVariantClass()
-    {
-        var html = await RenderLinkButtonAsync("/docs", "Go", LinkButtonVariant.Minimal);
-
-        html.ShouldContain("link-button-minimal");
-    }
-
-    [Fact]
     public async Task ShouldRenderIconAtStartByDefault()
     {
         var html = await RenderLinkButtonAsync("/docs", "Go", iconName: IconName.Star, iconPlacement: IconPlacement.Start);

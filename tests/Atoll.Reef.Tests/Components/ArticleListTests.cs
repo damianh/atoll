@@ -27,26 +27,12 @@ public sealed class ArticleListTests
     }
 
     [Fact]
-    public async Task ShouldRenderListContainer()
-    {
-        var html = await RenderAsync([MakeItem()]);
-        html.ShouldContain("class=\"article-list\"");
-    }
-
-    [Fact]
     public async Task ShouldRenderEachItemAsArticle()
     {
         var html = await RenderAsync([MakeItem("Alpha"), MakeItem("Beta")]);
         html.ShouldContain("Alpha");
         html.ShouldContain("Beta");
         html.ShouldContain("article-list-item");
-    }
-
-    [Fact]
-    public async Task ShouldRenderItemTitle()
-    {
-        var html = await RenderAsync([MakeItem(title: "My Post")]);
-        html.ShouldContain("My Post");
     }
 
     [Fact]

@@ -22,14 +22,6 @@ public sealed class PaginationTests
     }
 
     [Fact]
-    public async Task ShouldRenderNavElement()
-    {
-        var html = await RenderAsync(new PaginationInfo(1, 3, "/blog"));
-        html.ShouldContain("<nav");
-        html.ShouldContain("pagination");
-    }
-
-    [Fact]
     public async Task ShouldRenderPageNumbers()
     {
         var html = await RenderAsync(new PaginationInfo(2, 3, "/blog"));

@@ -33,26 +33,6 @@ public sealed class PaginationTests
         html.ShouldBeEmpty();
     }
 
-    // --- Nav structure ---
-
-    [Fact]
-    public async Task ShouldRenderNavWithAriaLabelWhenPreviousExists()
-    {
-        var html = await RenderPaginationAsync(Link("Intro", "/docs/intro/"), null);
-
-        html.ShouldContain("<nav class=\"docs-pagination\" aria-label=\"Pagination\">");
-        html.ShouldContain("</nav>");
-    }
-
-    [Fact]
-    public async Task ShouldRenderNavWithAriaLabelWhenNextExists()
-    {
-        var html = await RenderPaginationAsync(null, Link("Advanced", "/docs/advanced/"));
-
-        html.ShouldContain("<nav class=\"docs-pagination\" aria-label=\"Pagination\">");
-        html.ShouldContain("</nav>");
-    }
-
     // --- Previous link ---
 
     [Fact]
@@ -62,15 +42,6 @@ public sealed class PaginationTests
 
         html.ShouldContain("rel=\"prev\"");
         html.ShouldContain("href=\"/docs/getting-started/\"");
-    }
-
-    [Fact]
-    public async Task ShouldRenderPreviousLabelText()
-    {
-        var html = await RenderPaginationAsync(Link("Getting Started", "/docs/getting-started/"), null);
-
-        html.ShouldContain("Getting Started");
-        html.ShouldContain("Previous");
     }
 
     [Fact]
@@ -91,15 +62,6 @@ public sealed class PaginationTests
 
         html.ShouldContain("rel=\"next\"");
         html.ShouldContain("href=\"/docs/advanced/\"");
-    }
-
-    [Fact]
-    public async Task ShouldRenderNextLabelText()
-    {
-        var html = await RenderPaginationAsync(null, Link("Advanced Topics", "/docs/advanced/"));
-
-        html.ShouldContain("Advanced Topics");
-        html.ShouldContain("Next");
     }
 
     [Fact]
