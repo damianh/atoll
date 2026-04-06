@@ -199,5 +199,4 @@ Use Razor templates when the component is **markup-heavy** — lots of HTML with
 Keep using `RenderCoreAsync` with `WriteHtml`/`WriteText` when:
 
 - The component has complex control flow or significant C# logic interleaved with rendering
-- The component embeds inline JavaScript
-- The component is an island with client directives (`[ClientIdle]`, `[ClientLoad]`)
+- The component is an island with client directives (`[ClientIdle]`, `[ClientLoad]`) — the component *itself* stays in C#, but parent templates can render islands via `RenderComponentAsync<T>(props)` (island wrapping is automatic)
