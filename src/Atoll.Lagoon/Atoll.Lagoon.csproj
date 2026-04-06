@@ -7,6 +7,7 @@
     <ProjectReference Include="..\Atoll.Mermaid\Atoll.Mermaid.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="AngleSharp" />
     <PackageReference Include="RazorSlices" />
     <PackageReference Include="TextMateSharp.Grammars" />
   </ItemGroup>
