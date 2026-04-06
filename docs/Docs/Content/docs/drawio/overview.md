@@ -23,10 +23,16 @@ A single component is provided:
 
 ## Installation
 
-Add a project reference to `Atoll.DrawIo`:
+Add the `Atoll.DrawIo` NuGet package:
+
+```bash
+dotnet add package Atoll.DrawIo
+```
+
+Or add directly to your `.csproj`:
 
 ```xml
-<ProjectReference Include="..\..\src\Atoll.DrawIo\Atoll.DrawIo.csproj" />
+<PackageReference Include="Atoll.DrawIo" Version="0.1.*" />
 ```
 
 Register the component in your `ContentConfig`:

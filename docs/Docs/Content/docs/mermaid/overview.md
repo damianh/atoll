@@ -18,10 +18,16 @@ The `Atoll.Mermaid` plugin renders [Mermaid](https://mermaid.js.org/) diagrams f
 
 ## Installation
 
-Add a project reference to `Atoll.Mermaid`:
+Add the `Atoll.Mermaid` NuGet package:
+
+```bash
+dotnet add package Atoll.Mermaid
+```
+
+Or add directly to your `.csproj`:
 
 ```xml
-<ProjectReference Include="..\..\src\Atoll.Mermaid\Atoll.Mermaid.csproj" />
+<PackageReference Include="Atoll.Mermaid" Version="0.1.*" />
 ```
 
 Register the island asset provider so the embedded initialisation script is copied to the output directory during build:

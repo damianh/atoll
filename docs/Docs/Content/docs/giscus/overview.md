@@ -18,10 +18,16 @@ The `Atoll.Giscus` plugin embeds [giscus](https://giscus.app/) comments powered 
 
 ## Installation
 
-Add a project reference to `Atoll.Giscus`:
+Add the `Atoll.Giscus` NuGet package:
+
+```bash
+dotnet add package Atoll.Giscus
+```
+
+Or add directly to your `.csproj`:
 
 ```xml
-<ProjectReference Include="..\..\src\Atoll.Giscus\Atoll.Giscus.csproj" />
+<PackageReference Include="Atoll.Giscus" Version="0.1.*" />
 ```
 
 Register the island asset provider so the embedded JavaScript is copied to the output directory during build:
