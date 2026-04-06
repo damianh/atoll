@@ -1,4 +1,6 @@
+using Atoll.Build.Content.Collections;
 using Atoll.Lagoon.Configuration;
+using Atoll.Lagoon.Redirects;
 using Atoll.Mermaid.Islands;
 
 namespace Docs;
@@ -133,4 +135,38 @@ public static class DocsSetup
             },
         ],
     };
+
+    /// <summary>
+    /// Extracts redirect sources from a collection of documentation content entries.
+    /// Each entry's canonical URL and <c>redirectFrom</c> frontmatter field are combined
+    /// into a <see cref="RedirectSource"/> for use with <see cref="RedirectCollector"/>.
+    /// </summary>
+    /// <param name="entries">The loaded documentation content entries.</param>
+    /// <returns>
+    /// A list of <see cref="RedirectSource"/> instances, one per entry that declares
+    /// redirect sources (entries with no <c>redirectFrom</c> are included with an empty list).
+    /// </returns>
+    /// <example>
+    /// <code>
+    /// var entries = await query.GetEntriesAsync&lt;DocSchema&gt;("docs");
+    /// var sources = DocsSetup.BuildRedirectSources(entries);
+    /// var collector = new RedirectCollector(DocsSetup.Config.Redirects);
+    /// var redirectMap = collector.Collect(sources);
+    /// </code>
+    /// </example>
+    public static IReadOnlyList<RedirectSource> BuildRedirectSources(
+        IEnumerable<ContentEntry<DocSchema>> entries)
+    {
+        ArgumentNullException.ThrowIfNull(entries);
+
+        var sources = new List<RedirectSource>();
+        foreach (var entry in entries)
+        {
+            sources.Add(new RedirectSource(
+                "/" + entry.Slug,
+                entry.Data.RedirectFrom ?? []));
+        }
+
+        return sources;
+    }
 }

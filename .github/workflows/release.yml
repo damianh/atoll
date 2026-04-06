@@ -15,6 +15,7 @@ on:
 
 jobs:
   release:
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     environment: nuget.org
     permissions:

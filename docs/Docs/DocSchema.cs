@@ -37,4 +37,20 @@ public sealed class DocSchema
     /// Use a YAML literal block (<c>head: |</c>) for multi-line content.
     /// </summary>
     public string? Head { get; set; }
+
+    /// <summary>
+    /// Gets or sets a list of old URL paths that should redirect to this page.
+    /// Each entry is a base-relative path (e.g., <c>/old-getting-started</c>).
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// ---
+    /// title: Getting Started
+    /// redirectFrom:
+    ///   - /old-getting-started
+    ///   - /docs/v1/getting-started
+    /// ---
+    /// </code>
+    /// </example>
+    public List<string>? RedirectFrom { get; set; }
 }
