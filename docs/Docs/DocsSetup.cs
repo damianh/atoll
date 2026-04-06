@@ -22,7 +22,7 @@ public static class DocsSetup
     {
         Title = "Atoll",
         Description = "A .NET-native static-site framework inspired by Astro.",
-        BasePath = "",
+        BasePath = "/atoll",
         EnableMermaid = true,
         EnableSyntaxHighlighting = true,
         Social =

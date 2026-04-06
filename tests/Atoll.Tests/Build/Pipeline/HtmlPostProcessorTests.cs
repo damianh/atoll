@@ -417,6 +417,78 @@ public sealed class HtmlPostProcessorTests
     }
 
     [Fact]
+    public void ProcessShouldAdjustIslandComponentUrl()
+    {
+        var html = """
+            <!DOCTYPE html>
+            <html>
+            <head><title>Test</title></head>
+            <body>
+            <atoll-island component-url="/scripts/my-island.js" client="load"></atoll-island>
+            </body>
+            </html>
+            """;
+
+        var processor = new HtmlPostProcessor(new HtmlPostProcessorOptions
+        {
+            BasePath = "/docs",
+        });
+
+        var result = processor.Process(html);
+
+        result.ShouldContain("/docs/scripts/my-island.js");
+        result.ShouldNotContain("component-url=\"/scripts/my-island.js\"");
+    }
+
+    [Fact]
+    public void ProcessShouldAdjustIslandBeforeHydrationUrl()
+    {
+        var html = """
+            <!DOCTYPE html>
+            <html>
+            <head><title>Test</title></head>
+            <body>
+            <atoll-island component-url="/scripts/my-island.js" before-hydration-url="/scripts/pre-hydrate.js" client="load"></atoll-island>
+            </body>
+            </html>
+            """;
+
+        var processor = new HtmlPostProcessor(new HtmlPostProcessorOptions
+        {
+            BasePath = "/docs",
+        });
+
+        var result = processor.Process(html);
+
+        result.ShouldContain("/docs/scripts/my-island.js");
+        result.ShouldContain("/docs/scripts/pre-hydrate.js");
+    }
+
+    [Fact]
+    public void ProcessShouldNotDoublePrefixIslandComponentUrl()
+    {
+        var html = """
+            <!DOCTYPE html>
+            <html>
+            <head><title>Test</title></head>
+            <body>
+            <atoll-island component-url="/docs/scripts/my-island.js" client="load"></atoll-island>
+            </body>
+            </html>
+            """;
+
+        var processor = new HtmlPostProcessor(new HtmlPostProcessorOptions
+        {
+            BasePath = "/docs",
+        });
+
+        var result = processor.Process(html);
+
+        result.ShouldContain("/docs/scripts/my-island.js");
+        result.ShouldNotContain("/docs/docs/scripts/my-island.js");
+    }
+
+    [Fact]
     public void ProcessShouldHandleBasePathWithoutLeadingSlash()
     {
         var html = """
