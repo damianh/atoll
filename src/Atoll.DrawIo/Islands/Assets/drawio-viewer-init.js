@@ -15,7 +15,9 @@
  * element(s) within this island.
  */
 
-const VIEWER_SCRIPT_URL = '/scripts/atoll-drawio-viewer.min.js';
+// Derive the base path from this module's own URL so the viewer script
+// resolves correctly when the site is deployed under a sub-path (e.g. /atoll/).
+const VIEWER_SCRIPT_URL = new URL('./atoll-drawio-viewer.min.js', import.meta.url).href;
 const VIEWER_SCRIPT_ID  = 'atoll-drawio-viewer-script';
 
 /** @type {Promise<void> | null} */

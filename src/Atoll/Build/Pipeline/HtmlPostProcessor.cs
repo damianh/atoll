@@ -153,6 +153,18 @@ public sealed class HtmlPostProcessor
         // Adjust action attributes on <form>
         modified |= AdjustAttributes(document, "form[action]", "action", basePath);
 
+        // Adjust island component URLs on <atoll-island>
+        modified |= AdjustAttributes(
+            document,
+            "atoll-island[component-url]",
+            "component-url",
+            basePath);
+        modified |= AdjustAttributes(
+            document,
+            "atoll-island[before-hydration-url]",
+            "before-hydration-url",
+            basePath);
+
         return modified;
     }
 
