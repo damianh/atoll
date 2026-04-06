@@ -75,13 +75,41 @@ public sealed class MarkdownRenderResult
         string html,
         IReadOnlyList<MarkdownHeading> headings,
         IReadOnlyList<ContentFragment> fragments)
+        : this(html, headings, fragments, allReferences: [])
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="MarkdownRenderResult"/> with fragment data
+    /// and the full ordered reference list (including nested component references captured
+    /// inside <c>ChildHtml</c> of outer components).
+    /// </summary>
+    /// <param name="html">The rendered HTML string (with placeholder comments).</param>
+    /// <param name="headings">The extracted headings from the document.</param>
+    /// <param name="fragments">
+    /// The sequence of HTML and component fragments produced by splitting the HTML on
+    /// placeholder comments.
+    /// </param>
+    /// <param name="allReferences">
+    /// The complete ordered list of all component references, including those nested inside
+    /// other components' <c>ChildHtml</c>. Index N in this list corresponds to the
+    /// <c>&lt;!--atoll-tag:N--&gt;</c> placeholder that may appear in a component's
+    /// <c>ChildHtml</c>.
+    /// </param>
+    public MarkdownRenderResult(
+        string html,
+        IReadOnlyList<MarkdownHeading> headings,
+        IReadOnlyList<ContentFragment> fragments,
+        IReadOnlyList<ComponentReference> allReferences)
     {
         ArgumentNullException.ThrowIfNull(html);
         ArgumentNullException.ThrowIfNull(headings);
         ArgumentNullException.ThrowIfNull(fragments);
+        ArgumentNullException.ThrowIfNull(allReferences);
         Html = html;
         Headings = headings;
         Fragments = fragments;
+        AllReferences = allReferences;
     }
 
     /// <summary>
@@ -100,6 +128,14 @@ public sealed class MarkdownRenderResult
     /// contains the complete rendered output.
     /// </summary>
     public IReadOnlyList<ContentFragment>? Fragments { get; }
+
+    /// <summary>
+    /// Gets the complete ordered list of all component references, including those nested
+    /// inside other components' <c>ChildHtml</c>. Index N in this list corresponds to the
+    /// <c>&lt;!--atoll-tag:N--&gt;</c> placeholder that may appear in a component's
+    /// <c>ChildHtml</c>. Empty when no components were present.
+    /// </summary>
+    public IReadOnlyList<ComponentReference> AllReferences { get; } = [];
 }
 
 /// <summary>
@@ -207,7 +243,7 @@ public static class MarkdownRenderer
             }
 
             var fragments = BuildFragments(html, allReferences);
-            return new MarkdownRenderResult(html, headings, fragments);
+            return new MarkdownRenderResult(html, headings, fragments, allReferences);
         }
 
         return new MarkdownRenderResult(html, headings);

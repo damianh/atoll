@@ -540,12 +540,13 @@ public sealed class DocsSampleTests : IDisposable
         var writer = new IslandAssetWriter(_outputDir);
         var result = await writer.WriteAsync(assets);
 
-        result.FileCount.ShouldBe(4);
+        result.FileCount.ShouldBe(5);
 
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-search-dialog.js")).ShouldBeTrue();
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-theme-toggle.js")).ShouldBeTrue();
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-mobile-nav.js")).ShouldBeTrue();
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-sidebar-state.js")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-tabs.js")).ShouldBeTrue();
 
         // Verify one file has expected content
         var searchDialogContent = await File.ReadAllTextAsync(
@@ -657,11 +658,12 @@ public sealed class DocsSampleTests : IDisposable
         assetResult.Css.Css.ShouldContain("--docs-bg");
 
         // Assert island JS
-        islandResult.FileCount.ShouldBe(4);
+        islandResult.FileCount.ShouldBe(5);
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-search-dialog.js")).ShouldBeTrue();
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-theme-toggle.js")).ShouldBeTrue();
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-mobile-nav.js")).ShouldBeTrue();
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-sidebar-state.js")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-tabs.js")).ShouldBeTrue();
 
         // Assert HTML pages (no regression)
         File.Exists(Path.Combine(_outputDir, "index.html")).ShouldBeTrue();
