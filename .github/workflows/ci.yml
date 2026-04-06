@@ -1,10 +1,12 @@
-name: CI
+name: ci
 
 on:
   push:
-    branches: [main, astro-fork]
+    branches:
+      - main
+      - '**'
   pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
   build-and-test:
@@ -14,6 +16,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -29,11 +33,23 @@ jobs:
       - name: Test
         run: dotnet test -c Release --no-build --verbosity normal
 
-      - name: Pack Templates
-        run: dotnet pack templates/Atoll.Templates.csproj -c Release
+      - name: Build NuGet packages
+        run: |
+          dotnet pack src/Atoll/Atoll.csproj --no-build -c Release --output ./packages
+          dotnet pack src/Atoll.Annotations/Atoll.Annotations.csproj --no-build -c Release --output ./packages
+          dotnet pack src/Atoll.Cli/Atoll.Cli.csproj --no-build -c Release --output ./packages
+          dotnet pack src/Atoll.DrawIo/Atoll.DrawIo.csproj --no-build -c Release --output ./packages
+          dotnet pack src/Atoll.Giscus/Atoll.Giscus.csproj --no-build -c Release --output ./packages
+          dotnet pack src/Atoll.Lagoon/Atoll.Lagoon.csproj --no-build -c Release --output ./packages
+          dotnet pack src/Atoll.Mermaid/Atoll.Mermaid.csproj --no-build -c Release --output ./packages
+          dotnet pack src/Atoll.Middleware/Atoll.Middleware.csproj --no-build -c Release --output ./packages
+          dotnet pack src/Atoll.Reef/Atoll.Reef.csproj --no-build -c Release --output ./packages
 
-      - name: Upload Template Pack
+      - name: Pack Templates
+        run: dotnet pack templates/Atoll.Templates.csproj -c Release --output ./packages
+
+      - name: Upload NuGet packages
         uses: actions/upload-artifact@v4
         with:
-          name: atoll-templates-nupkg-${{ matrix.os }}
-          path: templates/bin/Release/*.nupkg
+          name: nuget-packages-${{ matrix.os }}
+          path: ./packages/*.nupkg
