@@ -42,7 +42,7 @@ public sealed class DevCommandHandler
         // our own request-logging middleware to emit at Information level.
         builder.Logging.SetMinimumLevel(LogLevel.Warning);
         builder.Logging.AddFilter<Microsoft.Extensions.Logging.Console.ConsoleLoggerProvider>(
-            "Atoll.Middleware.Server.DevServer.DevRequestLoggingMiddleware",
+            DevRequestLoggingMiddleware.LogCategory,
             LogLevel.Information);
 
         // Register the live-reload handler so LiveReloadMiddleware can resolve it.

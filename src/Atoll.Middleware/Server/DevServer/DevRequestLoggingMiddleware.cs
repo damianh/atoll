@@ -10,20 +10,26 @@ namespace Atoll.Middleware.Server.DevServer;
 /// </summary>
 public sealed class DevRequestLoggingMiddleware
 {
+    /// <summary>
+    /// The logger category name used by this middleware.
+    /// Keep in sync with the log-filter in <c>DevCommandHandler</c>.
+    /// </summary>
+    public const string LogCategory = "Atoll";
+
     private readonly RequestDelegate _next;
-    private readonly ILogger<DevRequestLoggingMiddleware> _logger;
+    private readonly ILogger _logger;
 
     /// <summary>
     /// Initializes a new <see cref="DevRequestLoggingMiddleware"/>.
     /// </summary>
     /// <param name="next">The next middleware in the pipeline.</param>
-    /// <param name="logger">The logger instance.</param>
-    public DevRequestLoggingMiddleware(RequestDelegate next, ILogger<DevRequestLoggingMiddleware> logger)
+    /// <param name="loggerFactory">The logger factory used to create a logger with a short category name.</param>
+    public DevRequestLoggingMiddleware(RequestDelegate next, ILoggerFactory loggerFactory)
     {
         ArgumentNullException.ThrowIfNull(next);
-        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(loggerFactory);
         _next = next;
-        _logger = logger;
+        _logger = loggerFactory.CreateLogger(LogCategory);
     }
 
     /// <summary>
