@@ -35,6 +35,11 @@ public sealed class LagoonIslandAssetProvider : IIslandAssetProvider
             ResourceAssembly);
 
         yield return new IslandAssetDescriptor(
+            "scripts/atoll-sidebar-resize.js",
+            "Atoll.Lagoon.Islands.Assets.sidebar-resize.js",
+            ResourceAssembly);
+
+        yield return new IslandAssetDescriptor(
             "scripts/atoll-docs-tabs.js",
             "Atoll.Lagoon.Islands.Assets.tabs.js",
             ResourceAssembly);

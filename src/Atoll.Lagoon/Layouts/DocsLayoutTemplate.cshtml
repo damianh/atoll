@@ -108,6 +108,7 @@
         }
     }
     <div class="docs-body">
+        <div class="docs-sidebar-wrapper" id="sidebar-wrapper">
         <aside class="docs-sidebar" id="mobile-nav-menu" aria-label="@Model.Translations.SiteNavigationLabel">
             @{ await RenderComponentAsync<Sidebar>(new Dictionary<string, object?>
             {
@@ -116,7 +117,10 @@
                 ["ChevronPosition"] = Model.Config.SidebarChevronPosition,
             }); }
         </aside>
+        <div class="docs-sidebar-resize" id="sidebar-resize" role="separator" aria-orientation="vertical" aria-label="Resize sidebar" tabindex="0"></div>
+        </div>
         <script src="/scripts/atoll-sidebar-state.js"></script>
+        <script src="/scripts/atoll-sidebar-resize.js" defer></script>
         <main class="docs-main" id="main-content">
             @if (Model.BreadcrumbItems.Count > 0)
             {

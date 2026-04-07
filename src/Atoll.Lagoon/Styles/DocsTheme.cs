@@ -199,6 +199,37 @@ public sealed class DocsTheme : AtollComponent
             height: calc(100vh - var(--docs-header-height));
             z-index: 10;
         }
+        /* Resize handle on the right edge of the sidebar */
+        .docs-sidebar-resize {
+            position: absolute;
+            top: 0;
+            right: -3px;
+            width: 6px;
+            height: 100%;
+            cursor: col-resize;
+            z-index: 20;
+            background: transparent;
+            transition: background 0.15s;
+        }
+        .docs-sidebar-resize:hover,
+        .docs-sidebar-resize.active {
+            background: var(--docs-primary);
+            opacity: 0.4;
+        }
+        /* The sidebar wrapper needs relative positioning for the resize handle */
+        .docs-sidebar-wrapper {
+            grid-column: 1;
+            position: sticky;
+            top: var(--docs-header-height);
+            height: calc(100vh - var(--docs-header-height));
+            display: flex;
+        }
+        /* When using the wrapper, sidebar fills it */
+        .docs-sidebar-wrapper > .docs-sidebar {
+            position: static;
+            flex: 1;
+            min-width: 0;
+        }
         .docs-main {
             grid-column: 2;
             min-width: 0;
@@ -233,6 +264,18 @@ public sealed class DocsTheme : AtollComponent
             .docs-body {
                 grid-template-columns: 1fr;
             }
+            .docs-sidebar-wrapper {
+                display: none;
+                position: fixed;
+                inset: 0;
+                z-index: 50;
+                width: 80vw;
+                max-width: 20rem;
+                overflow-y: auto;
+                height: auto;
+            }
+            .docs-sidebar-wrapper[aria-hidden="false"] { display: block; }
+            .docs-sidebar-resize { display: none; }
             .docs-sidebar {
                 display: none;
                 position: fixed;
@@ -760,6 +803,10 @@ public sealed class DocsTheme : AtollComponent
         .docs-sidebar .sidebar-chevron-start > summary {
             flex-direction: row-reverse;
             justify-content: flex-end;
+        }
+        /* Indent nested children within collapsible groups */
+        .docs-sidebar details > ul {
+            padding-inline-start: 0.75rem;
         }
         /* Add top border between sidebar groups for visual separation */
         .docs-sidebar nav > ul > .sidebar-group-item + .sidebar-group-item {
