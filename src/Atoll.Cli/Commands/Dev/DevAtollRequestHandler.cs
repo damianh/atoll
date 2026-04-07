@@ -61,6 +61,7 @@ internal sealed class DevAtollRequestHandler
             !ReferenceEquals(oldState.LoadContext, newState.LoadContext))
         {
             var alcToUnload = oldState.LoadContext;
+            var shadowDirToDelete = oldState.ShadowCopyDir;
             // Best-effort drain: wait 5 s for in-flight renders to complete before
             // requesting unload. Not a production-grade reference count.
             _ = Task.Delay(TimeSpan.FromSeconds(5))
@@ -70,6 +71,14 @@ internal sealed class DevAtollRequestHandler
                         catch (Exception ex)
                         {
                             _logger.LogDebug(ex, "ALC unload failed — this is expected if references remain.");
+                        }
+
+                        // Clean up the shadow-copy directory after the ALC has been
+                        // unloaded and the files are no longer memory-mapped.
+                        if (shadowDirToDelete is not null)
+                        {
+                            try { Directory.Delete(shadowDirToDelete, recursive: true); }
+                            catch { /* best-effort cleanup */ }
                         }
                     }, TaskScheduler.Default);
         }

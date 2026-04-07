@@ -35,6 +35,11 @@ namespace Atoll.Cli.Commands.Dev;
 /// Pre-generated search index JSON bytes, or <c>null</c> when no
 /// <c>ISearchIndexConfiguration</c> is found. Served at <c>/search-index.json</c>.
 /// </param>
+/// <param name="ShadowCopyDir">
+/// Temporary directory containing the shadow-copied assembly files, or <c>null</c> when
+/// no assembly is loaded. Deleted after the <see cref="LoadContext"/> is unloaded to
+/// reclaim disk space.
+/// </param>
 internal sealed record DevServerState(
     RouteMatcher RouteMatcher,
     AtollOptions Options,
@@ -42,7 +47,8 @@ internal sealed record DevServerState(
     Assembly? UserAssembly,
     string GlobalCss,
     IReadOnlyDictionary<string, byte[]> IslandAssets,
-    byte[]? SearchIndexJson)
+    byte[]? SearchIndexJson,
+    string? ShadowCopyDir)
 {
     private static readonly IReadOnlyDictionary<string, byte[]> EmptyAssets =
         new ReadOnlyDictionary<string, byte[]>(new Dictionary<string, byte[]>());
@@ -52,5 +58,5 @@ internal sealed record DevServerState(
     /// Used when no project file is present or the initial build fails.
     /// </summary>
     public static DevServerState Empty { get; } =
-        new DevServerState(new RouteMatcher([]), new AtollOptions(), null, null, "", EmptyAssets, null);
+        new DevServerState(new RouteMatcher([]), new AtollOptions(), null, null, "", EmptyAssets, null, null);
 }
