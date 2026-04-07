@@ -2,8 +2,10 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.Loader;
 using Atoll.Build.Content.Collections;
+using Atoll.Build.Diagnostics;
 using Atoll.Build.Pipeline;
 using Atoll.Build.Ssg;
+using Atoll.Cli.Output;
 using Atoll.Configuration;
 using Atoll.Css;
 using Atoll.Islands;
@@ -28,7 +30,10 @@ public sealed class BuildCommandHandler
         var startTime = DateTime.UtcNow;
         Console.WriteLine("Atoll — building site...");
 
-        // Load configuration
+        // Phase 1: Config — load configuration
+        var bar = new ConsoleProgressBar(
+            ["Config", "Compile", "Content", "SSG", "CSS", "Assets", "Islands", "Core", "HTML", "Manifest", "Extras"]);
+        bar.Advance();
         var config = await AtollConfigLoader.LoadAsync(projectRoot);
         var outputDir = AtollConfigLoader.ResolveOutputDirectory(config, projectRoot);
         var publicDir = AtollConfigLoader.ResolvePublicDirectory(config, projectRoot);
@@ -36,19 +41,12 @@ public sealed class BuildCommandHandler
         var basePath = AtollConfigLoader.NormalizeBasePath(config.Base);
         var basePathForAssets = basePath == "/" ? "" : basePath;
 
-        Console.WriteLine($"  Output: {outputDir}");
-        Console.WriteLine($"  Site:   {(config.Site.Length > 0 ? config.Site : "(not configured)")}");
-        if (basePath != "/")
-        {
-            Console.WriteLine($"  Base:   {basePath}");
-        }
-
-        // Build the user project and discover routes
+        // Phase 2: Compile — build the user project and discover routes
+        bar.Advance();
         var (routes, assembly) = await BuildAndDiscoverRoutesAsync(projectRoot, srcDir);
 
-        Console.WriteLine($"  Routes: {routes.Count} discovered");
-
-        // Build service props (e.g., CollectionQuery for content-driven pages)
+        // Phase 3: Content — build service props (e.g. CollectionQuery)
+        bar.Advance();
         var serviceProps = BuildServiceProps(assembly, projectRoot);
 
         // SSG options
@@ -60,11 +58,12 @@ public sealed class BuildCommandHandler
             CleanOutputDirectory = config.Build.Clean,
         };
 
-        // Generate static site
+        // Phase 4: SSG — generate static site
+        bar.Advance();
         var generator = new StaticSiteGenerator(ssgOptions, serviceProps);
         var ssgResult = await generator.GenerateAsync(routes);
 
-        // Asset pipeline
+        // Asset pipeline setup
         var pipelineOptions = new AssetPipelineOptions(outputDir)
         {
             BasePath = basePathForAssets,
@@ -76,28 +75,29 @@ public sealed class BuildCommandHandler
         var outputWriter = new OutputWriter(outputDir);
         var pipeline = new AssetPipeline(pipelineOptions, outputWriter);
 
-        // Discover global CSS types from the user assembly and its referenced assemblies
+        // Phase 5: CSS — discover global CSS types
+        bar.Advance();
         var globalStyleTypes = assembly is not null
             ? DiscoverGlobalStyleTypes(assembly)
             : Array.Empty<Type>();
 
-        if (globalStyleTypes.Count > 0)
-        {
-            Console.WriteLine($"  CSS:     {globalStyleTypes.Count} global style type(s) discovered");
-        }
-
+        // Phase 6: Assets — run asset pipeline
+        bar.Advance();
         var assetResult = await pipeline.RunAsync(globalStyleTypes, Array.Empty<string>());
 
-        // Write island JS assets from library providers
+        // Phase 7: Islands — write island JS assets from library providers
+        bar.Advance();
         if (assembly is not null)
         {
             await WriteIslandAssetsAsync(assembly, outputDir);
         }
 
-        // Write core framework assets (_atoll/island.js, _atoll/directives.js, _atoll/logo.png)
+        // Phase 8: Core — write core framework assets
+        bar.Advance();
         await WriteCoreFrameworkAssetsAsync(assembly, outputDir);
 
-        // Post-process HTML
+        // Phase 9: HTML — post-process HTML (inject CSS/JS refs)
+        bar.Advance();
         var cssHref = assetResult.Css.HasContent
             ? "/" + assetResult.Css.OutputPath.Replace('\\', '/')
             : "";
@@ -128,28 +128,26 @@ public sealed class BuildCommandHandler
             }
         }
 
-        // Write build manifest
+        // Phase 10: Manifest — write build manifest, redirects, and optional headers file
+        bar.Advance();
         var manifestWriter = new BuildManifestWriter(outputDir);
         var manifest = BuildManifestWriter.BuildFrom(ssgResult, assetResult, ssgOptions);
         await manifestWriter.WriteAsync(manifest);
 
-        // Write redirects.json for SSG deployments.
-        // The redirect map is populated by the user site via RedirectCollector.Collect().
-        // When the loaded assembly exposes an IRedirectMapProvider, use it;
-        // otherwise write an empty redirects.json as a stable artifact.
         var redirectMap = BuildRedirectMapFromAssembly(assembly);
         var redirectsWriter = new RedirectsFileWriter(outputDir);
         await redirectsWriter.WriteAsync(redirectMap);
 
-        // Generate _headers file for Netlify / Cloudflare Pages deployments
         if (config.Build.Cache.GenerateHeadersFile)
         {
             var headersGenerator = new HeadersFileGenerator(config.Build.Cache);
             await headersGenerator.WriteAsync(outputDir);
-            Console.WriteLine("  Headers: _headers file generated");
         }
 
-        // Generate search index (if project implements ISearchIndexConfiguration from Atoll.Lagoon)
+        // Phase 11: Extras — optional Lagoon integrations (search, links, redirects, OG, LLMs)
+        bar.Advance();
+        bar.Complete();
+
         if (assembly is not null && serviceProps.TryGetValue("Query", out var queryObj) && queryObj is CollectionQuery collectionQuery)
         {
             await GenerateSearchIndexAsync(assembly, collectionQuery, outputDir);
@@ -161,23 +159,26 @@ public sealed class BuildCommandHandler
 
         // Report results
         var elapsed = DateTime.UtcNow - startTime;
-        Console.WriteLine();
-        Console.WriteLine($"  Pages:  {ssgResult.SuccessCount} rendered");
-        if (ssgResult.FailureCount > 0)
+        var reporter = new BuildReporter();
+        reporter.CollectFromSsgResult(ssgResult);
+        reporter.CollectFromAssetResult(assetResult);
+
+        Console.WriteLine($"  Output: {outputDir}");
+        Console.WriteLine($"  Site:   {(config.Site.Length > 0 ? config.Site : "(not configured)")}");
+        if (basePath != "/")
         {
-            Console.WriteLine($"  Errors: {ssgResult.FailureCount} failed");
-            foreach (var failure in ssgResult.Failures)
-            {
-                Console.WriteLine($"    ✗ {failure.Route.UrlPath}: {failure.Error?.Message}");
-            }
+            Console.WriteLine($"  Base:   {basePath}");
         }
 
-        if (assetResult.StaticAssets is not null)
+        var summary = reporter.FormatSummary(ssgResult, assetResult, elapsed);
+        Console.Write(summary);
+
+        var timings = BuildReporter.FormatPageTimings(ssgResult);
+        if (timings.Length > 0)
         {
-            Console.WriteLine($"  Assets: {assetResult.StaticAssets.Count} static files copied");
+            Console.Write(timings);
         }
 
-        Console.WriteLine($"  Time:   {elapsed.TotalMilliseconds:F0}ms");
         Console.WriteLine($"  Done!   {outputDir}");
     }
 
@@ -201,7 +202,6 @@ public sealed class BuildCommandHandler
         if (collectionQuery is not null)
         {
             props["Query"] = collectionQuery;
-            Console.WriteLine("  Content: collection configuration discovered");
         }
 
         return props;
@@ -274,8 +274,6 @@ public sealed class BuildCommandHandler
             Console.WriteLine("  Warning: No .csproj found — no routes to discover.");
             return ([], null);
         }
-
-        Console.WriteLine($"  Building {Path.GetFileName(csprojPath)}...");
 
         // Build the project
         var buildSuccess = await BuildProjectAsync(csprojPath);
@@ -424,8 +422,7 @@ public sealed class BuildCommandHandler
         }
 
         var writer = new IslandAssetWriter(outputDirectory);
-        var writeResult = await writer.WriteAsync(allAssets);
-        Console.WriteLine($"  Islands: {writeResult.FileCount} JS asset(s) written");
+        await writer.WriteAsync(allAssets);
     }
 
     /// <summary>
@@ -608,7 +605,6 @@ public sealed class BuildCommandHandler
             count++;
         }
 
-        Console.WriteLine($"  Core:    {count} framework asset(s) written");
     }
 
     /// <summary>

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.Loader;
 using Atoll.Build.Content.Collections;
+using Atoll.Cli.Output;
 using Atoll.Configuration;
 using Atoll.Css;
 using Atoll.Islands;
@@ -81,25 +82,33 @@ internal sealed class DevServerReloader
         DevServerState? currentState)
     {
         var sw = Stopwatch.StartNew();
-        Console.WriteLine($"  Building {Path.GetFileName(_csprojPath)}...");
 
-        // Re-read atoll.json on every code-change build so that configuration
-        // changes (e.g. Src directory, SiteUrl) are picked up without a restart.
+        var bar = new ConsoleProgressBar(
+            ["Config", "Compile", "Load", "Routes", "Content", "CSS", "Islands", "Search"]);
+
+        // Phase 1: Config
+        bar.Advance();
         var config = await AtollConfigLoader.LoadAsync(_projectRoot);
         var pagesDirectory = AtollConfigLoader.ResolveSrcDirectory(config, _projectRoot);
 
+        // Phase 2: Compile
+        bar.Advance();
         var buildResult = await BuildProjectAsync(_csprojPath);
         if (!buildResult.Success)
         {
+            bar.Complete();
             Console.WriteLine("  Warning: Build failed — keeping current state.");
             // Preserve the current working state so the browser keeps showing content.
             var fallbackState = currentState ?? BuildEmptyState();
             return (fallbackState, buildResult.ErrorOutput);
         }
 
+        // Phase 3: Load
+        bar.Advance();
         var assemblyPath = FindOutputAssembly(_csprojPath);
         if (assemblyPath is null)
         {
+            bar.Complete();
             Console.WriteLine("  Warning: Could not locate compiled assembly.");
             return (currentState ?? BuildEmptyState(), "Could not locate compiled assembly after successful build.");
         }
@@ -108,21 +117,41 @@ internal sealed class DevServerReloader
         var (loadContext, assembly) = LoadAssembly(assemblyPath, $"AtollDev-{counter}");
         if (assembly is null)
         {
+            bar.Complete();
             return (currentState ?? BuildEmptyState(), "Failed to load compiled assembly.");
         }
 
+        // Phase 4: Routes
+        bar.Advance();
         var routes = DiscoverRoutes(assembly, pagesDirectory);
+
+        // Phase 5: Content
+        bar.Advance();
         var collectionQuery = CreateCollectionQueryFromAssembly(assembly, _projectRoot);
         var options = BuildOptions(collectionQuery);
+
+        // Phase 6: CSS
+        bar.Advance();
         var globalCss = AggregateGlobalCss(assembly);
+
+        // Phase 7: Islands
+        bar.Advance();
         var islandAssets = DiscoverIslandAssets(assembly);
+
+        // Phase 8: Search
+        bar.Advance();
         var searchIndex = collectionQuery is not null
             ? GenerateSearchIndexBytes(assembly, collectionQuery)
             : null;
 
-        Console.WriteLine($"  Routes: {routes.Count} discovered");
-        Console.WriteLine($"  Islands: {islandAssets.Count} JS asset(s) loaded");
-        Console.WriteLine($"  Reload complete ({sw.ElapsedMilliseconds}ms)");
+        bar.Complete();
+
+        Console.WriteLine(DevBuildSummary.Format(
+            routes.Count,
+            islandAssets.Count,
+            globalCss.Length > 0,
+            searchIndex is not null,
+            sw.ElapsedMilliseconds));
 
         return (new DevServerState(new RouteMatcher(routes), options, loadContext, assembly, globalCss, islandAssets, searchIndex), null);
     }
@@ -131,23 +160,34 @@ internal sealed class DevServerReloader
 
     private Task<DevServerState> ReloadContentOnlyAsync(DevServerState current)
     {
-        Console.WriteLine("  Reloading content...");
         var sw = Stopwatch.StartNew();
 
-        // Reuse the existing assembly and ALC — only rebuild CollectionQuery.
+        var bar = new ConsoleProgressBar(["Content", "Options", "Search"]);
+
+        // Phase 1: Content — Reuse the existing assembly and ALC, rebuild CollectionQuery only.
+        bar.Advance();
         var collectionQuery = current.UserAssembly is not null
             ? CreateCollectionQueryFromAssembly(current.UserAssembly, _projectRoot)
             : null;
 
+        // Phase 2: Options
+        bar.Advance();
         var options = BuildOptions(collectionQuery);
 
-        // Preserve existing routes — code hasn't changed.
-        Console.WriteLine($"  Reload complete ({sw.ElapsedMilliseconds}ms)");
-
-        // Regenerate search index from updated content but reuse island assets (code unchanged).
+        // Phase 3: Search — Regenerate search index from updated content; reuse island assets (code unchanged).
+        bar.Advance();
         var searchIndex = collectionQuery is not null && current.UserAssembly is not null
             ? GenerateSearchIndexBytes(current.UserAssembly, collectionQuery)
             : current.SearchIndexJson;
+
+        bar.Complete();
+
+        Console.WriteLine(DevBuildSummary.Format(
+            current.RouteMatcher.SortedRoutes.Count,
+            current.IslandAssets.Count,
+            current.GlobalCss.Length > 0,
+            searchIndex is not null,
+            sw.ElapsedMilliseconds));
 
         return Task.FromResult(
             new DevServerState(current.RouteMatcher, options, current.LoadContext, current.UserAssembly, current.GlobalCss, current.IslandAssets, searchIndex));
