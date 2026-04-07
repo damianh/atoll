@@ -17,7 +17,7 @@ public sealed class ConsoleProgressBarTests
 
         bar.Advance();
 
-        sb.ToString().ShouldBe("  Config (1/3)\r\n");
+        sb.ToString().ShouldBe($"  Config (1/3){writer.NewLine}");
     }
 
     [Fact]
