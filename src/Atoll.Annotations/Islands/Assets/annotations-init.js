@@ -254,6 +254,42 @@ function positionElement(el, rect) {
     el.style.left = `${left}px`;
 }
 
+/**
+ * Position the feedback button in the right gutter — just outside the
+ * content area's right edge, vertically centred on the selection rect.
+ * This avoids collision with the browser's native context menu / selection
+ * toolbar that appears directly above or below the selected text.
+ *
+ * Falls back to the standard centred-above/below positioning when the
+ * viewport is too narrow for a visible gutter (e.g. mobile portrait).
+ */
+function positionButtonInGutter(el, selRect, contentArea) {
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+    const margin = 8;
+
+    const contentRect = contentArea.getBoundingClientRect();
+    const gutterLeft = contentRect.right + scrollX + margin;
+    const spaceRight = window.innerWidth - contentRect.right;
+
+    // If not enough gutter space, fall back to centred positioning
+    if (spaceRight < el.offsetWidth + margin * 2) {
+        positionElement(el, selRect);
+        return;
+    }
+
+    // Vertically centre on the selection
+    let top = selRect.top + scrollY + (selRect.height / 2) - (el.offsetHeight / 2);
+
+    // Clamp vertically to viewport
+    const minTop = scrollY + margin;
+    const maxTop = scrollY + window.innerHeight - el.offsetHeight - margin;
+    top = Math.max(minTop, Math.min(top, maxTop));
+
+    el.style.top = `${top}px`;
+    el.style.left = `${gutterLeft}px`;
+}
+
 function createButton(config, getSelectionRect, onActivate) {
     const btn = document.createElement('button');
     btn.type = 'button';
@@ -363,7 +399,7 @@ export default function init(element) {
         // Position after display so offsetHeight is valid
         requestAnimationFrame(() => {
             if (selectionRect) {
-                positionElement(floatingBtn, selectionRect);
+                positionButtonInGutter(floatingBtn, selectionRect, contentArea);
             }
         });
     }
