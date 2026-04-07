@@ -9,6 +9,11 @@
  *
  * After Chart.js loads, a new Chart instance is created for each
  * canvas[data-chart-config] element inside the island container.
+ *
+ * Workaround for Chart.js #12177: canvas style dimensions are set once on initial
+ * render and never updated when the container grows. We use a ResizeObserver on the
+ * .atoll-chart container to clear the stale canvas inline styles and call
+ * chart.resize(), which forces Chart.js to recalculate from the container.
  */
 
 // Derive the vendor script URL from this module's own URL so it resolves correctly
@@ -65,16 +70,35 @@ export default function init(element) {
       try {
         const config = JSON.parse(canvas.getAttribute('data-chart-config'));
 
-        // Ensure responsive resizing works in both directions (shrink and grow).
-        // Chart.js uses a ResizeObserver on the canvas parent, which must have
-        // position:relative (provided by the .atoll-chart CSS).
+        // Default to responsive unless the user explicitly set responsive: false.
         if (!config.options) {
           config.options = {};
         }
-        config.options.responsive = true;
-        config.options.maintainAspectRatio = true;
+        if (config.options.responsive !== false) {
+          config.options.responsive = true;
+          // Default maintainAspectRatio to true if not explicitly set.
+          if (config.options.maintainAspectRatio === undefined) {
+            config.options.maintainAspectRatio = true;
+          }
+        }
 
-        new Chart(canvas, config);
+        const chart = new Chart(canvas, config);
+
+        // Workaround for Chart.js #12177: the library sets canvas.style.width/height
+        // once on initial render but never updates them when the container grows.
+        // We observe the .atoll-chart container and force a recalculation.
+        if (config.options.responsive !== false) {
+          const container = canvas.closest('.atoll-chart');
+          if (container) {
+            const observer = new ResizeObserver(() => {
+              // Clear the stale inline dimensions so Chart.js reads from the container.
+              canvas.style.width = '';
+              canvas.style.height = '';
+              chart.resize();
+            });
+            observer.observe(container);
+          }
+        }
       } catch (err) {
         console.error('[atoll-charts] Failed to render chart:', err);
       }
