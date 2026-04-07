@@ -3,7 +3,7 @@
     @foreach (var item in Model.Items)
     {
         var href = $"{Model.BaseTrimmed}/{item.Slug.TrimStart('/')}";
-        <article class="article-list-item">
+        <article class="article-list-item" data-tags="@string.Join(",", item.Tags)" data-author="@item.Author">
             <div class="article-list-item-header">
                 <h3 class="article-list-item-title"><a href="@href">@item.Title</a></h3>
                 <time class="article-list-item-date" datetime="@item.PubDate.ToString("yyyy-MM-dd")">@item.PubDate.ToString("MMM d, yyyy")</time>
