@@ -1,7 +1,6 @@
 using Atoll.Build.Content.Markdown;
 using Atoll.Components;
 using Atoll.Lagoon.Markdown;
-using Atoll.Rendering;
 using Shouldly;
 using Xunit;
 

@@ -1,6 +1,3 @@
-using Atoll.Components;
-using Atoll.Rendering;
-
 namespace Atoll.Islands;
 
 /// <summary>

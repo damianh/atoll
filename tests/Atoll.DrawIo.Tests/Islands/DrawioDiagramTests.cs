@@ -2,7 +2,6 @@ using System.Text.Json;
 using Atoll.Components;
 using Atoll.DrawIo.Islands;
 using Atoll.Instructions;
-using Atoll.Islands;
 using Atoll.Rendering;
 using Shouldly;
 using Xunit;

@@ -1,4 +1,3 @@
-using System.CommandLine;
 using Atoll.Cli;
 using Shouldly;
 using Xunit;

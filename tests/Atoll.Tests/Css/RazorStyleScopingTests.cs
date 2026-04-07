@@ -1,7 +1,5 @@
 using System.Reflection;
-using Atoll.Components;
 using Atoll.Css;
-using Atoll.Rendering;
 using Atoll.Tests.Components.Fixtures;
 using Shouldly;
 using Xunit;

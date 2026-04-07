@@ -1,5 +1,3 @@
-using Atoll.DrawIo.Model;
-
 namespace Atoll.DrawIo.Parsing;
 
 /// <summary>

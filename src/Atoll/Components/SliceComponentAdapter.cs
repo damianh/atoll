@@ -1,4 +1,3 @@
-using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using Atoll.Rendering;
 using Atoll.Slots;

@@ -9,7 +9,6 @@ using Atoll.Samples.Portfolio.Components;
 using Atoll.Samples.Portfolio.Islands;
 using Atoll.Samples.Portfolio.Layouts;
 using Atoll.Samples.Portfolio.Pages;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;

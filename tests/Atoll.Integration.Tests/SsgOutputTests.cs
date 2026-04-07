@@ -1,11 +1,7 @@
 using System.Text.Json;
 using Atoll.Build.Pipeline;
 using Atoll.Build.Ssg;
-using Atoll.Components;
-using Atoll.Rendering;
 using Atoll.Routing;
-using Atoll.Samples.Blog;
-using Atoll.Samples.Blog.Pages;
 using Atoll.Samples.Portfolio.Pages;
 using Shouldly;
 using Xunit;

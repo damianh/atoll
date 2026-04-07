@@ -1,7 +1,6 @@
 using Atoll.Components;
 using Atoll.Islands;
 using Atoll.Lagoon.Components;
-using Atoll.Slots;
 
 namespace Atoll.Lagoon.Islands;
 

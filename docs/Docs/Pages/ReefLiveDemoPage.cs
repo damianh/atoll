@@ -5,7 +5,6 @@ using Atoll.Reef.Components;
 using Atoll.Reef.Configuration;
 using Atoll.Reef.Islands;
 using Atoll.Routing;
-using Atoll.Slots;
 using Docs.Layouts;
 
 namespace Docs.Pages;

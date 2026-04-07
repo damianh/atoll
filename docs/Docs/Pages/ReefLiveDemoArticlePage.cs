@@ -2,7 +2,6 @@ using Atoll.Build.Content.Collections;
 using Atoll.Components;
 using Atoll.Reef.Components;
 using Atoll.Routing;
-using Atoll.Slots;
 using Docs.Layouts;
 
 namespace Docs.Pages;

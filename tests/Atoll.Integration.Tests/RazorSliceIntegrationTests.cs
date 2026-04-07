@@ -1,9 +1,7 @@
 using Atoll.Build.Ssg;
 using Atoll.Components;
-using Atoll.Rendering;
 using Atoll.Routing;
 using Atoll.Routing.FileSystem;
-using Atoll.Samples.Blog.Layouts;
 using Atoll.Samples.Blog.Pages;
 using Shouldly;
 using Xunit;

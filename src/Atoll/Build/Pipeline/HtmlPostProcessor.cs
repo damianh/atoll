@@ -1,4 +1,3 @@
-using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html;
 using AngleSharp.Html.Parser;

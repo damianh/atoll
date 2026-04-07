@@ -1,10 +1,7 @@
 using System.Net;
 using Atoll.Middleware.Server.Hosting;
 using Atoll.Redirects;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.Hosting;
 using Shouldly;
 using Xunit;
 

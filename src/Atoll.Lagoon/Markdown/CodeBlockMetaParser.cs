@@ -1,5 +1,3 @@
-using System.Text.RegularExpressions;
-
 namespace Atoll.Lagoon.Markdown;
 
 /// <summary>

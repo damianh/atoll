@@ -1,5 +1,4 @@
 using Atoll.Lagoon.Redirects;
-using Atoll.Redirects;
 using Shouldly;
 using Xunit;
 

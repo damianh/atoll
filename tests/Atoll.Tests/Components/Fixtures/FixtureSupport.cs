@@ -1,5 +1,4 @@
 using Atoll.Components;
-using Atoll.Rendering;
 
 namespace Atoll.Tests.Components.Fixtures;
 

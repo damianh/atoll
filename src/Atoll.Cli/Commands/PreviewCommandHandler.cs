@@ -2,7 +2,6 @@ using Atoll.Build.Pipeline;
 using Atoll.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.FileProviders;
 
 namespace Atoll.Cli.Commands;

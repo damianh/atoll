@@ -1,4 +1,3 @@
-using Atoll.Lagoon.Configuration;
 using Atoll.Lagoon.Navigation;
 
 namespace Atoll.Lagoon.Components;

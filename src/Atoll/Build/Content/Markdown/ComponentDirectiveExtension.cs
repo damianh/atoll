@@ -1,7 +1,6 @@
 using Markdig;
 using Markdig.Extensions.CustomContainers;
 using Markdig.Renderers;
-using Markdig.Renderers.Html;
 
 namespace Atoll.Build.Content.Markdown;
 

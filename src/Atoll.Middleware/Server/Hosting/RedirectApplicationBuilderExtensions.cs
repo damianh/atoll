@@ -1,5 +1,4 @@
 using Atoll.Redirects;
-using Microsoft.AspNetCore.Builder;
 
 namespace Atoll.Middleware.Server.Hosting;
 
