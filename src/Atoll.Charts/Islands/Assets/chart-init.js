@@ -11,9 +11,8 @@
  * canvas[data-chart-config] element inside the island container.
  *
  * Workaround for Chart.js #12177: canvas style dimensions are set once on initial
- * render and never updated when the container grows. We use a ResizeObserver on the
- * .atoll-chart container to clear the stale canvas inline styles and call
- * chart.resize(), which forces Chart.js to recalculate from the container.
+ * render and never updated when the container grows. On window resize we clear the
+ * stale canvas inline styles before Chart.js recalculates, so charts grow back.
  */
 
 // Derive the vendor script URL from this module's own URL so it resolves correctly
@@ -23,6 +22,28 @@ const VENDOR_SCRIPT_ID  = 'atoll-charts-vendor-script';
 
 /** @type {Promise<void> | null} */
 let vendorLoadPromise = null;
+
+/** @type {Array<{canvas: HTMLCanvasElement, chart: Object}>} */
+const responsiveCharts = [];
+
+/** @type {number} */
+let resizeTimer = 0;
+
+// Single debounced window resize handler shared across all charts.
+// Clears stale canvas inline dimensions so Chart.js recalculates from
+// the container, then lets Chart.js handle the actual resize.
+function onWindowResize() {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    for (const entry of responsiveCharts) {
+      entry.canvas.style.width = '';
+      entry.canvas.style.height = '';
+    }
+    // Chart.js already listens to window resize internally —
+    // clearing the styles is enough; it will recalculate on the
+    // same event cycle or the next animation frame.
+  }, 60);
+}
 
 /**
  * Ensures atoll-charts-vendor.min.js is loaded exactly once.
@@ -84,20 +105,12 @@ export default function init(element) {
 
         const chart = new Chart(canvas, config);
 
-        // Workaround for Chart.js #12177: the library sets canvas.style.width/height
-        // once on initial render but never updates them when the container grows.
-        // We observe the .atoll-chart container and force a recalculation.
+        // Register for the window-resize workaround (Chart.js #12177).
         if (config.options.responsive !== false) {
-          const container = canvas.closest('.atoll-chart');
-          if (container) {
-            const observer = new ResizeObserver(() => {
-              // Clear the stale inline dimensions so Chart.js reads from the container.
-              canvas.style.width = '';
-              canvas.style.height = '';
-              chart.resize();
-            });
-            observer.observe(container);
+          if (responsiveCharts.length === 0) {
+            window.addEventListener('resize', onWindowResize);
           }
+          responsiveCharts.push({ canvas, chart });
         }
       } catch (err) {
         console.error('[atoll-charts] Failed to render chart:', err);
