@@ -65,6 +65,48 @@
             </div>
         </div>
     </header>
+    @if (Model.Config.Banner is { Enabled: true } banner && !string.IsNullOrEmpty(banner.Content))
+    {
+        var bannerVariantClass = banner.Variant switch
+        {
+            Atoll.Lagoon.Configuration.BannerVariant.Info    => "docs-banner-info",
+            Atoll.Lagoon.Configuration.BannerVariant.Warning => "docs-banner-warning",
+            Atoll.Lagoon.Configuration.BannerVariant.Success => "docs-banner-success",
+            Atoll.Lagoon.Configuration.BannerVariant.Danger  => "docs-banner-danger",
+            _ => "docs-banner-info",
+        };
+        if (banner.Dismissible)
+        {
+            WriteLiteral($"<div class=\"docs-banner {bannerVariantClass}\" role=\"status\" id=\"docs-banner\" data-dismiss-key=\"{Atoll.Rendering.HtmlEncoder.Encode(banner.DismissKey)}\">");
+        }
+        else
+        {
+            WriteLiteral($"<div class=\"docs-banner {bannerVariantClass}\" role=\"status\" id=\"docs-banner\">");
+        }
+        <span class="docs-banner-content">@{ WriteLiteral(banner.Content); }</span>
+        @if (banner.LinkHref is not null && banner.LinkText is not null)
+        {
+            <a href="@banner.LinkHref">@banner.LinkText</a>
+        }
+        @if (banner.Dismissible)
+        {
+            <button type="button" class="docs-banner-dismiss" aria-label="@Model.Translations.BannerDismissLabel">&times;</button>
+        }
+        WriteLiteral("</div>");
+        @if (banner.Dismissible)
+        {
+            <script>
+            (function(){
+                var b=document.getElementById('docs-banner');
+                if(!b)return;
+                var k=b.getAttribute('data-dismiss-key');
+                if(k&&localStorage.getItem(k)==='1'){b.hidden=true;return;}
+                var btn=b.querySelector('.docs-banner-dismiss');
+                if(btn){btn.addEventListener('click',function(){b.hidden=true;if(k)localStorage.setItem(k,'1');});}
+            })();
+            </script>
+        }
+    }
     <div class="docs-body">
         <aside class="docs-sidebar" id="mobile-nav-menu" aria-label="@Model.Translations.SiteNavigationLabel">
             @{ await RenderComponentAsync<Sidebar>(new Dictionary<string, object?>

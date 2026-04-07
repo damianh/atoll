@@ -326,4 +326,37 @@ public sealed class SplashLayoutTests
 
         html.ShouldContain("src=\"/img?a=1&amp;b=2\"");
     }
+
+    // --- Banner ---
+
+    [Fact]
+    public async Task ShouldNotRenderBannerWhenBannerIsNull()
+    {
+        var html = await RenderLayoutAsync(MakeConfig());
+
+        html.ShouldNotContain("docs-banner");
+    }
+
+    [Fact]
+    public async Task ShouldRenderBannerInSplashLayout()
+    {
+        var config = new DocsConfig { Title = "Docs", Banner = new BannerConfig { Content = "Splash announcement" } };
+
+        var html = await RenderLayoutAsync(config);
+
+        html.ShouldContain("docs-banner");
+        html.ShouldContain("Splash announcement");
+    }
+
+    [Fact]
+    public async Task ShouldRenderBannerBeforeMainContent()
+    {
+        var config = new DocsConfig { Title = "Docs", Banner = new BannerConfig { Content = "Splash announcement" } };
+
+        var html = await RenderLayoutAsync(config);
+
+        var bannerIndex = html.IndexOf("docs-banner", StringComparison.Ordinal);
+        var mainIndex = html.IndexOf("splash-main", StringComparison.Ordinal);
+        bannerIndex.ShouldBeLessThan(mainIndex);
+    }
 }
