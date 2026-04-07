@@ -7,11 +7,6 @@ on:
         description: 'Version number (x.y.z or x.y.z-prerelease.1)'
         required: true
         type: string
-      push_to_nuget:
-        description: 'Push to NuGet.org'
-        required: true
-        type: boolean
-        default: false
 
 jobs:
   release:
@@ -75,7 +70,6 @@ jobs:
         dotnet pack templates/Atoll.Templates.csproj -c Release --output ./packages
 
     - name: Push to NuGet.org
-      if: ${{ inputs.push_to_nuget }}
       run: |
         dotnet nuget push "./packages/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_ORG_APIKEY }} --skip-duplicate
 
