@@ -63,6 +63,76 @@ new SidebarItem
 
 Auto-generated and manually-defined items cannot be mixed in the same group. If `AutoGenerate` is set, `Items` is ignored.
 
+### Nested directory groups
+
+When content files are organised in subdirectories under the `AutoGenerate` path, `SidebarBuilder` builds a nested group tree automatically. Subdirectories become collapsible group items; files become leaf links. The nesting can be arbitrarily deep.
+
+Given this content structure:
+
+```
+docs/
+  guides/
+    index.md          ← optional: makes the group header a clickable link
+    01-installation.md
+    02-configuration.md
+    advanced/
+      index.md
+      caching.md
+      deployment.md
+```
+
+With this sidebar config:
+
+```csharp
+new SidebarItem
+{
+    Label        = "Guides",
+    AutoGenerate = "guides",
+}
+```
+
+The resolved sidebar becomes:
+
+```
+Guides
+├── Installation
+├── Configuration
+└── Advanced
+    ├── Caching
+    └── Deployment
+```
+
+### Index pages as group headers
+
+An `index.md` file inside a subdirectory makes the group header a clickable link. The entry's `Title` is used as the group label, and its `Order` controls the group's sort position among siblings.
+
+When no `index.md` is present, the directory name is humanised automatically (see [Automatic label generation](#automatic-label-generation)).
+
+### Automatic label generation
+
+When a subdirectory has no `index.md`, `SidebarBuilder` converts the directory name into a human-readable label using `SlugLabelHelper.Humanize()`:
+
+1. Strips any leading numeric prefix (e.g. `01-`, `02-`)
+2. Replaces hyphens and underscores with spaces
+3. Applies title-case
+
+| Directory name | Generated label |
+|---|---|
+| `02-getting-started` | `Getting Started` |
+| `api_reference` | `Api Reference` |
+| `intro` | `Intro` |
+| `01-basics` | `Basics` |
+
+### Numeric prefix ordering
+
+Directory names with numeric prefixes (e.g. `01-basics`, `02-advanced`) are automatically sorted by their numeric value when no `index.md` is present. The sort priority is:
+
+1. **`index.md` `Order` value** — frontmatter `order:` always wins
+2. **Numeric prefix** of the directory name (e.g. `01-` → 1)
+3. **`int.MaxValue`** — directories without a numeric prefix sort after explicitly ordered items
+
+Files within each directory are sorted by `(Order ascending, Label case-insensitive)`.
+
 ## Badges
 
 Add a badge to any sidebar item to surface a label (e.g. `"New"`, `"Beta"`). A badge can be a plain string or a `SidebarBadge` with a colour variant.

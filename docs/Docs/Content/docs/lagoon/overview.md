@@ -84,6 +84,18 @@ Replace the default footer with custom text and navigation links.
 :::card{title="Versioned Documentation"}
 Opt-in multi-version docs with version selector, per-version sidebars, deprecated notices, and version-scoped search.
 :::
+:::card{title="Global Banner"}
+Site-wide announcement banner with colour variants, CTA links, and dismissal.
+:::
+:::card{title="Topic Search"}
+Multi-topic tagging and filter chip bar in the search dialog.
+:::
+:::card{title="LLM Content Export"}
+Generate llms.txt and llms-full.txt for AI agent consumption.
+:::
+:::card{title="Custom 404 Pages"}
+Convention-based 404 pages rendered through the full layout pipeline.
+:::
 :::
 
 ## Quick start
@@ -231,6 +243,12 @@ Opt-in multi-version docs with version selector, per-version sidebars, deprecate
 :::link-card{title="Components & Layout" href="./components" description="DocsLayout, Hero, navigation helpers."}
 :::
 :::link-card{title="Site Search" href="./search" description="Build-time indexing and the search dialog."}
+:::
+:::link-card{title="Global Banner" href="./banner" description="Site-wide announcement banners."}
+:::
+:::link-card{title="LLM Content Export" href="./llms-txt" description="Generate llms.txt for AI agent consumption."}
+:::
+:::link-card{title="Custom 404 Pages" href="./custom-404" description="Convention-based 404 page support."}
 :::
 :::link-card{title="Islands & Mermaid" href="./islands-and-mermaid" description="Built-in islands and diagram support."}
 :::

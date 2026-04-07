@@ -16,10 +16,11 @@ Lagoon provides two full-page layouts (`DocsLayout` for documentation pages, `Sp
 1. `<!DOCTYPE html>` + `<html lang="en">`
 2. **`<head>`** via `DocsBaseHead` (charset, viewport, `<title>`, meta description, CSS links)
 3. **Header** — logo/title, `SearchDialog` island, social links, `ThemeToggle` island
-4. **Mobile nav** — `MobileNav` island (only activates on narrow viewports)
-5. **Sidebar** — resolved navigation tree
-6. **Main content** — breadcrumbs, page heading, default slot (your page content), pagination
-7. **Table of contents** — "On this page" heading list
+4. **Banner** — optional site-wide announcement banner (when `Config.Banner` is set; see [Global Banner](./banner))
+5. **Mobile nav** — `MobileNav` island (only activates on narrow viewports)
+6. **Sidebar** — resolved navigation tree
+7. **Main content** — breadcrumbs, page heading, default slot (your page content), pagination
+8. **Table of contents** — "On this page" heading list
 
 ### Parameters
 
@@ -97,8 +98,9 @@ The **default slot** receives your page content (typically a `Hero` component an
 1. `<!DOCTYPE html>` + `<html lang="en">`
 2. **`<head>`** via `DocsBaseHead`
 3. **Header** — logo/title, `SearchDialog` island, social links, `ThemeToggle` island
-4. **Main content** — `<main class="splash-main">` with `<article class="splash-content">` wrapping the default slot
-5. **Footer**
+4. **Banner** — optional site-wide announcement banner (when `Config.Banner` is set; see [Global Banner](./banner))
+5. **Main content** — `<main class="splash-main">` with `<article class="splash-content">` wrapping the default slot
+6. **Footer**
 
 ### What `SplashLayout` omits
 
