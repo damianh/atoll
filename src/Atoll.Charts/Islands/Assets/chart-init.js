@@ -64,6 +64,16 @@ export default function init(element) {
     for (const canvas of canvases) {
       try {
         const config = JSON.parse(canvas.getAttribute('data-chart-config'));
+
+        // Ensure responsive resizing works in both directions (shrink and grow).
+        // Chart.js uses a ResizeObserver on the canvas parent, which must have
+        // position:relative (provided by the .atoll-chart CSS).
+        if (!config.options) {
+          config.options = {};
+        }
+        config.options.responsive = true;
+        config.options.maintainAspectRatio = true;
+
         new Chart(canvas, config);
       } catch (err) {
         console.error('[atoll-charts] Failed to render chart:', err);

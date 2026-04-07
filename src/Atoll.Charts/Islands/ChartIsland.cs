@@ -17,7 +17,7 @@ namespace Atoll.Charts.Islands;
 /// <code>{ "type": "bar", "data": { ... }, "options": { ... } }</code>
 /// </remarks>
 [ClientVisible]
-[Styles(".atoll-chart { display: block; width: 100%; } .atoll-chart canvas { width: 100% !important; height: auto !important; }")]
+[Styles(".atoll-chart { position: relative; width: 100%; }")]
 public sealed class ChartIsland : VanillaJsIsland
 {
     /// <inheritdoc />
