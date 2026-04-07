@@ -1,4 +1,5 @@
 using Atoll.Build.Content.Collections;
+using Atoll.Charts.Islands;
 using Atoll.Lagoon.Configuration;
 using Atoll.Lagoon.Redirects;
 using Atoll.Mermaid.Islands;
@@ -15,6 +16,10 @@ public static class DocsSetup
     // island asset discovery (which only scans direct assembly references)
     // can find MermaidIslandAssetProvider.
     private static readonly Type MermaidAssetProviderType = typeof(MermaidIslandAssetProvider);
+
+    // Ensure the Atoll.Charts assembly is referenced so the dev server's
+    // island asset discovery can find ChartIslandAssetProvider.
+    private static readonly Type ChartAssetProviderType = typeof(ChartIslandAssetProvider);
     /// <summary>
     /// Gets the documentation site configuration, including title, sidebar items, and feature flags.
     /// </summary>
@@ -102,6 +107,14 @@ public static class DocsSetup
                     new SidebarItem { Label = "Feeds & SEO",          Link = "/docs/reef/feeds-and-seo" },
                     new SidebarItem { Label = "Series & Navigation",  Link = "/docs/reef/series-and-navigation" },
                     new SidebarItem { Label = "Live Demo",             Link = "/docs/reef/live-demo" },
+                ],
+            },
+            new SidebarItem
+            {
+                Label = "Charts Plugin",
+                Items =
+                [
+                    new SidebarItem { Label = "Overview",  Link = "/docs/charts/overview" },
                 ],
             },
             new SidebarItem

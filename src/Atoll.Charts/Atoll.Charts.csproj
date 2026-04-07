@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Atoll\Atoll.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Atoll.Charts.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Islands\Assets\chart.js.min.js"
+      LogicalName="Atoll.Charts.Islands.Assets.chart.js.min.js" />
+    <EmbeddedResource Include="Islands\Assets\chart-init.js"
+      LogicalName="Atoll.Charts.Islands.Assets.chart-init.js" />
+  </ItemGroup>
+</Project>
