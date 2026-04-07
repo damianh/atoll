@@ -73,7 +73,7 @@ lacks. Grouped by priority.
 |---|---|---|---|
 | Auto-sidebar from file structure | `starlight-auto-sidebar` — zero-config sidebar generated from directory layout | Manual sidebar config only | Higher friction for large doc trees |
 | Topic-based search metadata | Custom remark plugin adds `data-pagefind-meta="topic:IdentityServer"` per content area | No search metadata enrichment | Search results lack product/topic filtering in multi-product sites |
-| LLM-optimised content export | `starlight-llms-txt` generates `/llms.txt`, `/llms-full.txt`, `/llms-small.txt` for AI agents | No LLM export | AI agents cannot efficiently consume docs |
+| ~~LLM-optimised content export~~ | ~~`starlight-llms-txt` generates `/llms.txt`, `/llms-full.txt`, `/llms-small.txt` for AI agents~~ | ~~`LlmsTxtGenerator` + `ILlmsTxtConfiguration` — generates `/llms.txt` index and `/llms-full.txt` with inlined content~~ | ~~Resolved~~ |
 | Trailing slash normalisation | Astro config + ASP.NET middleware + rehype plugin coordinate consistent trailing slash behaviour | No normalisation | Inconsistent URLs harm SEO and caching |
 | Global banner system | `Banner.astro` reads from JSON data, conditional display for announcements | No banner component | No built-in way to show site-wide announcements |
 | Custom 404 page | `404.md` with styled error page served by ASP.NET middleware | No custom 404 | Users see a generic error |
@@ -106,9 +106,9 @@ component directives, typed schemas, and islands architecture).
 **Lagoon advantages**: 6 features where Lagoon is ahead (multi-version docs, Draw.IO, annotations,
 blog/articles theme, typed frontmatter, ASP.NET middleware).
 
-**Notable gaps**: 17 total.
+**Notable gaps**: 16 total (1 resolved).
 - **5 must-have** — redirects, link validation, OG images, tab sync, expressive code blocks.
-- **6 should-have** — auto-sidebar, search metadata, LLM export, trailing slash normalisation, banner, custom 404.
+- **5 should-have** — auto-sidebar, search metadata, trailing slash normalisation, banner, custom 404. *(LLM export resolved)*
 - **3 architectural** — component overrides, plugin system, route data API.
 - **3 nice-to-have** — analytics hooks, heading badges, containerisation.
 
