@@ -39,6 +39,14 @@ public sealed class ChartIsland : VanillaJsIsland
     [Parameter]
     public int? Height { get; set; }
 
+    /// <summary>Gets or sets the optional maximum width of the chart container (CSS value, e.g. <c>"600px"</c> or <c>"50%"</c>).</summary>
+    [Parameter]
+    public string? MaxWidth { get; set; }
+
+    /// <summary>Gets or sets the optional maximum height of the chart container (CSS value, e.g. <c>"400px"</c>).</summary>
+    [Parameter]
+    public string? MaxHeight { get; set; }
+
     /// <inheritdoc />
     protected override Task RenderCoreAsync(RenderContext context)
     {
@@ -58,11 +66,28 @@ public sealed class ChartIsland : VanillaJsIsland
         var widthAttr = Width.HasValue ? $" width=\"{Width.Value}\"" : string.Empty;
         var heightAttr = Height.HasValue ? $" height=\"{Height.Value}\"" : string.Empty;
 
-        WriteHtml($"<div class=\"atoll-chart\"{role}{ariaLabel}>");
+        var containerStyle = BuildContainerStyle();
+        var styleAttr = containerStyle.Length > 0 ? $" style=\"{containerStyle}\"" : string.Empty;
+
+        WriteHtml($"<div class=\"atoll-chart\"{role}{ariaLabel}{styleAttr}>");
         WriteHtml($"<canvas data-chart-config=\"{encodedConfig}\"{widthAttr}{heightAttr}></canvas>");
         WriteHtml("<noscript>Chart requires JavaScript to display.</noscript>");
         WriteHtml("</div>");
 
         return Task.CompletedTask;
+    }
+
+    private string BuildContainerStyle()
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrEmpty(MaxWidth))
+        {
+            parts.Add($"max-width:{System.Web.HttpUtility.HtmlAttributeEncode(MaxWidth)}");
+        }
+        if (!string.IsNullOrEmpty(MaxHeight))
+        {
+            parts.Add($"max-height:{System.Web.HttpUtility.HtmlAttributeEncode(MaxHeight)}");
+        }
+        return string.Join(';', parts);
     }
 }

@@ -145,6 +145,56 @@ public sealed class ChartIslandTests
         html.ShouldNotContain("height=");
     }
 
+    // ─── MaxWidth / MaxHeight ─────────────────────────────────────────────
+
+    [Fact]
+    public async Task RenderWithMaxWidthShouldSetContainerStyle()
+    {
+        var html = await RenderAsync(new Dictionary<string, object?>
+        {
+            ["ConfigJson"] = SampleConfig,
+            ["MaxWidth"] = "600px",
+        });
+
+        html.ShouldContain("style=\"max-width:600px\"");
+    }
+
+    [Fact]
+    public async Task RenderWithMaxHeightShouldSetContainerStyle()
+    {
+        var html = await RenderAsync(new Dictionary<string, object?>
+        {
+            ["ConfigJson"] = SampleConfig,
+            ["MaxHeight"] = "400px",
+        });
+
+        html.ShouldContain("style=\"max-height:400px\"");
+    }
+
+    [Fact]
+    public async Task RenderWithMaxWidthAndMaxHeightShouldSetBothStyles()
+    {
+        var html = await RenderAsync(new Dictionary<string, object?>
+        {
+            ["ConfigJson"] = SampleConfig,
+            ["MaxWidth"] = "600px",
+            ["MaxHeight"] = "400px",
+        });
+
+        html.ShouldContain("style=\"max-width:600px;max-height:400px\"");
+    }
+
+    [Fact]
+    public async Task RenderWithoutMaxDimensionsShouldNotSetStyleAttribute()
+    {
+        var html = await RenderAsync(new Dictionary<string, object?>
+        {
+            ["ConfigJson"] = SampleConfig,
+        });
+
+        html.ShouldNotContain("style=");
+    }
+
     // ─── Island contract ──────────────────────────────────────────────────
 
     [Fact]
