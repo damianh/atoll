@@ -6,6 +6,7 @@
     <Title>Atoll Templates</Title>
     <Description>Project templates for scaffolding Atoll sites with dotnet new.</Description>
     <Authors>Atoll Contributors</Authors>
+    <PackageIcon>icon.png</PackageIcon>
     <TargetFramework>net10.0</TargetFramework>
     <PackageType>Template</PackageType>
     <IncludeContentInPack>true</IncludeContentInPack>
@@ -31,6 +32,10 @@
              Exclude="atoll-blog\bin\**;atoll-blog\obj\**" />
     <Content Include="atoll-portfolio\**\*"
              Exclude="atoll-portfolio\bin\**;atoll-portfolio\obj\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\assets\logo.png" Pack="true" PackagePath="\icon.png" />
   </ItemGroup>
 
 </Project>
