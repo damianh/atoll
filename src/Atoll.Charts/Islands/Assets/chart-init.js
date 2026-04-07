@@ -11,8 +11,9 @@
  * canvas[data-chart-config] element inside the island container.
  *
  * Workaround for Chart.js #12177: canvas style dimensions are set once on initial
- * render and never updated when the container grows. On window resize we clear the
- * stale canvas inline styles before Chart.js recalculates, so charts grow back.
+ * render and never updated when the container grows. We clear the stale canvas inline
+ * styles on the capture phase of window resize — before Chart.js processes the event —
+ * so Chart.js reads the true container width and resizes in both directions.
  */
 
 // Derive the vendor script URL from this module's own URL so it resolves correctly
@@ -23,26 +24,17 @@ const VENDOR_SCRIPT_ID  = 'atoll-charts-vendor-script';
 /** @type {Promise<void> | null} */
 let vendorLoadPromise = null;
 
-/** @type {Array<{canvas: HTMLCanvasElement, chart: Object}>} */
-const responsiveCharts = [];
+/** @type {Array<HTMLCanvasElement>} */
+const responsiveCanvases = [];
 
-/** @type {number} */
-let resizeTimer = 0;
-
-// Single debounced window resize handler shared across all charts.
-// Clears stale canvas inline dimensions so Chart.js recalculates from
-// the container, then lets Chart.js handle the actual resize.
-function onWindowResize() {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => {
-    for (const entry of responsiveCharts) {
-      entry.canvas.style.width = '';
-      entry.canvas.style.height = '';
-    }
-    // Chart.js already listens to window resize internally —
-    // clearing the styles is enough; it will recalculate on the
-    // same event cycle or the next animation frame.
-  }, 60);
+// Clear stale canvas inline dimensions on the CAPTURE phase of window resize,
+// before Chart.js (which listens on the bubble phase) processes the event.
+// This lets Chart.js read the true container size and grow back.
+function onResizeCapture() {
+  for (const canvas of responsiveCanvases) {
+    canvas.style.width = '';
+    canvas.style.height = '';
+  }
 }
 
 /**
@@ -103,14 +95,14 @@ export default function init(element) {
           }
         }
 
-        const chart = new Chart(canvas, config);
+        new Chart(canvas, config);
 
-        // Register for the window-resize workaround (Chart.js #12177).
+        // Register for the capture-phase resize workaround (Chart.js #12177).
         if (config.options.responsive !== false) {
-          if (responsiveCharts.length === 0) {
-            window.addEventListener('resize', onWindowResize);
+          if (responsiveCanvases.length === 0) {
+            window.addEventListener('resize', onResizeCapture, true);
           }
-          responsiveCharts.push({ canvas, chart });
+          responsiveCanvases.push(canvas);
         }
       } catch (err) {
         console.error('[atoll-charts] Failed to render chart:', err);
