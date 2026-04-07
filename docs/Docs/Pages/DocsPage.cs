@@ -14,8 +14,15 @@ namespace Docs.Pages;
 /// </summary>
 [Layout(typeof(SiteLayout))]
 [PageRoute("/docs/[...slug]")]
-public sealed class DocsPage : AtollComponent, IAtollPage, IStaticPathsProvider
+public sealed class DocsPage : AtollComponent, IAtollPage, IStaticPathsProvider, IPageStatusCodeProvider
 {
+    /// <summary>
+    /// The reserved slug for the custom 404 page. A content file at
+    /// <c>Content/docs/404.md</c> is rendered when a requested slug is not found.
+    /// This slug is excluded from static-path generation, sidebar, and search index.
+    /// </summary>
+    internal const string NotFoundSlug = "404";
+
     /// <summary>
     /// Gets or sets the doc slug from the URL parameter.
     /// </summary>
@@ -41,11 +48,15 @@ public sealed class DocsPage : AtollComponent, IAtollPage, IStaticPathsProvider
     public IReadOnlyList<MarkdownHeading> Headings { get; set; } = [];
 
     /// <inheritdoc />
+    public int ResponseStatusCode { get; private set; } = 200;
+
+    /// <inheritdoc />
     public Task<IReadOnlyList<StaticPath>> GetStaticPathsAsync()
     {
         var docs = Query.GetCollection<DocSchema>("docs");
 
         var paths = docs
+            .Where(entry => entry.Slug != NotFoundSlug)
             .Select(entry => new StaticPath(
                 new Dictionary<string, string> { ["slug"] = entry.Slug }))
             .ToList();
@@ -60,23 +71,50 @@ public sealed class DocsPage : AtollComponent, IAtollPage, IStaticPathsProvider
 
         if (entry is null)
         {
-            WriteHtml("<h1>Page Not Found</h1><p>The requested documentation page could not be found.</p>");
+            ResponseStatusCode = 404;
+
+            // Try to load a custom 404 page from Content/docs/404.md
+            var notFoundEntry = Query.GetEntry<DocSchema>("docs", NotFoundSlug);
+            if (notFoundEntry is not null)
+            {
+                var rendered = Query.Render(notFoundEntry);
+                PageTitle = notFoundEntry.Data.Title;
+                PageDescription = notFoundEntry.Data.Description;
+                Headings = rendered.Headings;
+
+                var notFoundContent = ContentComponent.FromRenderedContent(rendered);
+                await notFoundContent.RenderAsync(context);
+            }
+            else
+            {
+                // Styled default fallback — rendered within the layout
+                PageTitle = "Page Not Found";
+                WriteHtml("""
+                    <div class="not-found">
+                      <h1>Page Not Found</h1>
+                      <p>Sorry, we couldn&rsquo;t find the page you&rsquo;re looking for.
+                         It may have been moved or removed.</p>
+                      <p><a href="/docs">Return to the documentation home</a></p>
+                    </div>
+                    """);
+            }
+
             return;
         }
 
-        var rendered = Query.Render(entry);
+        var renderedEntry = Query.Render(entry);
 
         // Expose metadata so the layout (SiteLayout → DocsLayout) can consume it
         PageTitle = entry.Data.Title;
         PageDescription = entry.Data.Description;
-        Headings = rendered.Headings;
+        Headings = renderedEntry.Headings;
 
         // The addon DocsLayout wraps content in <article class="docs-article prose">,
         // so render the content directly without extra wrappers.
         // Use RenderAsync on the ContentComponent directly (not ToRenderFragment) so that
         // embedded component directives (:::aside, :::card-grid, etc.) and <PascalCaseName>
         // tags are resolved from the fragment list rather than left as placeholder comments.
-        var contentComponent = ContentComponent.FromRenderedContent(rendered);
+        var contentComponent = ContentComponent.FromRenderedContent(renderedEntry);
         await contentComponent.RenderAsync(context);
     }
 }

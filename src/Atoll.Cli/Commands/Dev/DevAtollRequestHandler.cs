@@ -282,6 +282,9 @@ internal sealed class DevAtollRequestHandler
         var componentType = match.RouteEntry.ComponentType;
         var props = BuildPageProps(match.Parameters, state.Options);
 
+        // PageRenderer must be instantiated fresh per request — it has instance fields.
+        var renderer = new PageRenderer();
+
         ComponentDelegate renderDelegate = async context =>
         {
             var component = (IAtollComponent)Activator.CreateInstance(componentType)!;
@@ -295,10 +298,13 @@ internal sealed class DevAtollRequestHandler
             var wrappedFragment = LayoutResolver.WrapWithLayouts(componentType, pageFragment, props);
 
             await context.RenderAsync(wrappedFragment);
-        };
 
-        // PageRenderer must be instantiated fresh per request — it has instance fields.
-        var renderer = new PageRenderer();
+            // Allow the page component to signal a non-200 HTTP status code
+            if (component is IPageStatusCodeProvider statusProvider)
+            {
+                renderer.StatusCode = statusProvider.ResponseStatusCode;
+            }
+        };
 
         // Inject global CSS (from [GlobalStyle] components) into <head>.
         // In SSG builds the asset pipeline writes CSS to a file and injects a <link> tag;
@@ -310,7 +316,7 @@ internal sealed class DevAtollRequestHandler
 
         var result = await renderer.RenderPageAsync(renderDelegate);
 
-        httpContext.Response.StatusCode = 200;
+        httpContext.Response.StatusCode = result.StatusCode;
         httpContext.Response.ContentType = "text/html; charset=utf-8";
         await result.WriteToStreamAsync(httpContext.Response.Body);
     }

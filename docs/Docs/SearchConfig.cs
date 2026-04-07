@@ -1,5 +1,6 @@
 using Atoll.Build.Content.Collections;
 using Atoll.Lagoon.Search;
+using Docs.Pages;
 
 namespace Docs;
 
@@ -15,6 +16,11 @@ public sealed class SearchConfig : ISearchIndexConfiguration
         var docs = query.GetCollection<DocSchema>("docs");
         foreach (var entry in docs)
         {
+            if (entry.Slug == DocsPage.NotFoundSlug)
+            {
+                continue;
+            }
+
             var rendered = query.Render(entry);
             yield return new SearchDocumentInput(entry.Data.Title, $"/docs/{entry.Slug}")
             {

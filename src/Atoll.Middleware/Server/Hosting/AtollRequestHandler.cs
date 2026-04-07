@@ -153,6 +153,9 @@ public sealed class AtollRequestHandler
         // Build props from service props + route parameters
         var props = BuildPageProps(match.Parameters);
 
+        // Render through PageRenderer for DOCTYPE/head injection
+        var renderer = new PageRenderer();
+
         // Build a component delegate that renders the page inside its layout chain
         ComponentDelegate renderDelegate = async context =>
         {
@@ -169,10 +172,14 @@ public sealed class AtollRequestHandler
 
             // Render the (possibly layout-wrapped) fragment to the context's destination
             await context.RenderAsync(wrappedFragment);
+
+            // Allow the page component to signal a non-200 HTTP status code
+            if (component is IPageStatusCodeProvider statusProvider)
+            {
+                renderer.StatusCode = statusProvider.ResponseStatusCode;
+            }
         };
 
-        // Render through PageRenderer for DOCTYPE/head injection
-        var renderer = new PageRenderer();
         var result = await renderer.RenderPageAsync(renderDelegate);
 
         if (_options.EnableCacheControl)
@@ -191,8 +198,8 @@ public sealed class AtollRequestHandler
                 return;
             }
 
-            // 200 response with ETag and Cache-Control
-            httpContext.Response.StatusCode = 200;
+            // Response with ETag and Cache-Control
+            httpContext.Response.StatusCode = result.StatusCode;
             httpContext.Response.ContentType = "text/html; charset=utf-8";
             httpContext.Response.Headers["ETag"] = etag;
             httpContext.Response.Headers["Cache-Control"] = "no-cache";
@@ -200,7 +207,7 @@ public sealed class AtollRequestHandler
         }
         else
         {
-            httpContext.Response.StatusCode = 200;
+            httpContext.Response.StatusCode = result.StatusCode;
             httpContext.Response.ContentType = "text/html; charset=utf-8";
             await result.WriteToStreamAsync(httpContext.Response.Body);
         }

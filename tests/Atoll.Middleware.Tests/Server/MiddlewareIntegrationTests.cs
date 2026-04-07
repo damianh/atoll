@@ -1062,6 +1062,34 @@ public sealed class MiddlewareIntegrationTests
     }
 
     // ================================================================
+    // IPageStatusCodeProvider Tests
+    // ================================================================
+
+    [Fact]
+    public async Task ShouldReturn404WhenPageImplementsStatusCodeProvider()
+    {
+        using var client = CreateTestClient(("missing/[...slug].cs", typeof(StatusCodePage)));
+
+        var response = await client.GetAsync("/missing/anything");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        var body = await response.Content.ReadAsStringAsync();
+        body.ShouldContain("<h1>Page Not Found</h1>");
+    }
+
+    [Fact]
+    public async Task ShouldReturn200WhenPageStatusCodeProviderReturns200()
+    {
+        using var client = CreateTestClient(("ok.cs", typeof(OkStatusCodePage)));
+
+        var response = await client.GetAsync("/ok");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = await response.Content.ReadAsStringAsync();
+        body.ShouldContain("<h1>All Good</h1>");
+    }
+
+    // ================================================================
     // Additional stubs for new tests
     // ================================================================
 
@@ -1142,6 +1170,28 @@ public sealed class MiddlewareIntegrationTests
         public Task<AtollResponse> GetAsync(EndpointContext context)
         {
             return Task.FromResult(AtollResponse.NotFound());
+        }
+    }
+
+    private sealed class StatusCodePage : AtollComponent, IAtollPage, IPageStatusCodeProvider
+    {
+        public int ResponseStatusCode => 404;
+
+        protected override Task RenderCoreAsync(RenderContext context)
+        {
+            WriteHtml("<html><head><title>Not Found</title></head><body><h1>Page Not Found</h1></body></html>");
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class OkStatusCodePage : AtollComponent, IAtollPage, IPageStatusCodeProvider
+    {
+        public int ResponseStatusCode => 200;
+
+        protected override Task RenderCoreAsync(RenderContext context)
+        {
+            WriteHtml("<html><head><title>OK</title></head><body><h1>All Good</h1></body></html>");
+            return Task.CompletedTask;
         }
     }
 }

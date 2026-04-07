@@ -42,6 +42,13 @@ public sealed class PageRenderer
     public InstructionProcessor InstructionProcessor => _instructionProcessor;
 
     /// <summary>
+    /// Gets or sets the HTTP status code to include in the <see cref="PageRenderResult"/>.
+    /// Defaults to 200. Set this during rendering (e.g. inside a <see cref="ComponentDelegate"/>)
+    /// to signal a non-200 response status to the request handler.
+    /// </summary>
+    public int StatusCode { get; set; } = 200;
+
+    /// <summary>
     /// Renders a page component and returns the complete HTML page.
     /// </summary>
     /// <typeparam name="TComponent">The page component type.</typeparam>
@@ -150,7 +157,7 @@ public sealed class PageRenderer
         var html = InjectHeadContent(componentOutput);
         html = InjectScripts(html);
         html = EnsureDoctype(html);
-        return new PageRenderResult(html);
+        return new PageRenderResult(html, StatusCode);
     }
 
     private string InjectHeadContent(string html)
