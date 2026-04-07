@@ -27,6 +27,8 @@
       LogicalName="Atoll.Lagoon.Islands.Assets.mobile-nav.js" />
     <EmbeddedResource Include="Islands\Assets\sidebar-state.js"
       LogicalName="Atoll.Lagoon.Islands.Assets.sidebar-state.js" />
+    <EmbeddedResource Include="Islands\Assets\sidebar-resize.js"
+      LogicalName="Atoll.Lagoon.Islands.Assets.sidebar-resize.js" />
     <EmbeddedResource Include="Islands\Assets\tabs.js"
       LogicalName="Atoll.Lagoon.Islands.Assets.tabs.js" />
     <EmbeddedResource Include="Assets\logo.png"
