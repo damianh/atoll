@@ -1,0 +1,64 @@
+{
+  "name": "atoll-mda",
+  "displayName": "Atoll MDA",
+  "description": "Language support for Atoll MDA files (.mda) — diagnostics, syntax highlighting, and more.",
+  "version": "0.1.0",
+  "publisher": "atoll",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters"
+  ],
+  "activationEvents": [
+    "onLanguage:mda"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "mda",
+        "aliases": [
+          "Markdown Atoll",
+          "MDA"
+        ],
+        "extensions": [
+          ".mda"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "mda",
+        "scopeName": "source.mda",
+        "path": "./syntaxes/mda.tmLanguage.json"
+      }
+    ],
+    "configuration": {
+      "title": "Atoll MDA",
+      "properties": {
+        "atoll.lsp.serverPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the Atoll LSP server binary (Atoll.Lsp.exe / Atoll.Lsp). Leave empty to auto-detect from PATH or dotnet tool."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.39",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.9.3"
+  }
+}

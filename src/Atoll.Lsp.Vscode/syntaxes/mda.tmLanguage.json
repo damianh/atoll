@@ -1,0 +1,122 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Markdown Atoll",
+  "scopeName": "source.mda",
+  "fileTypes": ["mda"],
+  "patterns": [
+    { "include": "#frontmatter" },
+    { "include": "#directive-block" },
+    { "include": "#component-tag" },
+    { "include": "#markdown-body" }
+  ],
+  "repository": {
+    "frontmatter": {
+      "comment": "YAML frontmatter between --- delimiters at the top of the file",
+      "begin": "\\A(---\\s*$)",
+      "end": "^(---\\s*$)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.frontmatter.begin.mda" }
+      },
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.frontmatter.end.mda" }
+      },
+      "name": "meta.frontmatter.mda",
+      "contentName": "source.yaml",
+      "patterns": [
+        { "include": "source.yaml" }
+      ]
+    },
+    "directive-block": {
+      "comment": ":::name{attrs} ... ::: block directive",
+      "begin": "^(:::)([a-zA-Z][a-zA-Z0-9-]*)(?:(\\{)([^}]*)(\\}))?\\s*$",
+      "end": "^(:::)\\s*$",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.directive.begin.mda" },
+        "2": { "name": "entity.name.type.directive.mda" },
+        "3": { "name": "punctuation.definition.attributes.begin.mda" },
+        "4": { "name": "meta.attributes.directive.mda" },
+        "5": { "name": "punctuation.definition.attributes.end.mda" }
+      },
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.directive.end.mda" }
+      },
+      "name": "meta.directive.mda",
+      "patterns": [
+        { "include": "#directive-block" },
+        { "include": "#component-tag" },
+        { "include": "#markdown-body" }
+      ]
+    },
+    "directive-inline": {
+      "comment": ":::name{attrs} self-contained directive (no closing :::)",
+      "match": "^(:::)([a-zA-Z][a-zA-Z0-9-]*)(?:(\\{)([^}]*)(\\}))?\\s*$",
+      "captures": {
+        "1": { "name": "punctuation.definition.directive.begin.mda" },
+        "2": { "name": "entity.name.type.directive.mda" },
+        "3": { "name": "punctuation.definition.attributes.begin.mda" },
+        "4": { "name": "meta.attributes.directive.mda" },
+        "5": { "name": "punctuation.definition.attributes.end.mda" }
+      },
+      "name": "meta.directive.inline.mda"
+    },
+    "component-tag": {
+      "comment": "PascalCase component tags: <Card Title=\"x\"> or <Card />",
+      "begin": "(<)([A-Z][A-Za-z0-9]+)",
+      "end": "(/?>)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.tag.begin.mda" },
+        "2": { "name": "entity.name.tag.component.mda" }
+      },
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.tag.end.mda" }
+      },
+      "name": "meta.tag.component.mda",
+      "patterns": [
+        { "include": "#tag-attribute" }
+      ]
+    },
+    "component-tag-close": {
+      "comment": "Closing component tags: </Card>",
+      "match": "(</)([A-Z][A-Za-z0-9]+)(>)",
+      "captures": {
+        "1": { "name": "punctuation.definition.tag.begin.mda" },
+        "2": { "name": "entity.name.tag.component.mda" },
+        "3": { "name": "punctuation.definition.tag.end.mda" }
+      },
+      "name": "meta.tag.component.close.mda"
+    },
+    "tag-attribute": {
+      "comment": "Attribute key=value pairs within component tags",
+      "patterns": [
+        {
+          "comment": "Attribute with double-quoted value",
+          "match": "([A-Za-z][A-Za-z0-9-]*)\\s*(=)\\s*(\"[^\"]*\")",
+          "captures": {
+            "1": { "name": "entity.other.attribute-name.mda" },
+            "2": { "name": "punctuation.separator.key-value.mda" },
+            "3": { "name": "string.quoted.double.mda" }
+          }
+        },
+        {
+          "comment": "Attribute with single-quoted value",
+          "match": "([A-Za-z][A-Za-z0-9-]*)\\s*(=)\\s*('[^']*')",
+          "captures": {
+            "1": { "name": "entity.other.attribute-name.mda" },
+            "2": { "name": "punctuation.separator.key-value.mda" },
+            "3": { "name": "string.quoted.single.mda" }
+          }
+        },
+        {
+          "comment": "Boolean attribute (no value)",
+          "match": "[A-Za-z][A-Za-z0-9-]*",
+          "name": "entity.other.attribute-name.mda"
+        }
+      ]
+    },
+    "markdown-body": {
+      "comment": "Standard Markdown content — embed text.html.markdown for highlighting",
+      "match": ".+",
+      "name": "text.html.markdown"
+    }
+  }
+}
