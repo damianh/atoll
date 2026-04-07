@@ -55,6 +55,42 @@ public sealed class ResolvedSidebarItem
         Items = items;
     }
 
+    /// <summary>
+    /// Initializes a group item that is also a clickable link (e.g., when an <c>index.md</c>
+    /// page serves as the group header).
+    /// </summary>
+    /// <param name="label">The group heading label.</param>
+    /// <param name="href">The URL the group header links to.</param>
+    /// <param name="isCurrent">Whether the group's index page is the current page.</param>
+    /// <param name="isActive">
+    /// Whether this group or any of its descendants matches the current page.
+    /// Should be <c>true</c> when <paramref name="isCurrent"/> is <c>true</c> or when any child is active.
+    /// </param>
+    /// <param name="badge">Optional badge.</param>
+    /// <param name="collapsed">Whether this group is collapsed by default.</param>
+    /// <param name="items">The resolved child items.</param>
+    public ResolvedSidebarItem(
+        string label,
+        string href,
+        bool isCurrent,
+        bool isActive,
+        SidebarBadge? badge,
+        bool collapsed,
+        IReadOnlyList<ResolvedSidebarItem> items)
+    {
+        ArgumentNullException.ThrowIfNull(label);
+        ArgumentNullException.ThrowIfNull(href);
+        ArgumentNullException.ThrowIfNull(items);
+        Label = label;
+        Href = href;
+        IsCurrent = isCurrent;
+        IsActive = isActive || isCurrent;
+        Badge = badge;
+        IsGroup = true;
+        Collapsed = collapsed;
+        Items = items;
+    }
+
     /// <summary>Gets the display label.</summary>
     public string Label { get; }
 

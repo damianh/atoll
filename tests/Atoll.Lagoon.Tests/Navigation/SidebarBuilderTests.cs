@@ -635,6 +635,287 @@ public sealed class SidebarBuilderTests
         result[0].Items[0].Label.ShouldBe("Intro (FR)");
     }
 
+    // --- Nested auto-generate sidebar ---
+
+    [Fact]
+    public void BuildShouldCreateNestedGroupForSubdirectory()
+    {
+        // 5a: Single-level subdirectory creates nested group.
+        var entries = new[]
+        {
+            Entry("Intro", "/docs/guides/intro", "guides/intro", order: 1),
+            Entry("Perf", "/docs/guides/advanced/perf", "guides/advanced/perf", order: 1),
+            Entry("Caching", "/docs/guides/advanced/caching", "guides/advanced/caching", order: 2),
+        };
+
+        var builder = new SidebarBuilder([AutoItem("Guides", "guides")], entries);
+
+        var result = builder.Build("/other/");
+
+        result.Count.ShouldBe(1);
+        result[0].Label.ShouldBe("Guides");
+        result[0].IsGroup.ShouldBeTrue();
+        result[0].Items.Count.ShouldBe(2);
+
+        var introItem = result[0].Items[0];
+        introItem.Label.ShouldBe("Intro");
+        introItem.IsGroup.ShouldBeFalse();
+
+        var advancedGroup = result[0].Items[1];
+        advancedGroup.Label.ShouldBe("Advanced");
+        advancedGroup.IsGroup.ShouldBeTrue();
+        advancedGroup.Items.Count.ShouldBe(2);
+        advancedGroup.Items[0].Label.ShouldBe("Perf");
+        advancedGroup.Items[1].Label.ShouldBe("Caching");
+    }
+
+    [Fact]
+    public void BuildShouldMakeIndexPageTheGroupLink()
+    {
+        // 5b: Index page becomes group link.
+        var entries = new[]
+        {
+            Entry("Advanced Topics", "/docs/guides/advanced/", "guides/advanced/index", order: 0),
+            Entry("Perf", "/docs/guides/advanced/perf", "guides/advanced/perf", order: 1),
+        };
+
+        var builder = new SidebarBuilder([AutoItem("Guides", "guides")], entries);
+
+        var result = builder.Build("/other/");
+
+        var advancedGroup = result[0].Items[0];
+        advancedGroup.IsGroup.ShouldBeTrue();
+        advancedGroup.Label.ShouldBe("Advanced Topics");
+        advancedGroup.Href.ShouldNotBeNull();
+        advancedGroup.Href.ShouldBe("/docs/guides/advanced/");
+        advancedGroup.Items.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void BuildShouldInferDirectoryLabelFromNameWhenNoIndex()
+    {
+        // 5c: Directory label inference without index.
+        var entries = new[]
+        {
+            Entry("Install", "/docs/guides/getting-started/install", "guides/getting-started/install", order: 1),
+        };
+
+        var builder = new SidebarBuilder([AutoItem("Guides", "guides")], entries);
+
+        var result = builder.Build("/other/");
+
+        var group = result[0].Items[0];
+        group.IsGroup.ShouldBeTrue();
+        group.Label.ShouldBe("Getting Started");
+        group.Href.ShouldBeNull();
+    }
+
+    [Fact]
+    public void BuildShouldStripNumericPrefixForDirectoryLabel()
+    {
+        // 5d: Numeric prefix stripping for directory names.
+        var entries = new[]
+        {
+            Entry("Intro", "/docs/guides/01-basics/intro", "guides/01-basics/intro", order: 1),
+            Entry("Perf", "/docs/guides/02-advanced/perf", "guides/02-advanced/perf", order: 1),
+        };
+
+        var builder = new SidebarBuilder([AutoItem("Guides", "guides")], entries);
+
+        var result = builder.Build("/other/");
+
+        result[0].Items.Count.ShouldBe(2);
+        result[0].Items[0].Label.ShouldBe("Basics");
+        result[0].Items[1].Label.ShouldBe("Advanced");
+    }
+
+    [Fact]
+    public void BuildShouldSortDirectoriesWithNumericPrefixNumerically()
+    {
+        // 5d (sort order): Numeric-prefixed dirs sort by prefix value.
+        var entries = new[]
+        {
+            Entry("Perf", "/docs/guides/02-advanced/perf", "guides/02-advanced/perf", order: 1),
+            Entry("Intro", "/docs/guides/01-basics/intro", "guides/01-basics/intro", order: 1),
+        };
+
+        var builder = new SidebarBuilder([AutoItem("Guides", "guides")], entries);
+
+        var result = builder.Build("/other/");
+
+        result[0].Items[0].Label.ShouldBe("Basics");
+        result[0].Items[1].Label.ShouldBe("Advanced");
+    }
+
+    [Fact]
+    public void BuildShouldSupportDeeplyNestedDirectories()
+    {
+        // 5e: Deeply nested directories (3 levels).
+        var entries = new[]
+        {
+            Entry("Install", "/docs/guides/basics/setup/install", "guides/basics/setup/install", order: 1),
+            Entry("Config", "/docs/guides/basics/setup/config", "guides/basics/setup/config", order: 2),
+        };
+
+        var builder = new SidebarBuilder([AutoItem("Guides", "guides")], entries);
+
+        var result = builder.Build("/other/");
+
+        var basicsGroup = result[0].Items[0];
+        basicsGroup.Label.ShouldBe("Basics");
+        basicsGroup.IsGroup.ShouldBeTrue();
+
+        var setupGroup = basicsGroup.Items[0];
+        setupGroup.Label.ShouldBe("Setup");
+        setupGroup.IsGroup.ShouldBeTrue();
+        setupGroup.Items.Count.ShouldBe(2);
+        setupGroup.Items[0].Label.ShouldBe("Install");
+        setupGroup.Items[1].Label.ShouldBe("Config");
+    }
+
+    [Fact]
+    public void BuildShouldInterleaveMixedFilesAndSubdirectoriesByOrder()
+    {
+        // 5f: Mixed files and subdirectories are sorted interleaved by Order.
+        var entries = new[]
+        {
+            Entry("Intro", "/docs/guides/intro", "guides/intro", order: 1),
+            Entry("Basics Index", "/docs/guides/basics/", "guides/basics/index", order: 2),
+            Entry("Start", "/docs/guides/basics/start", "guides/basics/start", order: 3),
+            Entry("Outro", "/docs/guides/outro", "guides/outro", order: 10),
+        };
+
+        var builder = new SidebarBuilder([AutoItem("Guides", "guides")], entries);
+
+        var result = builder.Build("/other/");
+
+        result[0].Items.Count.ShouldBe(3);
+        result[0].Items[0].Label.ShouldBe("Intro");
+        result[0].Items[1].Label.ShouldBe("Basics Index");  // group-with-link label from index
+        result[0].Items[1].IsGroup.ShouldBeTrue();
+        result[0].Items[2].Label.ShouldBe("Outro");
+    }
+
+    [Fact]
+    public void BuildShouldProduceFlatListForEntriesWithNoSubdirectories()
+    {
+        // 5g: Backward compat — flat entries produce flat list.
+        var entries = new[]
+        {
+            Entry("A", "/docs/guides/a", "guides/a", order: 1),
+            Entry("B", "/docs/guides/b", "guides/b", order: 2),
+            Entry("C", "/docs/guides/c", "guides/c", order: 3),
+        };
+
+        var builder = new SidebarBuilder([AutoItem("Guides", "guides")], entries);
+
+        var result = builder.Build("/other/");
+
+        result[0].Items.Count.ShouldBe(3);
+        result[0].Items.ShouldAllBe(i => !i.IsGroup);
+        result[0].Items[0].Label.ShouldBe("A");
+        result[0].Items[1].Label.ShouldBe("B");
+        result[0].Items[2].Label.ShouldBe("C");
+    }
+
+    [Fact]
+    public void BuildShouldSupportNestedAutoGenerateWithLocaleKey()
+    {
+        // 5h: Nested auto-generate with locale key.
+        var entries = new[]
+        {
+            Entry("Intro (FR)", "/docs/fr/guides/intro", "fr/guides/intro", order: 1),
+            Entry("Perf (FR)", "/docs/fr/guides/advanced/perf", "fr/guides/advanced/perf", order: 1),
+        };
+
+        var builder = new SidebarBuilder([AutoItem("Guides", "guides")], entries);
+
+        var result = builder.Build("/docs/fr/guides/intro", "/fr", "/docs", "fr");
+
+        result[0].Items.Count.ShouldBe(2);
+        result[0].Items[0].Label.ShouldBe("Intro (FR)");
+        result[0].Items[1].IsGroup.ShouldBeTrue();
+        result[0].Items[1].Label.ShouldBe("Advanced");
+        result[0].Items[1].Items[0].Label.ShouldBe("Perf (FR)");
+    }
+
+    [Fact]
+    public void BuildShouldSupportNestedAutoGenerateWithVersionKey()
+    {
+        // 5i: Nested auto-generate with version key.
+        var entries = new[]
+        {
+            Entry("Intro v1", "/v1.0/guides/intro", "v1.0/guides/intro", order: 1),
+            Entry("Perf v1", "/v1.0/guides/advanced/perf", "v1.0/guides/advanced/perf", order: 1),
+        };
+
+        var builder = new SidebarBuilder([AutoItem("Guides", "guides")], entries);
+
+        var result = builder.Build("/v1.0/guides/intro", "", "", "", "/v1.0", "v1.0");
+
+        result[0].Items.Count.ShouldBe(2);
+        result[0].Items[0].Label.ShouldBe("Intro v1");
+        result[0].Items[1].IsGroup.ShouldBeTrue();
+        result[0].Items[1].Label.ShouldBe("Advanced");
+    }
+
+    [Fact]
+    public void BuildShouldMarkIndexPageCurrentAndGroupActive()
+    {
+        // 5j: Index page active state propagates to group.
+        var entries = new[]
+        {
+            Entry("Advanced Topics", "/docs/guides/advanced/", "guides/advanced/index"),
+            Entry("Perf", "/docs/guides/advanced/perf", "guides/advanced/perf"),
+        };
+
+        var builder = new SidebarBuilder([AutoItem("Guides", "guides")], entries);
+
+        var result = builder.Build("/docs/guides/advanced/");
+
+        var advancedGroup = result[0].Items[0];
+        advancedGroup.IsGroup.ShouldBeTrue();
+        advancedGroup.IsCurrent.ShouldBeTrue();
+        advancedGroup.IsActive.ShouldBeTrue();
+        result[0].IsActive.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void BuildShouldPruneDraftEntriesFromNestedGroups()
+    {
+        // 5k: Draft entries excluded; empty group after draft pruning is omitted.
+        var entries = new[]
+        {
+            Entry("Intro", "/docs/guides/intro", "guides/intro", order: 1),
+            DraftEntry("Secret", "/docs/guides/secret/page", "guides/secret/page"),
+        };
+
+        var builder = new SidebarBuilder([AutoItem("Guides", "guides")], entries);
+
+        var result = builder.Build("/docs/guides/intro");
+
+        // "secret" group should be pruned (its only entry is draft).
+        result[0].Items.Count.ShouldBe(1);
+        result[0].Items[0].Label.ShouldBe("Intro");
+        result[0].Items.ShouldAllBe(i => !i.IsGroup);
+    }
+
+    [Fact]
+    public void BuildShouldPreserveCollapsedStateOnAutoGeneratedNestedGroup()
+    {
+        // 5l: Collapsed state preserved on auto-generated group.
+        var entries = new[]
+        {
+            Entry("Perf", "/docs/guides/advanced/perf", "guides/advanced/perf", order: 1),
+        };
+
+        var builder = new SidebarBuilder([AutoItem("Guides", "guides", collapsed: true)], entries);
+
+        var result = builder.Build("/other/");
+
+        result[0].Collapsed.ShouldBeTrue();
+    }
+
     // --- Version-aware sidebar ---
 
     [Fact]
