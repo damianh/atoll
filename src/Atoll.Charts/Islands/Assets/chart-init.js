@@ -10,10 +10,11 @@
  * After Chart.js loads, a new Chart instance is created for each
  * canvas[data-chart-config] element inside the island container.
  *
- * Workaround for Chart.js #12177: canvas style dimensions are set once on initial
- * render and never updated when the container grows. We clear the stale canvas inline
- * styles on the capture phase of window resize — before Chart.js processes the event —
- * so Chart.js reads the true container width and resizes in both directions.
+ * Chart.js built-in responsive mode has a known bug (#12177) where charts shrink
+ * but don't grow back. We work around this by disabling Chart.js responsive mode
+ * and managing resize ourselves: a ResizeObserver on the .atoll-chart container
+ * calls chart.resize(width, height) with explicit dimensions derived from the
+ * container. This avoids feedback loops because we never modify the container.
  */
 
 // Derive the vendor script URL from this module's own URL so it resolves correctly
@@ -23,19 +24,6 @@ const VENDOR_SCRIPT_ID  = 'atoll-charts-vendor-script';
 
 /** @type {Promise<void> | null} */
 let vendorLoadPromise = null;
-
-/** @type {Array<HTMLCanvasElement>} */
-const responsiveCanvases = [];
-
-// Clear stale canvas inline dimensions on the CAPTURE phase of window resize,
-// before Chart.js (which listens on the bubble phase) processes the event.
-// This lets Chart.js read the true container size and grow back.
-function onResizeCapture() {
-  for (const canvas of responsiveCanvases) {
-    canvas.style.width = '';
-    canvas.style.height = '';
-  }
-}
 
 /**
  * Ensures atoll-charts-vendor.min.js is loaded exactly once.
@@ -82,27 +70,54 @@ export default function init(element) {
     for (const canvas of canvases) {
       try {
         const config = JSON.parse(canvas.getAttribute('data-chart-config'));
-
-        // Default to responsive unless the user explicitly set responsive: false.
         if (!config.options) {
           config.options = {};
         }
-        if (config.options.responsive !== false) {
-          config.options.responsive = true;
-          // Default maintainAspectRatio to true if not explicitly set.
-          if (config.options.maintainAspectRatio === undefined) {
-            config.options.maintainAspectRatio = true;
-          }
+
+        // If the user explicitly set responsive: false, honour it and skip
+        // our resize management entirely.
+        const userDisabledResponsive = config.options.responsive === false;
+
+        // Disable Chart.js built-in responsive mode — we manage sizing ourselves
+        // to work around the grow-back bug (#12177).
+        if (!userDisabledResponsive) {
+          config.options.responsive = false;
         }
 
-        new Chart(canvas, config);
+        // Read the user's desired aspect ratio (default 2 for cartesian, 1 for radial).
+        const aspectRatio = config.options.aspectRatio
+          || (['pie', 'doughnut', 'radar', 'polarArea'].includes(config.type) ? 1 : 2);
 
-        // Register for the capture-phase resize workaround (Chart.js #12177).
-        if (config.options.responsive !== false) {
-          if (responsiveCanvases.length === 0) {
-            window.addEventListener('resize', onResizeCapture, true);
-          }
-          responsiveCanvases.push(canvas);
+        const container = canvas.closest('.atoll-chart');
+
+        // Set initial size from container before creating the chart.
+        if (!userDisabledResponsive && container) {
+          const w = container.clientWidth;
+          const h = config.options.maintainAspectRatio === false
+            ? container.clientHeight
+            : Math.round(w / aspectRatio);
+          canvas.width = w;
+          canvas.height = h;
+          canvas.style.width = w + 'px';
+          canvas.style.height = h + 'px';
+        }
+
+        const chart = new Chart(canvas, config);
+
+        // Observe the container and resize the chart when it changes.
+        // We only touch the canvas — never the container — so no feedback loop.
+        if (!userDisabledResponsive && container) {
+          const observer = new ResizeObserver((entries) => {
+            const entry = entries[0];
+            if (!entry) return;
+            const w = Math.round(entry.contentRect.width);
+            if (w === 0) return; // hidden element
+            const h = config.options.maintainAspectRatio === false
+              ? Math.round(entry.contentRect.height)
+              : Math.round(w / aspectRatio);
+            chart.resize(w, h);
+          });
+          observer.observe(container);
         }
       } catch (err) {
         console.error('[atoll-charts] Failed to render chart:', err);
