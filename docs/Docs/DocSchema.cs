@@ -32,6 +32,23 @@ public sealed class DocSchema
     public string Section { get; set; } = "";
 
     /// <summary>
+    /// Gets or sets the topic labels for search filtering
+    /// (e.g., <c>["IdentityServer", "Security"]</c>).
+    /// When set, overrides the auto-seeding of topics from <see cref="Section"/>.
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// ---
+    /// title: Token Validation
+    /// topics:
+    ///   - IdentityServer
+    ///   - Security
+    /// ---
+    /// </code>
+    /// </example>
+    public List<string>? Topics { get; set; }
+
+    /// <summary>
     /// Gets or sets optional raw HTML to inject into the page's &lt;head&gt; section.
     /// Supports analytics scripts, social meta tags, or any custom head content.
     /// Use a YAML literal block (<c>head: |</c>) for multi-line content.

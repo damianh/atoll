@@ -21,6 +21,31 @@ public sealed class SearchEntry
         string? section,
         IReadOnlyList<string> headings,
         string body)
+        : this(title, href, description, section, headings, body, null)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="SearchEntry"/> with topic labels.
+    /// </summary>
+    /// <param name="title">The document title.</param>
+    /// <param name="href">The URL path for this document.</param>
+    /// <param name="description">Optional short description.</param>
+    /// <param name="section">Optional section label (e.g., sidebar group).</param>
+    /// <param name="headings">Heading texts extracted from the document.</param>
+    /// <param name="body">Plain-text excerpt of the document body (HTML stripped, truncated).</param>
+    /// <param name="topics">
+    /// Optional topic labels for filtering (e.g., <c>["IdentityServer", "Security"]</c>).
+    /// <c>null</c> when no topics are assigned; omitted from JSON output.
+    /// </param>
+    public SearchEntry(
+        string title,
+        string href,
+        string? description,
+        string? section,
+        IReadOnlyList<string> headings,
+        string body,
+        IReadOnlyList<string>? topics)
     {
         ArgumentNullException.ThrowIfNull(title);
         ArgumentNullException.ThrowIfNull(href);
@@ -32,6 +57,7 @@ public sealed class SearchEntry
         Section = section;
         Headings = headings;
         Body = body;
+        Topics = topics;
     }
 
     /// <summary>Gets the document title.</summary>
@@ -51,4 +77,10 @@ public sealed class SearchEntry
 
     /// <summary>Gets the plain-text excerpt of the document body (HTML stripped).</summary>
     public string Body { get; }
+
+    /// <summary>
+    /// Gets the optional topic labels for this document (e.g., <c>["IdentityServer", "Security"]</c>).
+    /// <c>null</c> when no topics are assigned; omitted from JSON when null.
+    /// </summary>
+    public IReadOnlyList<string>? Topics { get; }
 }

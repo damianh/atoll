@@ -30,6 +30,7 @@ production Duende docs site (`docs.duendesoftware.com`, Astro 5.18 + Starlight 0
 | Internationalisation (i18n) | `LocaleConfig`, `UiTranslations`, `BuiltInTranslations`, `LanguagePicker` — 8 built-in languages, locale routing, UI string translation, RTL support | 30+ languages, locale routing, UI string translation, RTL support |
 | Content components | `Aside`, `Card`, `CardGrid`, `Steps`, `Tabs`, `FileTree`, `LinkCard`, `LinkButton`, `Icon` — 10 content components for rich documentation authoring | Cards, Tabs, Asides/Callouts, Steps, FileTree, LinkCards, CardGrids, LinkButtons, Icons |
 | Versioned documentation | `VersionConfig`, `VersionPicker`, `VersionResolver` — version selector dropdown, per-version sidebars, deprecated version notices, version-scoped search indices | `starlight-versions` plugin |
+| Topic-based search metadata | `SearchDocumentInput.Topics` + `SearchEntry.Topics` — multi-topic tagging with auto-seed from `Section`; client-side topic filter chip bar in search dialog; backward compatible with `section`-only indices | Custom remark plugin adds `data-pagefind-meta="topic:..."` per content area |
 | Giscus comments | `Atoll.Giscus` plugin — GitHub Discussions comments with mapping, lazy/eager loading, theming | `starlight-giscus` plugin |
 | External link handling | Markdown pipeline auto-detects external links | `rehype-external-links` adds `target="_blank"` + rel attributes |
 | Markdown extensions | Footnotes, task lists, auto-links, emphasis extras, GFM tables | CommonMark + GFM via remark |
@@ -72,7 +73,6 @@ lacks. Grouped by priority.
 | Feature | Starlight / Duende Implementation | Lagoon Status | Impact |
 |---|---|---|---|
 | Auto-sidebar from file structure | `starlight-auto-sidebar` — zero-config sidebar generated from directory layout | Manual sidebar config only | Higher friction for large doc trees |
-| Topic-based search metadata | Custom remark plugin adds `data-pagefind-meta="topic:IdentityServer"` per content area | No search metadata enrichment | Search results lack product/topic filtering in multi-product sites |
 | ~~LLM-optimised content export~~ | ~~`starlight-llms-txt` generates `/llms.txt`, `/llms-full.txt`, `/llms-small.txt` for AI agents~~ | ~~`LlmsTxtGenerator` + `ILlmsTxtConfiguration` — generates `/llms.txt` index and `/llms-full.txt` with inlined content~~ | ~~Resolved~~ |
 | Trailing slash normalisation | Astro config + ASP.NET middleware + rehype plugin coordinate consistent trailing slash behaviour | No normalisation | Inconsistent URLs harm SEO and caching |
 | Global banner system | `Banner.astro` reads from JSON data, conditional display for announcements | No banner component | No built-in way to show site-wide announcements |
@@ -100,15 +100,15 @@ lacks. Grouped by priority.
 
 ## Summary
 
-**Parity**: 30 features fully covered (including Giscus, external links, markdown extensions,
-component directives, typed schemas, and islands architecture).
+**Parity**: 31 features fully covered (including Giscus, external links, markdown extensions,
+component directives, typed schemas, islands architecture, and topic-based search metadata).
 
 **Lagoon advantages**: 6 features where Lagoon is ahead (multi-version docs, Draw.IO, annotations,
 blog/articles theme, typed frontmatter, ASP.NET middleware).
 
-**Notable gaps**: 16 total (1 resolved).
+**Notable gaps**: 15 total (2 resolved).
 - **5 must-have** — redirects, link validation, OG images, tab sync, expressive code blocks.
-- **5 should-have** — auto-sidebar, search metadata, trailing slash normalisation, banner, custom 404. *(LLM export resolved)*
+- **4 should-have** — auto-sidebar, trailing slash normalisation, banner, custom 404. *(LLM export and search metadata resolved)*
 - **3 architectural** — component overrides, plugin system, route data API.
 - **3 nice-to-have** — analytics hooks, heading badges, containerisation.
 

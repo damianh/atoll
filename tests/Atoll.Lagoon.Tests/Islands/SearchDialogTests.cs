@@ -182,4 +182,25 @@ public sealed class SearchDialogTests
 
         html.ShouldContain("data-base-path=\"/atoll\"");
     }
+
+    [Fact]
+    public async Task ShouldRenderTopicFilterContainer()
+    {
+        var dest = new StringRenderDestination();
+        await ComponentRenderer.RenderComponentAsync<SearchDialog>(dest, new Dictionary<string, object?>());
+        var html = dest.GetOutput();
+
+        html.ShouldContain("id=\"search-topics\"");
+        html.ShouldContain("class=\"search-topic-filter\"");
+    }
+
+    [Fact]
+    public async Task ShouldRenderTopicFilterLabelDataAttribute()
+    {
+        var dest = new StringRenderDestination();
+        await ComponentRenderer.RenderComponentAsync<SearchDialog>(dest, new Dictionary<string, object?>());
+        var html = dest.GetOutput();
+
+        html.ShouldContain("data-topic-filter-label=\"Filter by topic\"");
+    }
 }

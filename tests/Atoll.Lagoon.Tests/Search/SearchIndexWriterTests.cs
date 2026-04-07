@@ -56,6 +56,65 @@ public sealed class SearchIndexWriterTests
         var first = doc.RootElement.GetProperty("entries")[0];
         first.TryGetProperty("description", out _).ShouldBeFalse("null description should be omitted");
         first.TryGetProperty("section", out _).ShouldBeFalse("null section should be omitted");
+        first.TryGetProperty("topics", out _).ShouldBeFalse("null topics should be omitted");
+    }
+
+    [Fact]
+    public void ShouldSerializeTopicsArrayWhenPopulated()
+    {
+        var entry = new SearchEntry(
+            "Guide",
+            "/docs/guide/",
+            null,
+            null,
+            [],
+            "body",
+            ["IdentityServer", "Security"]);
+        var index = new SearchIndex([entry], DateTimeOffset.UtcNow);
+
+        var json = _writer.Serialize(index);
+        using var doc = JsonDocument.Parse(json);
+
+        var first = doc.RootElement.GetProperty("entries")[0];
+        var topics = first.GetProperty("topics");
+        topics.GetArrayLength().ShouldBe(2);
+        topics[0].GetString().ShouldBe("IdentityServer");
+        topics[1].GetString().ShouldBe("Security");
+    }
+
+    [Fact]
+    public void ShouldSerializeTopicsAlongsideSection()
+    {
+        var entry = new SearchEntry(
+            "Guide",
+            "/docs/guide/",
+            null,
+            "Getting Started",
+            [],
+            "body",
+            ["IdentityServer"]);
+        var index = new SearchIndex([entry], DateTimeOffset.UtcNow);
+
+        var json = _writer.Serialize(index);
+        using var doc = JsonDocument.Parse(json);
+
+        var first = doc.RootElement.GetProperty("entries")[0];
+        first.GetProperty("section").GetString().ShouldBe("Getting Started");
+        first.GetProperty("topics")[0].GetString().ShouldBe("IdentityServer");
+    }
+
+    [Fact]
+    public void ShouldOmitTopicsWhenNull()
+    {
+        var entry = new SearchEntry("Title", "/path/", null, "Section", [], "body");
+        var index = new SearchIndex([entry], DateTimeOffset.UtcNow);
+
+        var json = _writer.Serialize(index);
+        using var doc = JsonDocument.Parse(json);
+
+        // The six-arg constructor leaves Topics null, so it should be omitted
+        var first = doc.RootElement.GetProperty("entries")[0];
+        first.TryGetProperty("topics", out _).ShouldBeFalse("topics should be omitted when null");
     }
 
     [Fact]

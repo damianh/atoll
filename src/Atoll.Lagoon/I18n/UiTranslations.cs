@@ -31,6 +31,9 @@ public sealed record UiTranslations
     /// <summary>Gets the message shown when a search yields no results.</summary>
     public string SearchNoResults { get; init; } = "No results found.";
 
+    /// <summary>Gets the accessible label for the topic filter chip bar in the search dialog.</summary>
+    public string SearchTopicFilterLabel { get; init; } = "Filter by topic";
+
     // -- Theme --
 
     /// <summary>Gets the accessible label for the theme toggle button.</summary>
