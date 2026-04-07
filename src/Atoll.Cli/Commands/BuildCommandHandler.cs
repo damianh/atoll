@@ -156,6 +156,7 @@ public sealed class BuildCommandHandler
             await ValidateLinksAsync(assembly, collectionQuery);
             await GenerateRedirectsAsync(assembly, collectionQuery, outputDir);
             await GenerateOgImagesAsync(assembly, collectionQuery, outputDir, projectRoot);
+            await GenerateLlmsTxtAsync(assembly, collectionQuery, outputDir);
         }
 
         // Report results
@@ -1023,6 +1024,127 @@ public sealed class BuildCommandHandler
         }
 
         Console.WriteLine($"  Redirects: {ruleCount} rule(s) written to _redirects");
+    }
+
+    /// <summary>
+    /// Scans the user assembly for an <c>ILlmsTxtConfiguration</c> implementation and, if found,
+    /// generates <c>llms.txt</c> (and optionally <c>llms-full.txt</c>) via <c>LlmsTxtGenerator</c>.
+    /// </summary>
+    private static async Task GenerateLlmsTxtAsync(
+        Assembly assembly,
+        CollectionQuery collectionQuery,
+        string outputDirectory)
+    {
+        const string interfaceName = "Atoll.Lagoon.LlmsTxt.ILlmsTxtConfiguration";
+        const string generatorTypeName = "Atoll.Lagoon.LlmsTxt.LlmsTxtGenerator";
+
+        // Find an ILlmsTxtConfiguration implementation in the user's assembly
+        Type? configType = null;
+        foreach (var type in assembly.GetTypes())
+        {
+            if (type.IsAbstract || type.IsInterface)
+            {
+                continue;
+            }
+
+            var iface = type.GetInterface(interfaceName);
+            if (iface is not null)
+            {
+                configType = type;
+                break;
+            }
+        }
+
+        if (configType is null)
+        {
+            return;
+        }
+
+        // Resolve LlmsTxtGenerator from the assembly's dependencies
+        Type? generatorType = null;
+        foreach (var referencedAssembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            generatorType = referencedAssembly.GetType(generatorTypeName);
+            if (generatorType is not null)
+            {
+                break;
+            }
+        }
+
+        // Also try to find it via the assembly directory
+        if (generatorType is null)
+        {
+            var assemblyDir = Path.GetDirectoryName(assembly.Location);
+            if (assemblyDir is not null)
+            {
+                var lagoonDll = Path.Combine(assemblyDir, "Atoll.Lagoon.dll");
+                if (File.Exists(lagoonDll))
+                {
+                    try
+                    {
+                        var lagoonAssembly = Assembly.LoadFrom(lagoonDll);
+                        generatorType = lagoonAssembly.GetType(generatorTypeName);
+                    }
+                    catch
+                    {
+                        // Ignore load failures
+                    }
+                }
+            }
+        }
+
+        if (generatorType is null)
+        {
+            Console.WriteLine("  Warning: ILlmsTxtConfiguration found but Atoll.Lagoon assembly could not be loaded.");
+            return;
+        }
+
+        // Create config instance
+        var configInstance = Activator.CreateInstance(configType)!;
+
+        // Create generator instance: new LlmsTxtGenerator(outputDirectory)
+        var generator = Activator.CreateInstance(generatorType, outputDirectory)!;
+
+        // Find GenerateAsync(CollectionQuery, ILlmsTxtConfiguration) by scanning methods
+        MethodInfo? generateMethod = null;
+        foreach (var method in generatorType.GetMethods())
+        {
+            if (method.Name != "GenerateAsync")
+            {
+                continue;
+            }
+
+            var parameters = method.GetParameters();
+            if (parameters.Length == 2
+                && parameters[0].ParameterType == typeof(CollectionQuery))
+            {
+                generateMethod = method;
+                break;
+            }
+        }
+
+        if (generateMethod is null)
+        {
+            Console.WriteLine("  Warning: Could not find GenerateAsync method on LlmsTxtGenerator.");
+            return;
+        }
+
+        var task = (Task)generateMethod.Invoke(generator, [collectionQuery, configInstance])!;
+        await task;
+
+        // Get result stats via dynamic to avoid reflection on Task<T>.Result
+        dynamic taskResult = task;
+        int documentCount;
+        try
+        {
+            documentCount = (int)taskResult.Result.DocumentCount;
+        }
+        catch
+        {
+            documentCount = 0;
+        }
+
+        Console.WriteLine($"  LLMs:    {documentCount} document(s) exported to llms.txt");
     }
 
     /// <summary>
