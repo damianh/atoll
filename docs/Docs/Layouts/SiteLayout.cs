@@ -4,6 +4,7 @@ using Atoll.Build.Content.Markdown;
 using Atoll.Components;
 using Atoll.Lagoon.Navigation;
 using Atoll.Slots;
+using Docs.Pages;
 using AddonLayout = Atoll.Lagoon.Layouts.DocsLayout;
 
 namespace Docs.Layouts;
@@ -50,8 +51,9 @@ public sealed class SiteLayout : AtollComponent
             ? Query.Render(currentEntry).Headings
             : (IReadOnlyList<MarkdownHeading>)[];
 
-        // Build sidebar entries from the docs collection
+        // Build sidebar entries from the docs collection, excluding the reserved 404 page
         var entries = Query.GetCollection<DocSchema>("docs")
+            .Where(e => e.Slug != DocsPage.NotFoundSlug)
             .Select(e => new SidebarEntry(e.Data.Title, $"/docs/{e.Slug}", e.Slug, e.Data.Order, null))
             .ToList();
 

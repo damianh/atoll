@@ -17,13 +17,26 @@ namespace Atoll.Rendering;
 public sealed class PageRenderResult
 {
     /// <summary>
-    /// Initializes a new <see cref="PageRenderResult"/> with the specified HTML content.
+    /// Initializes a new <see cref="PageRenderResult"/> with the specified HTML content
+    /// and a default HTTP status code of 200.
     /// </summary>
     /// <param name="html">The fully rendered HTML page content.</param>
     public PageRenderResult(string html)
+        : this(html, 200)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new <see cref="PageRenderResult"/> with the specified HTML content
+    /// and HTTP status code.
+    /// </summary>
+    /// <param name="html">The fully rendered HTML page content.</param>
+    /// <param name="statusCode">The HTTP status code to return with the response.</param>
+    public PageRenderResult(string html, int statusCode)
     {
         ArgumentNullException.ThrowIfNull(html);
         Html = html;
+        StatusCode = statusCode;
     }
 
     /// <summary>
@@ -31,6 +44,11 @@ public sealed class PageRenderResult
     /// and body content.
     /// </summary>
     public string Html { get; }
+
+    /// <summary>
+    /// Gets the HTTP status code for the page response. Defaults to 200.
+    /// </summary>
+    public int StatusCode { get; }
 
     /// <summary>
     /// Writes the rendered HTML to the specified stream using UTF-8 encoding.

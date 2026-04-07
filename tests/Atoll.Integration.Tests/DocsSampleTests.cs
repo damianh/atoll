@@ -281,6 +281,14 @@ public sealed class DocsSampleTests : IDisposable
         };
         var html = await RenderPageAsync<DocsPage>(props);
 
+        // Should contain full layout structure (rendered through SiteLayout → DocsLayout)
+        html.ShouldContain("<!DOCTYPE html>");
+        html.ShouldContain("<html");
+        html.ShouldContain("<header");
+        html.ShouldContain("<footer");
+        html.ShouldContain("</html>");
+
+        // Should contain the styled 404 content (not bare unstyled HTML)
         html.ShouldContain("Page Not Found");
     }
 
@@ -311,6 +319,158 @@ public sealed class DocsSampleTests : IDisposable
         // Should show section headings
         html.ShouldContain("Basics");
         html.ShouldContain("Features");
+    }
+
+    // ── 404 page tests ──
+
+    private static InMemoryFileProvider CreateDocsContentWith404()
+    {
+        var provider = CreateDocsContent();
+        provider.AddFile("content/docs", "404.md", """
+            ---
+            title: Custom Not Found
+            description: This is a custom 404 page.
+            order: 0
+            section: ""
+            ---
+
+            # Custom Not Found
+
+            The page you requested does not exist. Please check the URL or use the sidebar.
+            """);
+        return provider;
+    }
+
+    [Fact]
+    public async Task DocsPageShouldExclude404SlugFromStaticPaths()
+    {
+        var query = CreateCollectionQuery(CreateDocsContentWith404());
+        var page = new DocsPage { Query = query, Slug = "" };
+        var paths = await page.GetStaticPathsAsync();
+
+        paths.Count.ShouldBe(3);
+        paths.Select(p => p.Parameters["slug"]).ShouldNotContain("404");
+        paths.Select(p => p.Parameters["slug"]).ShouldContain("getting-started");
+        paths.Select(p => p.Parameters["slug"]).ShouldContain("components");
+        paths.Select(p => p.Parameters["slug"]).ShouldContain("content-collections");
+    }
+
+    [Fact]
+    public async Task DocsPageShouldRenderCustom404ContentWhenFileExists()
+    {
+        var query = CreateCollectionQuery(CreateDocsContentWith404());
+        var props = new Dictionary<string, object?>
+        {
+            ["Slug"] = "nonexistent-page",
+            ["Query"] = query,
+        };
+        var html = await RenderPageAsync<DocsPage>(props);
+
+        // Custom 404.md title and body content should appear
+        html.ShouldContain("Custom Not Found");
+        html.ShouldContain("The page you requested does not exist");
+
+        // Full layout structure should be present
+        html.ShouldContain("<!DOCTYPE html>");
+        html.ShouldContain("<html");
+        html.ShouldContain("<header");
+        html.ShouldContain("<footer");
+    }
+
+    [Fact]
+    public async Task DocsPageShouldRenderDefaultFallbackWhenNo404FileExists()
+    {
+        // Default content has no 404.md
+        var query = CreateDefaultQuery();
+        var props = new Dictionary<string, object?>
+        {
+            ["Slug"] = "nonexistent-page",
+            ["Query"] = query,
+        };
+        var html = await RenderPageAsync<DocsPage>(props);
+
+        // Default fallback content
+        html.ShouldContain("Page Not Found");
+        html.ShouldContain("Return to the documentation home");
+
+        // Full layout structure should be present
+        html.ShouldContain("<!DOCTYPE html>");
+        html.ShouldContain("<html");
+        html.ShouldContain("<header");
+        html.ShouldContain("<footer");
+    }
+
+    [Fact]
+    public async Task DocsPageShouldExclude404SlugFromSidebar()
+    {
+        var query = CreateCollectionQuery(CreateDocsContentWith404());
+        var props = new Dictionary<string, object?>
+        {
+            ["Slug"] = "getting-started",
+            ["Query"] = query,
+        };
+        var html = await RenderPageAsync<DocsPage>(props);
+
+        // Sidebar should contain normal pages
+        html.ShouldContain("href=\"/docs/getting-started\"");
+        html.ShouldContain("href=\"/docs/components\"");
+
+        // Sidebar should NOT contain a link to the 404 page
+        html.ShouldNotContain("href=\"/docs/404\"");
+    }
+
+    [Fact]
+    public async Task SearchIndexShouldExclude404Entry()
+    {
+        var query = CreateCollectionQuery(CreateDocsContentWith404());
+
+        var searchGenerator = new LagoonSearchIndexGenerator(_outputDir);
+        var config = new SearchConfig();
+        var result = await searchGenerator.GenerateAsync(query, config);
+
+        // Should only contain the 3 normal docs, not the 404 page
+        result.EntryCount.ShouldBe(3);
+
+        var json = await File.ReadAllTextAsync(Path.Combine(_outputDir, "search-index.json"));
+        json.ShouldContain("Getting Started");
+        json.ShouldContain("Components");
+        json.ShouldContain("Content Collections");
+        json.ShouldNotContain("Custom Not Found");
+        json.ShouldNotContain("/docs/404");
+    }
+
+    [Fact]
+    public async Task DocsPageShouldSetResponseStatusCodeTo404ForMissingSlug()
+    {
+        var query = CreateDefaultQuery();
+        var page = new DocsPage();
+        var props = new Dictionary<string, object?>
+        {
+            ["Slug"] = "nonexistent-page",
+            ["Query"] = query,
+        };
+
+        var renderer = new PageRenderer();
+        await renderer.RenderPageAsync(page, props);
+
+        page.ResponseStatusCode.ShouldBe(404);
+    }
+
+    [Fact]
+    public async Task DocsPageShouldSetResponseStatusCodeTo200ForValidSlug()
+    {
+        var query = CreateDefaultQuery();
+        var page = new DocsPage();
+        var props = new Dictionary<string, object?>
+        {
+            ["Slug"] = "getting-started",
+            ["Query"] = query,
+        };
+
+        var renderer = new PageRenderer();
+        await renderer.RenderPageAsync(page, props);
+
+        page.ResponseStatusCode.ShouldBe(200);
     }
 
     // ── SSG tests ──

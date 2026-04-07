@@ -242,6 +242,62 @@ public sealed class PageRendererTests
     }
 
     [Fact]
+    public async Task ResultShouldDefaultToStatusCode200()
+    {
+        var renderer = new PageRenderer();
+
+        var result = await renderer.RenderPageAsync<SimplePage>();
+
+        result.StatusCode.ShouldBe(200);
+    }
+
+    [Fact]
+    public async Task ResultShouldReflectCustomStatusCode()
+    {
+        var renderer = new PageRenderer();
+        renderer.StatusCode = 404;
+
+        var result = await renderer.RenderPageAsync<SimplePage>();
+
+        result.StatusCode.ShouldBe(404);
+    }
+
+    [Fact]
+    public async Task StatusCodeSetDuringDelegateShouldPropagateToResult()
+    {
+        var renderer = new PageRenderer();
+
+        ComponentDelegate pageDelegate = ctx =>
+        {
+            ctx.WriteHtml("<html><head></head><body><p>Not Found</p></body></html>");
+            renderer.StatusCode = 404;
+            return Task.CompletedTask;
+        };
+
+        var result = await renderer.RenderPageAsync(pageDelegate);
+
+        result.StatusCode.ShouldBe(404);
+        result.Html.ShouldContain("<p>Not Found</p>");
+    }
+
+    [Fact]
+    public void PageRenderResultShouldAcceptStatusCodeViaConstructor()
+    {
+        var result = new PageRenderResult("<html></html>", 404);
+
+        result.StatusCode.ShouldBe(404);
+        result.Html.ShouldBe("<html></html>");
+    }
+
+    [Fact]
+    public void PageRenderResultShouldDefaultToStatusCode200()
+    {
+        var result = new PageRenderResult("<html></html>");
+
+        result.StatusCode.ShouldBe(200);
+    }
+
+    [Fact]
     public async Task ResultShouldWriteToStream()
     {
         var renderer = new PageRenderer();
