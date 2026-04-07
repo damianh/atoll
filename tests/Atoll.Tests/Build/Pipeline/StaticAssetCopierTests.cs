@@ -4,6 +4,7 @@ namespace Atoll.Build.Tests.Pipeline;
 
 public sealed class StaticAssetCopierTests : IDisposable
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
     private readonly string _testDir;
     private readonly string _sourceDir;
     private readonly string _outputDir;
@@ -135,7 +136,7 @@ public sealed class StaticAssetCopierTests : IDisposable
         File.WriteAllText(Path.Combine(_sourceDir, "robots.txt"), "User-agent: *");
 
         var copier = new StaticAssetCopier(_outputDir);
-        var result = await copier.CopyAsync(_sourceDir);
+        var result = await copier.CopyAsync(_sourceDir, _ct);
 
         result.Count.ShouldBe(1);
         File.Exists(Path.Combine(_outputDir, "robots.txt")).ShouldBeTrue();
@@ -149,7 +150,7 @@ public sealed class StaticAssetCopierTests : IDisposable
         File.WriteAllText(Path.Combine(fontsDir, "inter.woff2"), "font data");
 
         var copier = new StaticAssetCopier(_outputDir);
-        var result = await copier.CopyAsync(_sourceDir);
+        var result = await copier.CopyAsync(_sourceDir, _ct);
 
         result.Count.ShouldBe(1);
         File.Exists(Path.Combine(_outputDir, "fonts", "inter.woff2")).ShouldBeTrue();
@@ -159,7 +160,7 @@ public sealed class StaticAssetCopierTests : IDisposable
     public async Task CopyAsyncShouldReturnEmptyForNonExistentSource()
     {
         var copier = new StaticAssetCopier(_outputDir);
-        var result = await copier.CopyAsync(Path.Combine(_testDir, "missing"));
+        var result = await copier.CopyAsync(Path.Combine(_testDir, "missing"), _ct);
 
         result.Count.ShouldBe(0);
     }

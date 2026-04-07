@@ -3,6 +3,7 @@ using Atoll.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 
 namespace Atoll.Cli.Commands;
 
@@ -17,9 +18,10 @@ public sealed class PreviewCommandHandler
     /// </summary>
     /// <param name="projectRoot">The project root directory.</param>
     /// <param name="port">The port override (0 = use config default).</param>
-    public async Task ExecuteAsync(string projectRoot, int port)
+    /// <param name="cancellationToken">A token to cancel the preview operation.</param>
+    public async Task ExecuteAsync(string projectRoot, int port, CancellationToken cancellationToken)
     {
-        var config = await AtollConfigLoader.LoadAsync(projectRoot);
+        var config = await AtollConfigLoader.LoadAsync(projectRoot, cancellationToken);
         var outputDir = AtollConfigLoader.ResolveOutputDirectory(config, projectRoot);
         var effectivePort = port > 0 ? port : config.Server.Port;
 
@@ -66,7 +68,7 @@ public sealed class PreviewCommandHandler
         Console.WriteLine($"  Serving: {outputDir}");
         Console.WriteLine("  Press Ctrl+C to stop.");
 
-        await app.RunAsync();
+        await ((IHost)app).RunAsync(cancellationToken);
     }
 
     /// <summary>

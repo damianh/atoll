@@ -43,10 +43,12 @@ public sealed class AssetPipeline
     /// </summary>
     /// <param name="componentTypes">The page/component types rendered during SSG (for CSS extraction).</param>
     /// <param name="jsSources">JavaScript source strings to process (island scripts, etc.).</param>
+    /// <param name="cancellationToken">A token to cancel the pipeline operation.</param>
     /// <returns>An <see cref="AssetPipelineResult"/> with all processed asset references.</returns>
     public async Task<AssetPipelineResult> RunAsync(
         IEnumerable<Type> componentTypes,
-        IEnumerable<string> jsSources)
+        IEnumerable<string> jsSources,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(componentTypes);
         ArgumentNullException.ThrowIfNull(jsSources);
@@ -62,13 +64,13 @@ public sealed class AssetPipeline
         // Write processed CSS to output
         if (cssResult.HasContent)
         {
-            await _outputWriter.WriteFileAsync(cssResult.OutputPath, cssResult.Css);
+            await _outputWriter.WriteFileAsync(cssResult.OutputPath, cssResult.Css, cancellationToken);
         }
 
         // Write processed JS to output
         if (jsResult.HasContent)
         {
-            await _outputWriter.WriteFileAsync(jsResult.OutputPath, jsResult.Js);
+            await _outputWriter.WriteFileAsync(jsResult.OutputPath, jsResult.Js, cancellationToken);
         }
 
         // Copy static assets
@@ -76,7 +78,7 @@ public sealed class AssetPipeline
         if (_options.PublicDirectory.Length > 0)
         {
             var copier = new StaticAssetCopier(_options.OutputDirectory);
-            copyResult = await copier.CopyAsync(_options.PublicDirectory);
+            copyResult = await copier.CopyAsync(_options.PublicDirectory, cancellationToken);
         }
 
         stopwatch.Stop();
@@ -89,10 +91,12 @@ public sealed class AssetPipeline
     /// </summary>
     /// <param name="cssAggregator">The pre-populated CSS aggregator.</param>
     /// <param name="jsSources">JavaScript source strings to process.</param>
+    /// <param name="cancellationToken">A token to cancel the pipeline operation.</param>
     /// <returns>An <see cref="AssetPipelineResult"/> with all processed asset references.</returns>
     public async Task<AssetPipelineResult> RunAsync(
         CssAggregator cssAggregator,
-        IEnumerable<string> jsSources)
+        IEnumerable<string> jsSources,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(cssAggregator);
         ArgumentNullException.ThrowIfNull(jsSources);
@@ -109,13 +113,13 @@ public sealed class AssetPipeline
         // Write processed CSS to output
         if (cssResult.HasContent)
         {
-            await _outputWriter.WriteFileAsync(cssResult.OutputPath, cssResult.Css);
+            await _outputWriter.WriteFileAsync(cssResult.OutputPath, cssResult.Css, cancellationToken);
         }
 
         // Write processed JS to output
         if (jsResult.HasContent)
         {
-            await _outputWriter.WriteFileAsync(jsResult.OutputPath, jsResult.Js);
+            await _outputWriter.WriteFileAsync(jsResult.OutputPath, jsResult.Js, cancellationToken);
         }
 
         // Copy static assets
@@ -123,7 +127,7 @@ public sealed class AssetPipeline
         if (_options.PublicDirectory.Length > 0)
         {
             var copier = new StaticAssetCopier(_options.OutputDirectory);
-            copyResult = await copier.CopyAsync(_options.PublicDirectory);
+            copyResult = await copier.CopyAsync(_options.PublicDirectory, cancellationToken);
         }
 
         stopwatch.Stop();

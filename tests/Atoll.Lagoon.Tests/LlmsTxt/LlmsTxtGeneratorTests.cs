@@ -5,6 +5,7 @@ namespace Atoll.Lagoon.Tests.LlmsTxt;
 
 public sealed class LlmsTxtGeneratorTests : IDisposable
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
     private readonly string _outputDir;
 
     public LlmsTxtGeneratorTests()
@@ -34,7 +35,7 @@ public sealed class LlmsTxtGeneratorTests : IDisposable
             ]);
         var generator = new LlmsTxtGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(CreateEmptyQuery(), config);
+        var result = await generator.GenerateAsync(CreateEmptyQuery(), config, _ct);
 
         result.DocumentCount.ShouldBe(2);
         File.Exists(result.LlmsTxtPath).ShouldBeTrue();
@@ -48,7 +49,7 @@ public sealed class LlmsTxtGeneratorTests : IDisposable
             []);
         var generator = new LlmsTxtGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(CreateEmptyQuery(), config);
+        var result = await generator.GenerateAsync(CreateEmptyQuery(), config, _ct);
 
         result.LlmsTxtPath.ShouldBe(Path.Combine(_outputDir, "llms.txt"));
     }
@@ -61,7 +62,7 @@ public sealed class LlmsTxtGeneratorTests : IDisposable
             [new LlmsTxtDocumentInput("Doc", "/doc/")]);
         var generator = new LlmsTxtGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(CreateEmptyQuery(), config);
+        var result = await generator.GenerateAsync(CreateEmptyQuery(), config, _ct);
 
         result.Elapsed.ShouldBeGreaterThanOrEqualTo(TimeSpan.Zero);
     }
@@ -74,7 +75,7 @@ public sealed class LlmsTxtGeneratorTests : IDisposable
             []);
         var generator = new LlmsTxtGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(CreateEmptyQuery(), config);
+        var result = await generator.GenerateAsync(CreateEmptyQuery(), config, _ct);
 
         result.DocumentCount.ShouldBe(0);
         File.Exists(result.LlmsTxtPath).ShouldBeTrue();
@@ -93,7 +94,7 @@ public sealed class LlmsTxtGeneratorTests : IDisposable
         };
         var generator = new LlmsTxtGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(siteInfo, documents);
+        var result = await generator.GenerateAsync(siteInfo, documents, _ct);
 
         result.DocumentCount.ShouldBe(2);
         File.Exists(result.LlmsTxtPath).ShouldBeTrue();
@@ -107,7 +108,7 @@ public sealed class LlmsTxtGeneratorTests : IDisposable
         var siteInfo = new LlmsTxtSiteInfo("Duende IdentityServer", null);
         var generator = new LlmsTxtGenerator(_outputDir);
 
-        await generator.GenerateAsync(siteInfo, Array.Empty<LlmsTxtDocumentInput>());
+        await generator.GenerateAsync(siteInfo, Array.Empty<LlmsTxtDocumentInput>(), _ct);
 
         var content = await File.ReadAllTextAsync(Path.Combine(_outputDir, "llms.txt"));
         content.ShouldStartWith("# Duende IdentityServer");
@@ -119,7 +120,7 @@ public sealed class LlmsTxtGeneratorTests : IDisposable
         var siteInfo = new LlmsTxtSiteInfo("My Docs", "Developer documentation for My Project.");
         var generator = new LlmsTxtGenerator(_outputDir);
 
-        await generator.GenerateAsync(siteInfo, Array.Empty<LlmsTxtDocumentInput>());
+        await generator.GenerateAsync(siteInfo, Array.Empty<LlmsTxtDocumentInput>(), _ct);
 
         var content = await File.ReadAllTextAsync(Path.Combine(_outputDir, "llms.txt"));
         content.ShouldContain("> Developer documentation for My Project.");
@@ -131,7 +132,7 @@ public sealed class LlmsTxtGeneratorTests : IDisposable
         var siteInfo = new LlmsTxtSiteInfo("My Docs", null);
         var generator = new LlmsTxtGenerator(_outputDir);
 
-        await generator.GenerateAsync(siteInfo, Array.Empty<LlmsTxtDocumentInput>());
+        await generator.GenerateAsync(siteInfo, Array.Empty<LlmsTxtDocumentInput>(), _ct);
 
         var content = await File.ReadAllTextAsync(Path.Combine(_outputDir, "llms.txt"));
         content.ShouldNotContain(">");
@@ -147,7 +148,7 @@ public sealed class LlmsTxtGeneratorTests : IDisposable
         };
         var generator = new LlmsTxtGenerator(_outputDir);
 
-        await generator.GenerateAsync(siteInfo, documents);
+        await generator.GenerateAsync(siteInfo, documents, _ct);
 
         var content = await File.ReadAllTextAsync(Path.Combine(_outputDir, "llms.txt"));
         content.ShouldContain("- [Getting Started](/docs/getting-started/)");
@@ -166,7 +167,7 @@ public sealed class LlmsTxtGeneratorTests : IDisposable
         };
         var generator = new LlmsTxtGenerator(_outputDir);
 
-        await generator.GenerateAsync(siteInfo, documents);
+        await generator.GenerateAsync(siteInfo, documents, _ct);
 
         var content = await File.ReadAllTextAsync(Path.Combine(_outputDir, "llms.txt"));
         content.ShouldContain("- [API Reference](/api/): Complete API documentation");
@@ -184,7 +185,7 @@ public sealed class LlmsTxtGeneratorTests : IDisposable
         };
         var generator = new LlmsTxtGenerator(_outputDir);
 
-        await generator.GenerateAsync(siteInfo, documents);
+        await generator.GenerateAsync(siteInfo, documents, _ct);
 
         var content = await File.ReadAllTextAsync(Path.Combine(_outputDir, "llms.txt"));
         content.ShouldContain("## Getting Started");
@@ -203,7 +204,7 @@ public sealed class LlmsTxtGeneratorTests : IDisposable
         };
         var generator = new LlmsTxtGenerator(_outputDir);
 
-        await generator.GenerateAsync(siteInfo, documents);
+        await generator.GenerateAsync(siteInfo, documents, _ct);
 
         var content = await File.ReadAllTextAsync(Path.Combine(_outputDir, "llms.txt"));
         content.ShouldContain("## Documentation");
@@ -224,7 +225,7 @@ public sealed class LlmsTxtGeneratorTests : IDisposable
         };
         var generator = new LlmsTxtGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(siteInfo, documents);
+        var result = await generator.GenerateAsync(siteInfo, documents, _ct);
 
         result.LlmsFullTxtPath.ShouldNotBeNull();
         File.Exists(result.LlmsFullTxtPath).ShouldBeTrue();
@@ -240,7 +241,7 @@ public sealed class LlmsTxtGeneratorTests : IDisposable
         };
         var generator = new LlmsTxtGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(siteInfo, documents);
+        var result = await generator.GenerateAsync(siteInfo, documents, _ct);
 
         result.LlmsFullTxtPath.ShouldBeNull();
     }
@@ -258,7 +259,7 @@ public sealed class LlmsTxtGeneratorTests : IDisposable
         };
         var generator = new LlmsTxtGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(siteInfo, documents);
+        var result = await generator.GenerateAsync(siteInfo, documents, _ct);
 
         var content = await File.ReadAllTextAsync(result.LlmsFullTxtPath!);
         content.ShouldContain("# Docs");
@@ -281,7 +282,7 @@ public sealed class LlmsTxtGeneratorTests : IDisposable
         };
         var generator = new LlmsTxtGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(siteInfo, documents);
+        var result = await generator.GenerateAsync(siteInfo, documents, _ct);
 
         var content = await File.ReadAllTextAsync(result.LlmsFullTxtPath!);
         var descriptionIdx = content.IndexOf("API reference docs.");
@@ -299,7 +300,7 @@ public sealed class LlmsTxtGeneratorTests : IDisposable
         };
         var generator = new LlmsTxtGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(siteInfo, documents);
+        var result = await generator.GenerateAsync(siteInfo, documents, _ct);
 
         result.LlmsFullTxtPath.ShouldBe(Path.Combine(_outputDir, "llms-full.txt"));
     }

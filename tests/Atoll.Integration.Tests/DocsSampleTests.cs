@@ -21,6 +21,7 @@ namespace Atoll.Integration.Tests;
 /// </summary>
 public sealed class DocsSampleTests : IDisposable
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
     private readonly string _outputDir;
 
     public DocsSampleTests()
@@ -424,7 +425,7 @@ public sealed class DocsSampleTests : IDisposable
 
         var searchGenerator = new LagoonSearchIndexGenerator(_outputDir);
         var config = new SearchConfig();
-        var result = await searchGenerator.GenerateAsync(query, config);
+        var result = await searchGenerator.GenerateAsync(query, config, _ct);
 
         // Should only contain the 3 normal docs, not the 404 page
         result.EntryCount.ShouldBe(3);
@@ -487,7 +488,7 @@ public sealed class DocsSampleTests : IDisposable
 
         var ssgOptions = new SsgOptions(_outputDir);
         var generator = new StaticSiteGenerator(ssgOptions, serviceProps);
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         result.IsSuccess.ShouldBeTrue();
         // 1 index + 3 doc pages
@@ -513,7 +514,7 @@ public sealed class DocsSampleTests : IDisposable
 
         var ssgOptions = new SsgOptions(_outputDir);
         var generator = new StaticSiteGenerator(ssgOptions, serviceProps);
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         foreach (var pageResult in result.PageResults)
         {
@@ -537,7 +538,7 @@ public sealed class DocsSampleTests : IDisposable
 
         var ssgOptions = new SsgOptions(_outputDir);
         var generator = new StaticSiteGenerator(ssgOptions, serviceProps);
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         result.IsSuccess.ShouldBeTrue();
 
@@ -565,12 +566,12 @@ public sealed class DocsSampleTests : IDisposable
 
         var ssgOptions = new SsgOptions(_outputDir);
         var generator = new StaticSiteGenerator(ssgOptions, serviceProps);
-        await generator.GenerateAsync(routes);
+        await generator.GenerateAsync(routes, _ct);
 
         // Run search index generation using the docs SearchConfig
         var searchGenerator = new LagoonSearchIndexGenerator(_outputDir);
         var config = new SearchConfig();
-        var result = await searchGenerator.GenerateAsync(query, config);
+        var result = await searchGenerator.GenerateAsync(query, config, _ct);
 
         // Verify the file was written
         var searchIndexPath = Path.Combine(_outputDir, "search-index.json");
@@ -589,7 +590,7 @@ public sealed class DocsSampleTests : IDisposable
 
         var searchGenerator = new LagoonSearchIndexGenerator(_outputDir);
         var config = new SearchConfig();
-        await searchGenerator.GenerateAsync(query, config);
+        await searchGenerator.GenerateAsync(query, config, _ct);
 
         var json = await File.ReadAllTextAsync(Path.Combine(_outputDir, "search-index.json"));
 
@@ -606,7 +607,7 @@ public sealed class DocsSampleTests : IDisposable
 
         var searchGenerator = new LagoonSearchIndexGenerator(_outputDir);
         var config = new SearchConfig();
-        await searchGenerator.GenerateAsync(query, config);
+        await searchGenerator.GenerateAsync(query, config, _ct);
 
         var json = await File.ReadAllTextAsync(Path.Combine(_outputDir, "search-index.json"));
 
@@ -627,7 +628,7 @@ public sealed class DocsSampleTests : IDisposable
 
         var searchGenerator = new LagoonSearchIndexGenerator(_outputDir);
         var config = new SearchConfig();
-        await searchGenerator.GenerateAsync(query, config);
+        await searchGenerator.GenerateAsync(query, config, _ct);
 
         var json = await File.ReadAllTextAsync(Path.Combine(_outputDir, "search-index.json"));
 
@@ -647,7 +648,7 @@ public sealed class DocsSampleTests : IDisposable
 
         var searchGenerator = new LagoonSearchIndexGenerator(_outputDir);
         var config = new SearchConfig();
-        await searchGenerator.GenerateAsync(query, config);
+        await searchGenerator.GenerateAsync(query, config, _ct);
 
         var json = await File.ReadAllTextAsync(Path.Combine(_outputDir, "search-index.json"));
 
@@ -670,7 +671,7 @@ public sealed class DocsSampleTests : IDisposable
         var outputWriter = new OutputWriter(_outputDir);
         var pipeline = new AssetPipeline(pipelineOptions, outputWriter);
 
-        var result = await pipeline.RunAsync(new[] { typeof(DocsTheme) }, Array.Empty<string>());
+        var result = await pipeline.RunAsync(new[] { typeof(DocsTheme) }, Array.Empty<string>(), _ct);
 
         result.Css.HasContent.ShouldBeTrue();
         result.Css.Css.ShouldContain("--docs-bg");
@@ -696,7 +697,7 @@ public sealed class DocsSampleTests : IDisposable
         var assets = provider.GetAssets().ToList();
 
         var writer = new IslandAssetWriter(_outputDir);
-        var result = await writer.WriteAsync(assets);
+        var result = await writer.WriteAsync(assets, _ct);
 
         result.FileCount.ShouldBe(6);
 
@@ -793,7 +794,7 @@ public sealed class DocsSampleTests : IDisposable
         };
         var ssgOptions = new SsgOptions(_outputDir);
         var generator = new StaticSiteGenerator(ssgOptions, serviceProps);
-        var ssgResult = await generator.GenerateAsync(routes);
+        var ssgResult = await generator.GenerateAsync(routes, _ct);
         ssgResult.IsSuccess.ShouldBeTrue();
 
         // 2. Asset pipeline with DocsTheme CSS
@@ -805,12 +806,12 @@ public sealed class DocsSampleTests : IDisposable
         };
         var outputWriter = new OutputWriter(_outputDir);
         var pipeline = new AssetPipeline(pipelineOptions, outputWriter);
-        var assetResult = await pipeline.RunAsync(globalStyleTypes, Array.Empty<string>());
+        var assetResult = await pipeline.RunAsync(globalStyleTypes, Array.Empty<string>(), _ct);
 
         // 3. Island assets
         var islandProvider = new LagoonIslandAssetProvider();
         var islandWriter = new IslandAssetWriter(_outputDir);
-        var islandResult = await islandWriter.WriteAsync(islandProvider.GetAssets());
+        var islandResult = await islandWriter.WriteAsync(islandProvider.GetAssets(), _ct);
 
         // Assert CSS
         assetResult.Css.HasContent.ShouldBeTrue();

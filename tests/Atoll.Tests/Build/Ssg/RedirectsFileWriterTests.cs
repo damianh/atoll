@@ -6,6 +6,7 @@ namespace Atoll.Build.Tests.Ssg;
 
 public sealed class RedirectsFileWriterTests : IDisposable
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
     private readonly string _testDir;
     private readonly string _outputDir;
 
@@ -126,7 +127,7 @@ public sealed class RedirectsFileWriterTests : IDisposable
         var map = CreateMap(("/old", "/new"));
         var writer = new RedirectsFileWriter(_outputDir);
 
-        await writer.WriteAsync(map);
+        await writer.WriteAsync(map, _ct);
 
         File.Exists(Path.Combine(_outputDir, "redirects.json")).ShouldBeTrue();
     }
@@ -137,7 +138,7 @@ public sealed class RedirectsFileWriterTests : IDisposable
         var map = CreateMap(("/old", "/new"));
         var writer = new RedirectsFileWriter(_outputDir);
 
-        await writer.WriteAsync(map);
+        await writer.WriteAsync(map, _ct);
 
         var content = await File.ReadAllTextAsync(Path.Combine(_outputDir, "redirects.json"));
         Should.NotThrow(() => JsonDocument.Parse(content));
@@ -149,7 +150,7 @@ public sealed class RedirectsFileWriterTests : IDisposable
         var map = CreateMap(("/old", "/new"));
         var writer = new RedirectsFileWriter(_outputDir);
 
-        await writer.WriteAsync(map, 308);
+        await writer.WriteAsync(map, 308, _ct);
 
         var content = await File.ReadAllTextAsync(Path.Combine(_outputDir, "redirects.json"));
         var doc = JsonDocument.Parse(content);

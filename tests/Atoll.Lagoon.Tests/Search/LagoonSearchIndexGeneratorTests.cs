@@ -5,6 +5,7 @@ namespace Atoll.Lagoon.Tests.Search;
 
 public sealed class LagoonSearchIndexGeneratorTests : IDisposable
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
     private readonly string _outputDir;
 
     public LagoonSearchIndexGeneratorTests()
@@ -37,7 +38,7 @@ public sealed class LagoonSearchIndexGeneratorTests : IDisposable
         var query = CreateEmptyQuery();
         var generator = new LagoonSearchIndexGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(query, config);
+        var result = await generator.GenerateAsync(query, config, _ct);
 
         result.EntryCount.ShouldBe(3);
         File.Exists(SearchIndexPath(_outputDir)).ShouldBeTrue();
@@ -53,7 +54,7 @@ public sealed class LagoonSearchIndexGeneratorTests : IDisposable
         ]);
         var generator = new LagoonSearchIndexGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(CreateEmptyQuery(), config);
+        var result = await generator.GenerateAsync(CreateEmptyQuery(), config, _ct);
 
         result.EntryCount.ShouldBe(2);
     }
@@ -64,7 +65,7 @@ public sealed class LagoonSearchIndexGeneratorTests : IDisposable
         var config = new StubSearchConfig([]);
         var generator = new LagoonSearchIndexGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(CreateEmptyQuery(), config);
+        var result = await generator.GenerateAsync(CreateEmptyQuery(), config, _ct);
 
         result.EntryCount.ShouldBe(0);
         File.Exists(SearchIndexPath(_outputDir)).ShouldBeTrue();
@@ -76,7 +77,7 @@ public sealed class LagoonSearchIndexGeneratorTests : IDisposable
         var config = new StubSearchConfig([]);
         var generator = new LagoonSearchIndexGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(CreateEmptyQuery(), config);
+        var result = await generator.GenerateAsync(CreateEmptyQuery(), config, _ct);
 
         result.OutputPath.ShouldBe(SearchIndexPath(_outputDir));
     }
@@ -87,7 +88,7 @@ public sealed class LagoonSearchIndexGeneratorTests : IDisposable
         var config = new StubSearchConfig([new SearchDocumentInput("Doc", "/docs/doc/")]);
         var generator = new LagoonSearchIndexGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(CreateEmptyQuery(), config);
+        var result = await generator.GenerateAsync(CreateEmptyQuery(), config, _ct);
 
         result.Elapsed.ShouldBeGreaterThanOrEqualTo(TimeSpan.Zero);
     }
@@ -104,7 +105,7 @@ public sealed class LagoonSearchIndexGeneratorTests : IDisposable
         };
         var generator = new LagoonSearchIndexGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(documents);
+        var result = await generator.GenerateAsync(documents, _ct);
 
         result.EntryCount.ShouldBe(2);
         File.Exists(SearchIndexPath(_outputDir)).ShouldBeTrue();
@@ -119,7 +120,7 @@ public sealed class LagoonSearchIndexGeneratorTests : IDisposable
         };
         var generator = new LagoonSearchIndexGenerator(_outputDir);
 
-        await generator.GenerateAsync(documents);
+        await generator.GenerateAsync(documents, _ct);
 
         var json = await File.ReadAllTextAsync(SearchIndexPath(_outputDir));
         json.ShouldNotContain("<p>");
@@ -133,7 +134,7 @@ public sealed class LagoonSearchIndexGeneratorTests : IDisposable
     {
         var generator = new LagoonSearchIndexGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(Array.Empty<SearchDocumentInput>());
+        var result = await generator.GenerateAsync(Array.Empty<SearchDocumentInput>(), _ct);
 
         result.EntryCount.ShouldBe(0);
         File.Exists(SearchIndexPath(_outputDir)).ShouldBeTrue();
@@ -152,7 +153,7 @@ public sealed class LagoonSearchIndexGeneratorTests : IDisposable
         };
         var generator = new LagoonSearchIndexGenerator(_outputDir);
 
-        await generator.GenerateAsync(documents);
+        await generator.GenerateAsync(documents, _ct);
 
         var json = await File.ReadAllTextAsync(SearchIndexPath(_outputDir));
         json.ShouldContain("My Title");
@@ -170,7 +171,7 @@ public sealed class LagoonSearchIndexGeneratorTests : IDisposable
         };
         var generator = new LagoonSearchIndexGenerator(_outputDir);
 
-        await generator.GenerateAsync(documents);
+        await generator.GenerateAsync(documents, _ct);
 
         var json = await File.ReadAllTextAsync(SearchIndexPath(_outputDir));
         json.ShouldContain("\"entries\"");
@@ -188,7 +189,7 @@ public sealed class LagoonSearchIndexGeneratorTests : IDisposable
         };
         var generator = new LagoonSearchIndexGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(documents, "fr");
+        var result = await generator.GenerateAsync(documents, "fr", _ct);
 
         result.EntryCount.ShouldBe(1);
         var expectedPath = Path.Combine(_outputDir, "fr", "search-index.json");
@@ -205,7 +206,7 @@ public sealed class LagoonSearchIndexGeneratorTests : IDisposable
         };
         var generator = new LagoonSearchIndexGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(documents, "");
+        var result = await generator.GenerateAsync(documents, "", _ct);
 
         result.OutputPath.ShouldBe(SearchIndexPath(_outputDir));
         File.Exists(SearchIndexPath(_outputDir)).ShouldBeTrue();
@@ -219,8 +220,8 @@ public sealed class LagoonSearchIndexGeneratorTests : IDisposable
         var enDocs = new[] { new SearchDocumentInput("English Doc", "/guide/") };
         var frDocs = new[] { new SearchDocumentInput("French Doc", "/fr/guide/") };
 
-        var enResult = await generator.GenerateAsync(enDocs, "");
-        var frResult = await generator.GenerateAsync(frDocs, "fr");
+        var enResult = await generator.GenerateAsync(enDocs, "", _ct);
+        var frResult = await generator.GenerateAsync(frDocs, "fr", _ct);
 
         enResult.EntryCount.ShouldBe(1);
         frResult.EntryCount.ShouldBe(1);
@@ -249,7 +250,7 @@ public sealed class LagoonSearchIndexGeneratorTests : IDisposable
         };
         var generator = new LagoonSearchIndexGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(documents, "/es");
+        var result = await generator.GenerateAsync(documents, "/es", _ct);
 
         var expectedPath = Path.Combine(_outputDir, "es", "search-index.json");
         result.OutputPath.ShouldBe(expectedPath);
@@ -267,7 +268,7 @@ public sealed class LagoonSearchIndexGeneratorTests : IDisposable
         };
         var generator = new LagoonSearchIndexGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(documents, "", "v1.0");
+        var result = await generator.GenerateAsync(documents, "", "v1.0", _ct);
 
         var expectedPath = Path.Combine(_outputDir, "v1.0", "search-index.json");
         result.OutputPath.ShouldBe(expectedPath);
@@ -283,7 +284,7 @@ public sealed class LagoonSearchIndexGeneratorTests : IDisposable
         };
         var generator = new LagoonSearchIndexGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(documents, "fr", "v1.0");
+        var result = await generator.GenerateAsync(documents, "fr", "v1.0", _ct);
 
         var expectedPath = Path.Combine(_outputDir, "fr", "v1.0", "search-index.json");
         result.OutputPath.ShouldBe(expectedPath);
@@ -299,7 +300,7 @@ public sealed class LagoonSearchIndexGeneratorTests : IDisposable
         };
         var generator = new LagoonSearchIndexGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(documents, "", "");
+        var result = await generator.GenerateAsync(documents, "", "", _ct);
 
         result.OutputPath.ShouldBe(SearchIndexPath(_outputDir));
         File.Exists(SearchIndexPath(_outputDir)).ShouldBeTrue();
@@ -314,7 +315,7 @@ public sealed class LagoonSearchIndexGeneratorTests : IDisposable
         };
         var generator = new LagoonSearchIndexGenerator(_outputDir);
 
-        var result = await generator.GenerateAsync(documents, "", "/v2.0");
+        var result = await generator.GenerateAsync(documents, "", "/v2.0", _ct);
 
         var expectedPath = Path.Combine(_outputDir, "v2.0", "search-index.json");
         result.OutputPath.ShouldBe(expectedPath);

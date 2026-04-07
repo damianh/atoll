@@ -107,7 +107,7 @@ internal sealed class DevAtollRequestHandler
 
         // Serve the built-in Atoll hydration scripts (island bootstrap + directives).
         // These are embedded resources in the Atoll assembly, served at /_atoll/*.js.
-        if (TryServeAtollScript(context, path))
+        if (await TryServeAtollScriptAsync(context, path))
         {
             return true;
         }
@@ -188,7 +188,7 @@ internal sealed class DevAtollRequestHandler
     /// Serves the built-in Atoll hydration scripts (<c>island.js</c> and <c>directives.js</c>)
     /// from embedded resources when the request path starts with <c>/_atoll/</c>.
     /// </summary>
-    private static bool TryServeAtollScript(HttpContext context, string path)
+    private static async Task<bool> TryServeAtollScriptAsync(HttpContext context, string path)
     {
         if (path == "/_atoll/logo.png")
         {
@@ -198,7 +198,7 @@ internal sealed class DevAtollRequestHandler
                 context.Response.StatusCode = 200;
                 context.Response.ContentType = "image/png";
                 context.Response.Headers["Cache-Control"] = "no-cache";
-                context.Response.Body.WriteAsync(png).GetAwaiter().GetResult();
+                await context.Response.Body.WriteAsync(png, context.RequestAborted);
                 return true;
             }
 
@@ -220,7 +220,7 @@ internal sealed class DevAtollRequestHandler
         context.Response.StatusCode = 200;
         context.Response.ContentType = "application/javascript; charset=utf-8";
         context.Response.Headers["Cache-Control"] = "no-cache";
-        context.Response.WriteAsync(scriptContent).GetAwaiter().GetResult();
+        await context.Response.WriteAsync(scriptContent, context.RequestAborted);
         return true;
     }
 
@@ -279,7 +279,7 @@ internal sealed class DevAtollRequestHandler
         var endpointRequest = BuildEndpointRequest(httpContext);
         var endpointContext = new EndpointContext(match.Parameters, endpointRequest);
         var response = await EndpointDispatcher.DispatchAsync(endpoint, endpointContext);
-        await WriteAtollResponseAsync(httpContext.Response, response);
+        await WriteAtollResponseAsync(httpContext.Response, response, httpContext.RequestAborted);
     }
 
     private async Task HandlePageAsync(
@@ -326,7 +326,7 @@ internal sealed class DevAtollRequestHandler
 
         httpContext.Response.StatusCode = result.StatusCode;
         httpContext.Response.ContentType = "text/html; charset=utf-8";
-        await result.WriteToStreamAsync(httpContext.Response.Body);
+        await result.WriteToStreamAsync(httpContext.Response.Body, httpContext.RequestAborted);
     }
 
     private static IReadOnlyDictionary<string, object?> BuildPageProps(
@@ -367,7 +367,10 @@ internal sealed class DevAtollRequestHandler
             request.Body);
     }
 
-    private static async Task WriteAtollResponseAsync(HttpResponse httpResponse, AtollResponse atollResponse)
+    private static async Task WriteAtollResponseAsync(
+        HttpResponse httpResponse,
+        AtollResponse atollResponse,
+        CancellationToken cancellationToken)
     {
         httpResponse.StatusCode = atollResponse.StatusCode;
 
@@ -378,7 +381,7 @@ internal sealed class DevAtollRequestHandler
 
         if (atollResponse.Body is not null)
         {
-            await httpResponse.Body.WriteAsync(atollResponse.Body);
+            await httpResponse.Body.WriteAsync(atollResponse.Body, cancellationToken);
         }
     }
 

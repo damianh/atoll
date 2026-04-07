@@ -14,6 +14,7 @@ namespace Atoll.Build.Tests;
 /// </summary>
 public sealed class EndToEndBuildPipelineTests : IDisposable
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
     private readonly string _outputDir;
     private readonly string _publicDir;
 
@@ -49,7 +50,7 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
         };
 
         // Act: SSG render
-        var ssgResult = await generator.GenerateAsync(routes);
+        var ssgResult = await generator.GenerateAsync(routes, _ct);
 
         // Assert: successful render
         ssgResult.IsSuccess.ShouldBeTrue();
@@ -77,7 +78,7 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
         };
 
         // Act: SSG render
-        var ssgResult = await generator.GenerateAsync(routes);
+        var ssgResult = await generator.GenerateAsync(routes, _ct);
 
         // Assert: 4 pages (2 static + 2 dynamic from GetStaticPaths)
         ssgResult.IsSuccess.ShouldBeTrue();
@@ -105,7 +106,7 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
             new RouteEntry("/", typeof(StyledHomePage), "index.cs"),
         };
 
-        var ssgResult = await generator.GenerateAsync(routes);
+        var ssgResult = await generator.GenerateAsync(routes, _ct);
         ssgResult.IsSuccess.ShouldBeTrue();
 
         // Act: run asset pipeline
@@ -119,7 +120,7 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
 
         var componentTypes = new[] { typeof(StyledHomePage) };
         var jsSources = new[] { "console.log('hello');" };
-        var assetResult = await pipeline.RunAsync(componentTypes, jsSources);
+        var assetResult = await pipeline.RunAsync(componentTypes, jsSources, _ct);
 
         // Assert: CSS was processed
         assetResult.Css.HasContent.ShouldBeTrue();
@@ -157,14 +158,14 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
             new RouteEntry("/", typeof(StyledHomePage), "index.cs"),
         };
 
-        var ssgResult = await generator.GenerateAsync(routes);
+        var ssgResult = await generator.GenerateAsync(routes, _ct);
         ssgResult.IsSuccess.ShouldBeTrue();
 
         // Run asset pipeline to get fingerprinted paths
         var pipelineOptions = new AssetPipelineOptions(_outputDir) { Minify = true, Fingerprint = true };
         var outputWriter = new OutputWriter(_outputDir);
         var pipeline = new AssetPipeline(pipelineOptions, outputWriter);
-        var assetResult = await pipeline.RunAsync(new[] { typeof(StyledHomePage) }, new[] { "console.log('app');" });
+        var assetResult = await pipeline.RunAsync(new[] { typeof(StyledHomePage) }, new[] { "console.log('app');" }, _ct);
 
         // Act: post-process HTML
         var postProcessorOptions = new HtmlPostProcessorOptions
@@ -206,7 +207,7 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
             new RouteEntry("/about", typeof(AboutPage), "about.cs"),
         };
 
-        var ssgResult = await generator.GenerateAsync(routes);
+        var ssgResult = await generator.GenerateAsync(routes, _ct);
 
         // Run asset pipeline
         var pipelineOptions = new AssetPipelineOptions(_outputDir) { Minify = true, Fingerprint = true };
@@ -214,12 +215,13 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
         var pipeline = new AssetPipeline(pipelineOptions, outputWriter);
         var assetResult = await pipeline.RunAsync(
             new[] { typeof(StyledHomePage) },
-            new[] { "console.log('init');" });
+            new[] { "console.log('init');" },
+            _ct);
 
         // Act: write manifest
         var manifestWriter = new BuildManifestWriter(_outputDir);
         var manifest = BuildManifestWriter.BuildFrom(ssgResult, assetResult, ssgOptions);
-        var manifestPath = await manifestWriter.WriteAsync(manifest);
+        var manifestPath = await manifestWriter.WriteAsync(manifest, _ct);
 
         // Assert: manifest file exists
         File.Exists(manifestPath).ShouldBeTrue();
@@ -254,7 +256,7 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
         {
             new RouteEntry("/", typeof(HomePage), "index.cs"),
         };
-        var ssgResult = await generator.GenerateAsync(routes);
+        var ssgResult = await generator.GenerateAsync(routes, _ct);
         ssgResult.IsSuccess.ShouldBeTrue();
 
         // Act: run asset pipeline with static asset copying
@@ -266,7 +268,7 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
         };
         var outputWriter = new OutputWriter(_outputDir);
         var pipeline = new AssetPipeline(pipelineOptions, outputWriter);
-        var assetResult = await pipeline.RunAsync(Array.Empty<Type>(), Array.Empty<string>());
+        var assetResult = await pipeline.RunAsync(Array.Empty<Type>(), Array.Empty<string>(), _ct);
 
         // Assert: static assets were copied
         assetResult.StaticAssets.ShouldNotBeNull();
@@ -302,7 +304,7 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
             new RouteEntry("/blog/[slug]", typeof(BlogPage), "blog/[slug].cs"),
         };
 
-        var ssgResult = await generator.GenerateAsync(routes);
+        var ssgResult = await generator.GenerateAsync(routes, _ct);
         ssgResult.IsSuccess.ShouldBeTrue();
         ssgResult.TotalCount.ShouldBe(4); // 2 static + 2 dynamic from blog
 
@@ -317,7 +319,8 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
         var pipeline = new AssetPipeline(pipelineOptions, outputWriter);
         var assetResult = await pipeline.RunAsync(
             new[] { typeof(StyledHomePage) },
-            new[] { "document.addEventListener('DOMContentLoaded', function() { console.log('ready'); });" });
+            new[] { "document.addEventListener('DOMContentLoaded', function() { console.log('ready'); });" },
+            _ct);
 
         // Step 4: Post-process all HTML files
         var cssHref = assetResult.Css.HasContent ? "/" + assetResult.Css.OutputPath.Replace('\\', '/') : "";
@@ -346,7 +349,7 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
         // Step 5: Write build manifest
         var manifestWriter = new BuildManifestWriter(_outputDir);
         var manifest = BuildManifestWriter.BuildFrom(ssgResult, assetResult, ssgOptions);
-        await manifestWriter.WriteAsync(manifest);
+        await manifestWriter.WriteAsync(manifest, _ct);
 
         // ── Verify the complete output ──
 
@@ -400,7 +403,7 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
             new RouteEntry("/", typeof(PageWithLinks), "index.cs"),
         };
 
-        var ssgResult = await generator.GenerateAsync(routes);
+        var ssgResult = await generator.GenerateAsync(routes, _ct);
         ssgResult.IsSuccess.ShouldBeTrue();
 
         // Run asset pipeline with base path
@@ -412,7 +415,7 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
         };
         var outputWriter = new OutputWriter(_outputDir);
         var pipeline = new AssetPipeline(pipelineOptions, outputWriter);
-        var assetResult = await pipeline.RunAsync(Array.Empty<Type>(), new[] { "var x = 1;" });
+        var assetResult = await pipeline.RunAsync(Array.Empty<Type>(), new[] { "var x = 1;" }, _ct);
 
         // Post-process with base path
         var jsHref = assetResult.Js.HasContent ? "/" + assetResult.Js.OutputPath.Replace('\\', '/') : "";
@@ -444,7 +447,7 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
             new RouteEntry("/error", typeof(ErrorPage), "error.cs"),
         };
 
-        var ssgResult = await generator.GenerateAsync(routes);
+        var ssgResult = await generator.GenerateAsync(routes, _ct);
 
         ssgResult.IsSuccess.ShouldBeFalse();
         ssgResult.SuccessCount.ShouldBe(1);
@@ -456,7 +459,7 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
         // Write manifest — should record both success and failure
         var manifestWriter = new BuildManifestWriter(_outputDir);
         var manifest = BuildManifestWriter.BuildFrom(ssgResult, null, ssgOptions);
-        var manifestPath = await manifestWriter.WriteAsync(manifest);
+        var manifestPath = await manifestWriter.WriteAsync(manifest, _ct);
 
         var json = await File.ReadAllTextAsync(manifestPath);
         var deserialized = JsonSerializer.Deserialize<BuildManifest>(json);
@@ -480,7 +483,8 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
         var pipeline1 = new AssetPipeline(pipelineOptions, outputWriter);
         var result1 = await pipeline1.RunAsync(
             new[] { typeof(StyledHomePage) },
-            new[] { "console.log('test');" });
+            new[] { "console.log('test');" },
+            _ct);
 
         // Clean and run again
         if (Directory.Exists(_outputDir))
@@ -491,7 +495,8 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
         var pipeline2 = new AssetPipeline(pipelineOptions, outputWriter);
         var result2 = await pipeline2.RunAsync(
             new[] { typeof(StyledHomePage) },
-            new[] { "console.log('test');" });
+            new[] { "console.log('test');" },
+            _ct);
 
         // Fingerprints should be identical
         result1.Css.Hash.ShouldBe(result2.Css.Hash);
@@ -516,7 +521,7 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
             new RouteEntry("/", typeof(HomePage), "index.cs"),
         };
 
-        var ssgResult = await generator.GenerateAsync(routes);
+        var ssgResult = await generator.GenerateAsync(routes, _ct);
         ssgResult.IsSuccess.ShouldBeTrue();
 
         // Stale files should be gone
@@ -537,7 +542,7 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
             new RouteEntry("/", typeof(LayoutPage), "index.cs"),
         };
 
-        var ssgResult = await generator.GenerateAsync(routes);
+        var ssgResult = await generator.GenerateAsync(routes, _ct);
         ssgResult.IsSuccess.ShouldBeTrue();
 
         var html = ssgResult.PageResults[0].Html;
@@ -562,7 +567,7 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
             new RouteEntry("/blog/[slug]", typeof(BlogPage), "blog/[slug].cs"),
         };
 
-        var ssgResult = await generator.GenerateAsync(routes);
+        var ssgResult = await generator.GenerateAsync(routes, _ct);
         ssgResult.IsSuccess.ShouldBeTrue();
 
         var manifest = BuildManifestWriter.BuildFrom(ssgResult, null, ssgOptions);
@@ -587,7 +592,7 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
         var ssgOptions = new SsgOptions(_outputDir);
         var generator = new StaticSiteGenerator(ssgOptions);
 
-        var ssgResult = await generator.GenerateAsync([]);
+        var ssgResult = await generator.GenerateAsync([], _ct);
         ssgResult.IsSuccess.ShouldBeTrue();
         ssgResult.TotalCount.ShouldBe(0);
 
@@ -595,7 +600,7 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
         var pipelineOptions = new AssetPipelineOptions(_outputDir);
         var outputWriter = new OutputWriter(_outputDir);
         var pipeline = new AssetPipeline(pipelineOptions, outputWriter);
-        var assetResult = await pipeline.RunAsync(Array.Empty<Type>(), Array.Empty<string>());
+        var assetResult = await pipeline.RunAsync(Array.Empty<Type>(), Array.Empty<string>(), _ct);
 
         assetResult.Css.HasContent.ShouldBeFalse();
         assetResult.Js.HasContent.ShouldBeFalse();
@@ -618,14 +623,15 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
             new RouteEntry("/blog/[slug]", typeof(BlogPage), "blog/[slug].cs"),
         };
 
-        var ssgResult = await generator.GenerateAsync(routes);
+        var ssgResult = await generator.GenerateAsync(routes, _ct);
 
         var pipelineOptions = new AssetPipelineOptions(_outputDir) { Minify = true, Fingerprint = true };
         var outputWriter = new OutputWriter(_outputDir);
         var pipeline = new AssetPipeline(pipelineOptions, outputWriter);
         var assetResult = await pipeline.RunAsync(
             new[] { typeof(StyledHomePage) },
-            new[] { "console.log('x');" });
+            new[] { "console.log('x');" },
+            _ct);
 
         var manifest = BuildManifestWriter.BuildFrom(ssgResult, assetResult, ssgOptions);
         var json = BuildManifestWriter.Serialize(manifest);
@@ -657,7 +663,8 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
 
         var assetResult = await pipeline.RunAsync(
             new[] { typeof(StyledHomePage) },
-            Array.Empty<string>());
+            Array.Empty<string>(),
+            _ct);
 
         assetResult.Css.HasContent.ShouldBeTrue();
         // Minified CSS should not have excessive whitespace
@@ -680,7 +687,7 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
             new RouteEntry("/api/data", typeof(ApiEndpoint), "api/data.cs"),
         };
 
-        var ssgResult = await generator.GenerateAsync(routes);
+        var ssgResult = await generator.GenerateAsync(routes, _ct);
 
         // Only the page should be rendered; the endpoint is skipped
         ssgResult.TotalCount.ShouldBe(1);
@@ -699,13 +706,13 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
             new RouteEntry("/blog/[slug]", typeof(BlogPage), "blog/[slug].cs"),
         };
 
-        var ssgResult = await generator.GenerateAsync(routes);
+        var ssgResult = await generator.GenerateAsync(routes, _ct);
 
         // Run pipeline to also create _atoll/ subdirectory
         var pipelineOptions = new AssetPipelineOptions(_outputDir) { Minify = true, Fingerprint = true };
         var outputWriter = new OutputWriter(_outputDir);
         var pipeline = new AssetPipeline(pipelineOptions, outputWriter);
-        await pipeline.RunAsync(new[] { typeof(StyledHomePage) }, new[] { "var a=1;" });
+        await pipeline.RunAsync(new[] { typeof(StyledHomePage) }, new[] { "var a=1;" }, _ct);
 
         // Verify directory structure
         Directory.Exists(_outputDir).ShouldBeTrue();
@@ -727,7 +734,7 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
             new RouteEntry("/about", typeof(AboutPage), "about.cs"),
         };
 
-        var ssgResult = await generator.GenerateAsync(routes);
+        var ssgResult = await generator.GenerateAsync(routes, _ct);
 
         // SSG timing
         ssgResult.TotalElapsed.ShouldBeGreaterThan(TimeSpan.Zero);
@@ -740,7 +747,7 @@ public sealed class EndToEndBuildPipelineTests : IDisposable
         var pipelineOptions = new AssetPipelineOptions(_outputDir);
         var outputWriter = new OutputWriter(_outputDir);
         var pipeline = new AssetPipeline(pipelineOptions, outputWriter);
-        var assetResult = await pipeline.RunAsync(Array.Empty<Type>(), Array.Empty<string>());
+        var assetResult = await pipeline.RunAsync(Array.Empty<Type>(), Array.Empty<string>(), _ct);
         assetResult.Elapsed.ShouldBeGreaterThan(TimeSpan.Zero);
 
         // Manifest stats capture timing

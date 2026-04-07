@@ -32,13 +32,14 @@ public static class AtollConfigLoader
     /// Returns a default configuration if the file does not exist.
     /// </summary>
     /// <param name="directory">The directory to search for <c>atoll.json</c>.</param>
+    /// <param name="cancellationToken">A token to cancel the load operation.</param>
     /// <returns>The loaded or default configuration.</returns>
-    public static async Task<AtollConfig> LoadAsync(string directory)
+    public static async Task<AtollConfig> LoadAsync(string directory, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(directory);
 
         var filePath = Path.Combine(directory, DefaultFileName);
-        return await LoadFromFileAsync(filePath);
+        return await LoadFromFileAsync(filePath, cancellationToken);
     }
 
     /// <summary>
@@ -46,8 +47,9 @@ public static class AtollConfigLoader
     /// Returns a default configuration if the file does not exist.
     /// </summary>
     /// <param name="filePath">The full path to the <c>atoll.json</c> file.</param>
+    /// <param name="cancellationToken">A token to cancel the load operation.</param>
     /// <returns>The loaded or default configuration.</returns>
-    public static async Task<AtollConfig> LoadFromFileAsync(string filePath)
+    public static async Task<AtollConfig> LoadFromFileAsync(string filePath, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(filePath);
 
@@ -56,7 +58,7 @@ public static class AtollConfigLoader
             return new AtollConfig();
         }
 
-        var json = await File.ReadAllTextAsync(filePath);
+        var json = await File.ReadAllTextAsync(filePath, cancellationToken);
         return Deserialize(json);
     }
 

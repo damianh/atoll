@@ -11,7 +11,7 @@ namespace Atoll.Rendering;
 /// <see cref="PageRenderResult"/> is produced by <see cref="PageRenderer"/> after
 /// the page component has been rendered, head content has been collected and injected,
 /// and the DOCTYPE has been ensured. The final HTML output can be retrieved as a
-/// string via <see cref="Html"/> or written to a stream via <see cref="WriteToStreamAsync(Stream)"/>.
+/// string via <see cref="Html"/> or written to a stream via <see cref="WriteToStreamAsync(Stream, CancellationToken)"/>.
 /// </para>
 /// </remarks>
 public sealed class PageRenderResult
@@ -54,10 +54,11 @@ public sealed class PageRenderResult
     /// Writes the rendered HTML to the specified stream using UTF-8 encoding.
     /// </summary>
     /// <param name="stream">The stream to write to.</param>
+    /// <param name="cancellationToken">A token to cancel the write operation.</param>
     /// <returns>A <see cref="Task"/> representing the write operation.</returns>
-    public Task WriteToStreamAsync(Stream stream)
+    public Task WriteToStreamAsync(Stream stream, CancellationToken cancellationToken)
     {
-        return WriteToStreamAsync(stream, Encoding.UTF8);
+        return WriteToStreamAsync(stream, Encoding.UTF8, cancellationToken);
     }
 
     /// <summary>
@@ -65,13 +66,14 @@ public sealed class PageRenderResult
     /// </summary>
     /// <param name="stream">The stream to write to.</param>
     /// <param name="encoding">The character encoding to use.</param>
+    /// <param name="cancellationToken">A token to cancel the write operation.</param>
     /// <returns>A <see cref="Task"/> representing the write operation.</returns>
-    public async Task WriteToStreamAsync(Stream stream, Encoding encoding)
+    public async Task WriteToStreamAsync(Stream stream, Encoding encoding, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(stream);
         ArgumentNullException.ThrowIfNull(encoding);
 
         var bytes = encoding.GetBytes(Html);
-        await stream.WriteAsync(bytes).ConfigureAwait(false);
+        await stream.WriteAsync(bytes, cancellationToken).ConfigureAwait(false);
     }
 }

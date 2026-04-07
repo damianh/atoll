@@ -38,10 +38,12 @@ public sealed class LagoonRedirectGenerator
     /// </summary>
     /// <param name="query">The content collection query for accessing content entries.</param>
     /// <param name="configuration">The user-provided redirect configuration.</param>
+    /// <param name="cancellationToken">A token to cancel the generation operation.</param>
     /// <returns>A <see cref="RedirectGenerationResult"/> describing the generation outcome.</returns>
     public async Task<RedirectGenerationResult> GenerateAsync(
         CollectionQuery query,
-        IRedirectConfiguration configuration)
+        IRedirectConfiguration configuration,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
         ArgumentNullException.ThrowIfNull(configuration);
@@ -59,13 +61,13 @@ public sealed class LagoonRedirectGenerator
             rules.Add(rule);
         }
 
-        await WriteRedirectsFileAsync(rules);
+        await WriteRedirectsFileAsync(rules, cancellationToken);
 
         stopwatch.Stop();
         return new RedirectGenerationResult(rules.Count, stopwatch.Elapsed);
     }
 
-    private async Task WriteRedirectsFileAsync(IReadOnlyList<RedirectRule> rules)
+    private async Task WriteRedirectsFileAsync(IReadOnlyList<RedirectRule> rules, CancellationToken cancellationToken)
     {
         var sb = new StringBuilder();
         foreach (var rule in rules)
@@ -74,6 +76,6 @@ public sealed class LagoonRedirectGenerator
         }
 
         var outputPath = Path.Combine(_outputDirectory, "_redirects");
-        await File.WriteAllTextAsync(outputPath, sb.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+        await File.WriteAllTextAsync(outputPath, sb.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), cancellationToken);
     }
 }

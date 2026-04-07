@@ -5,6 +5,7 @@ namespace Atoll.Tests.Build.Ssg;
 
 public sealed class HeadersFileGeneratorTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
     // ── Default rules ──
 
     [Fact]
@@ -187,7 +188,7 @@ public sealed class HeadersFileGeneratorTests
             Directory.CreateDirectory(tempDir);
             var generator = new HeadersFileGenerator();
 
-            await generator.WriteAsync(tempDir);
+            await generator.WriteAsync(tempDir, _ct);
 
             var headersPath = Path.Combine(tempDir, "_headers");
             File.Exists(headersPath).ShouldBeTrue();
@@ -223,7 +224,7 @@ public sealed class HeadersFileGeneratorTests
             };
             var generator = new HeadersFileGenerator(config);
 
-            await generator.WriteAsync(tempDir);
+            await generator.WriteAsync(tempDir, _ct);
 
             var bytes = await File.ReadAllBytesAsync(Path.Combine(tempDir, "_headers"));
             // UTF-8 BOM is NOT expected (File.WriteAllTextAsync without BOM)
@@ -266,6 +267,6 @@ public sealed class HeadersFileGeneratorTests
     public void ShouldThrowWhenOutputDirectoryIsNull()
     {
         var generator = new HeadersFileGenerator();
-        Should.Throw<ArgumentNullException>(() => generator.WriteAsync(null!));
+        Should.Throw<ArgumentNullException>(() => generator.WriteAsync(null!, _ct));
     }
 }

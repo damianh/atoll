@@ -53,11 +53,14 @@ public sealed class IslandAssetWriter
     /// Parent directories are created automatically.
     /// </summary>
     /// <param name="assets">The asset descriptors to write.</param>
+    /// <param name="cancellationToken">A token to cancel the write operation.</param>
     /// <returns>An <see cref="IslandAssetWriteResult"/> with the count and paths of written files.</returns>
     /// <exception cref="InvalidOperationException">
     /// Thrown when an embedded resource specified by a descriptor cannot be found.
     /// </exception>
-    public async Task<IslandAssetWriteResult> WriteAsync(IEnumerable<IslandAssetDescriptor> assets)
+    public async Task<IslandAssetWriteResult> WriteAsync(
+        IEnumerable<IslandAssetDescriptor> assets,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(assets);
 
@@ -65,6 +68,8 @@ public sealed class IslandAssetWriter
 
         foreach (var descriptor in assets)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var stream = descriptor.ResourceAssembly.GetManifestResourceStream(descriptor.ResourceName);
             if (stream is null)
             {
@@ -91,7 +96,7 @@ public sealed class IslandAssetWriter
                     bufferSize: 4096,
                     useAsync: true);
 
-                await stream.CopyToAsync(fileStream);
+                await stream.CopyToAsync(fileStream, cancellationToken);
                 writtenPaths.Add(fullOutputPath);
             }
         }

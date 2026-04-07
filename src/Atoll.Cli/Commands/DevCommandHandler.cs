@@ -3,6 +3,7 @@ using Atoll.Middleware.Server.DevServer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Atoll.Cli.Commands;
@@ -20,9 +21,10 @@ public sealed class DevCommandHandler
     /// </summary>
     /// <param name="projectRoot">The project root directory.</param>
     /// <param name="port">The port override (0 = use config default).</param>
-    public async Task ExecuteAsync(string projectRoot, int port)
+    /// <param name="cancellationToken">A token to cancel the dev server operation.</param>
+    public async Task ExecuteAsync(string projectRoot, int port, CancellationToken cancellationToken)
     {
-        var config = await AtollConfigLoader.LoadAsync(projectRoot);
+        var config = await AtollConfigLoader.LoadAsync(projectRoot, cancellationToken);
         var effectivePort = port > 0 ? port : config.Server.Port;
 
         var csprojPath = FindProjectFile(projectRoot);
@@ -129,7 +131,7 @@ public sealed class DevCommandHandler
 
             watcher.Start();
 
-            await app.RunAsync();
+            await ((IHost)app).RunAsync(cancellationToken);
         }
         else
         {
@@ -152,7 +154,7 @@ public sealed class DevCommandHandler
             Console.WriteLine("  Warning: No .csproj found — starting with no routes.");
             Console.WriteLine("  Press Ctrl+C to stop.");
 
-            await app.RunAsync();
+            await ((IHost)app).RunAsync(cancellationToken);
         }
     }
 

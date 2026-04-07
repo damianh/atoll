@@ -25,7 +25,8 @@ public sealed class BuildCommandHandler
     /// Executes the build command.
     /// </summary>
     /// <param name="projectRoot">The project root directory.</param>
-    public async Task ExecuteAsync(string projectRoot)
+    /// <param name="cancellationToken">A token to cancel the build operation.</param>
+    public async Task ExecuteAsync(string projectRoot, CancellationToken cancellationToken)
     {
         var startTime = DateTime.UtcNow;
         Console.WriteLine("Atoll — building site...");
@@ -34,7 +35,7 @@ public sealed class BuildCommandHandler
         var bar = new ConsoleProgressBar(
             ["Config", "Compile", "Content", "SSG", "CSS", "Assets", "Islands", "Core", "HTML", "Manifest", "Extras"]);
         bar.Advance();
-        var config = await AtollConfigLoader.LoadAsync(projectRoot);
+        var config = await AtollConfigLoader.LoadAsync(projectRoot, cancellationToken);
         var outputDir = AtollConfigLoader.ResolveOutputDirectory(config, projectRoot);
         var publicDir = AtollConfigLoader.ResolvePublicDirectory(config, projectRoot);
         var srcDir = AtollConfigLoader.ResolveSrcDirectory(config, projectRoot);
@@ -61,7 +62,7 @@ public sealed class BuildCommandHandler
         // Phase 4: SSG — generate static site
         bar.Advance();
         var generator = new StaticSiteGenerator(ssgOptions, serviceProps);
-        var ssgResult = await generator.GenerateAsync(routes);
+        var ssgResult = await generator.GenerateAsync(routes, cancellationToken);
 
         // Asset pipeline setup
         var pipelineOptions = new AssetPipelineOptions(outputDir)
@@ -83,18 +84,18 @@ public sealed class BuildCommandHandler
 
         // Phase 6: Assets — run asset pipeline
         bar.Advance();
-        var assetResult = await pipeline.RunAsync(globalStyleTypes, Array.Empty<string>());
+        var assetResult = await pipeline.RunAsync(globalStyleTypes, Array.Empty<string>(), cancellationToken);
 
         // Phase 7: Islands — write island JS assets from library providers
         bar.Advance();
         if (assembly is not null)
         {
-            await WriteIslandAssetsAsync(assembly, outputDir);
+            await WriteIslandAssetsAsync(assembly, outputDir, cancellationToken);
         }
 
         // Phase 8: Core — write core framework assets
         bar.Advance();
-        await WriteCoreFrameworkAssetsAsync(assembly, outputDir);
+        await WriteCoreFrameworkAssetsAsync(assembly, outputDir, cancellationToken);
 
         // Phase 9: HTML — post-process HTML (inject CSS/JS refs)
         bar.Advance();
@@ -124,7 +125,7 @@ public sealed class BuildCommandHandler
                 }
 
                 var processedHtml = postProcessor.Process(pageResult.Html);
-                await File.WriteAllTextAsync(pageResult.OutputPath, processedHtml);
+                await File.WriteAllTextAsync(pageResult.OutputPath, processedHtml, cancellationToken);
             }
         }
 
@@ -132,16 +133,16 @@ public sealed class BuildCommandHandler
         bar.Advance();
         var manifestWriter = new BuildManifestWriter(outputDir);
         var manifest = BuildManifestWriter.BuildFrom(ssgResult, assetResult, ssgOptions);
-        await manifestWriter.WriteAsync(manifest);
+        await manifestWriter.WriteAsync(manifest, cancellationToken);
 
         var redirectMap = BuildRedirectMapFromAssembly(assembly);
         var redirectsWriter = new RedirectsFileWriter(outputDir);
-        await redirectsWriter.WriteAsync(redirectMap);
+        await redirectsWriter.WriteAsync(redirectMap, cancellationToken);
 
         if (config.Build.Cache.GenerateHeadersFile)
         {
             var headersGenerator = new HeadersFileGenerator(config.Build.Cache);
-            await headersGenerator.WriteAsync(outputDir);
+            await headersGenerator.WriteAsync(outputDir, cancellationToken);
         }
 
         // Phase 11: Extras — optional Lagoon integrations (search, links, redirects, OG, LLMs)
@@ -150,11 +151,11 @@ public sealed class BuildCommandHandler
 
         if (assembly is not null && serviceProps.TryGetValue("Query", out var queryObj) && queryObj is CollectionQuery collectionQuery)
         {
-            await GenerateSearchIndexAsync(assembly, collectionQuery, outputDir);
+            await GenerateSearchIndexAsync(assembly, collectionQuery, outputDir, cancellationToken);
             await ValidateLinksAsync(assembly, collectionQuery);
-            await GenerateRedirectsAsync(assembly, collectionQuery, outputDir);
-            await GenerateOgImagesAsync(assembly, collectionQuery, outputDir, projectRoot);
-            await GenerateLlmsTxtAsync(assembly, collectionQuery, outputDir);
+            await GenerateRedirectsAsync(assembly, collectionQuery, outputDir, cancellationToken);
+            await GenerateOgImagesAsync(assembly, collectionQuery, outputDir, projectRoot, cancellationToken);
+            await GenerateLlmsTxtAsync(assembly, collectionQuery, outputDir, cancellationToken);
         }
 
         // Report results
@@ -351,7 +352,7 @@ public sealed class BuildCommandHandler
     /// Discovers <see cref="IIslandAssetProvider"/> implementations from the assembly and its
     /// referenced assemblies, then writes all declared island JS assets to the output directory.
     /// </summary>
-    private static async Task WriteIslandAssetsAsync(Assembly assembly, string outputDirectory)
+    private static async Task WriteIslandAssetsAsync(Assembly assembly, string outputDirectory, CancellationToken cancellationToken)
     {
         var assembliesToScan = new List<Assembly> { assembly };
         var assemblyDir = Path.GetDirectoryName(assembly.Location);
@@ -422,7 +423,7 @@ public sealed class BuildCommandHandler
         }
 
         var writer = new IslandAssetWriter(outputDirectory);
-        await writer.WriteAsync(allAssets);
+        await writer.WriteAsync(allAssets, cancellationToken);
     }
 
     /// <summary>
@@ -580,7 +581,7 @@ public sealed class BuildCommandHandler
     /// is referenced) <c>_atoll/logo.png</c>. These are embedded resources served
     /// dynamically by the dev server but must be written to disk for SSG output.
     /// </summary>
-    private static async Task WriteCoreFrameworkAssetsAsync(Assembly? userAssembly, string outputDirectory)
+    private static async Task WriteCoreFrameworkAssetsAsync(Assembly? userAssembly, string outputDirectory, CancellationToken cancellationToken)
     {
         var atollDir = Path.Combine(outputDirectory, "_atoll");
         Directory.CreateDirectory(atollDir);
@@ -589,19 +590,19 @@ public sealed class BuildCommandHandler
 
         // island.js
         var islandJs = IslandScriptProvider.GetIslandScript();
-        await File.WriteAllTextAsync(Path.Combine(atollDir, "island.js"), islandJs);
+        await File.WriteAllTextAsync(Path.Combine(atollDir, "island.js"), islandJs, cancellationToken);
         count++;
 
         // directives.js
         var directivesJs = IslandScriptProvider.GetDirectivesScript();
-        await File.WriteAllTextAsync(Path.Combine(atollDir, "directives.js"), directivesJs);
+        await File.WriteAllTextAsync(Path.Combine(atollDir, "directives.js"), directivesJs, cancellationToken);
         count++;
 
         // logo.png — loaded via reflection to avoid a hard dependency on Atoll.Lagoon
         var logoPng = GetLagoonLogoPng(userAssembly);
         if (logoPng is not null)
         {
-            await File.WriteAllBytesAsync(Path.Combine(atollDir, "logo.png"), logoPng);
+            await File.WriteAllBytesAsync(Path.Combine(atollDir, "logo.png"), logoPng, cancellationToken);
             count++;
         }
 
@@ -664,7 +665,8 @@ public sealed class BuildCommandHandler
         Assembly assembly,
         CollectionQuery collectionQuery,
         string outputDirectory,
-        string projectRoot)
+        string projectRoot,
+        CancellationToken cancellationToken)
     {
         const string interfaceName = "Atoll.Lagoon.OpenGraph.IOgImageConfiguration";
         const string generatorTypeName = "Atoll.Lagoon.OpenGraph.OgImageGenerator";
@@ -736,7 +738,7 @@ public sealed class BuildCommandHandler
         // Create generator instance: new OgImageGenerator(outputDirectory, projectRoot)
         var generator = Activator.CreateInstance(generatorType, outputDirectory, projectRoot)!;
 
-        // Find GenerateAsync(CollectionQuery, IOgImageConfiguration) — the 2-parameter overload
+        // Find GenerateAsync(CollectionQuery, IOgImageConfiguration, CancellationToken) — the 3-parameter overload
         MethodInfo? generateMethod = null;
         foreach (var method in generatorType.GetMethods())
         {
@@ -746,8 +748,9 @@ public sealed class BuildCommandHandler
             }
 
             var parameters = method.GetParameters();
-            if (parameters.Length == 2
-                && parameters[0].ParameterType == typeof(CollectionQuery))
+            if (parameters.Length == 3
+                && parameters[0].ParameterType == typeof(CollectionQuery)
+                && parameters[2].ParameterType == typeof(CancellationToken))
             {
                 generateMethod = method;
                 break;
@@ -760,7 +763,7 @@ public sealed class BuildCommandHandler
             return;
         }
 
-        var task = (Task)generateMethod.Invoke(generator, [collectionQuery, configInstance])!;
+        var task = (Task)generateMethod.Invoke(generator, [collectionQuery, configInstance, cancellationToken])!;
         await task;
 
         // Get result stats via dynamic to avoid reflection on Task<T>.Result
@@ -786,7 +789,8 @@ public sealed class BuildCommandHandler
     private static async Task GenerateSearchIndexAsync(
         Assembly assembly,
         CollectionQuery collectionQuery,
-        string outputDirectory)
+        string outputDirectory,
+        CancellationToken cancellationToken)
     {
         const string interfaceName = "Atoll.Lagoon.Search.ISearchIndexConfiguration";
         const string generatorTypeName = "Atoll.Lagoon.Search.LagoonSearchIndexGenerator";
@@ -858,7 +862,7 @@ public sealed class BuildCommandHandler
         // Create generator instance: new LagoonSearchIndexGenerator(outputDirectory)
         var generator = Activator.CreateInstance(generatorType, outputDirectory)!;
 
-        // Find GenerateAsync(CollectionQuery, ISearchIndexConfiguration) by scanning methods
+        // Find GenerateAsync(CollectionQuery, ISearchIndexConfiguration, CancellationToken) by scanning methods
         MethodInfo? generateMethod = null;
         foreach (var method in generatorType.GetMethods())
         {
@@ -868,8 +872,9 @@ public sealed class BuildCommandHandler
             }
 
             var parameters = method.GetParameters();
-            if (parameters.Length == 2
-                && parameters[0].ParameterType == typeof(CollectionQuery))
+            if (parameters.Length == 3
+                && parameters[0].ParameterType == typeof(CollectionQuery)
+                && parameters[2].ParameterType == typeof(CancellationToken))
             {
                 generateMethod = method;
                 break;
@@ -882,7 +887,7 @@ public sealed class BuildCommandHandler
             return;
         }
 
-        var task = (Task)generateMethod.Invoke(generator, [collectionQuery, configInstance])!;
+        var task = (Task)generateMethod.Invoke(generator, [collectionQuery, configInstance, cancellationToken])!;
         await task;
 
         // Get result stats via dynamic to avoid reflection on Task<T>.Result
@@ -908,7 +913,8 @@ public sealed class BuildCommandHandler
     private static async Task GenerateRedirectsAsync(
         Assembly assembly,
         CollectionQuery collectionQuery,
-        string outputDirectory)
+        string outputDirectory,
+        CancellationToken cancellationToken)
     {
         const string interfaceName = "Atoll.Lagoon.Redirects.IRedirectConfiguration";
         const string generatorTypeName = "Atoll.Lagoon.Redirects.LagoonRedirectGenerator";
@@ -980,7 +986,7 @@ public sealed class BuildCommandHandler
         // Create generator instance: new LagoonRedirectGenerator(outputDirectory)
         var generator = Activator.CreateInstance(generatorType, outputDirectory)!;
 
-        // Find GenerateAsync(CollectionQuery, IRedirectConfiguration) by scanning methods
+        // Find GenerateAsync(CollectionQuery, IRedirectConfiguration, CancellationToken) by scanning methods
         MethodInfo? generateMethod = null;
         foreach (var method in generatorType.GetMethods())
         {
@@ -990,8 +996,9 @@ public sealed class BuildCommandHandler
             }
 
             var parameters = method.GetParameters();
-            if (parameters.Length == 2
-                && parameters[0].ParameterType == typeof(CollectionQuery))
+            if (parameters.Length == 3
+                && parameters[0].ParameterType == typeof(CollectionQuery)
+                && parameters[2].ParameterType == typeof(CancellationToken))
             {
                 generateMethod = method;
                 break;
@@ -1004,7 +1011,7 @@ public sealed class BuildCommandHandler
             return;
         }
 
-        var task = (Task)generateMethod.Invoke(generator, [collectionQuery, configInstance])!;
+        var task = (Task)generateMethod.Invoke(generator, [collectionQuery, configInstance, cancellationToken])!;
         await task;
 
         // Get result stats via dynamic to avoid reflection on Task<T>.Result
@@ -1029,7 +1036,8 @@ public sealed class BuildCommandHandler
     private static async Task GenerateLlmsTxtAsync(
         Assembly assembly,
         CollectionQuery collectionQuery,
-        string outputDirectory)
+        string outputDirectory,
+        CancellationToken cancellationToken)
     {
         const string interfaceName = "Atoll.Lagoon.LlmsTxt.ILlmsTxtConfiguration";
         const string generatorTypeName = "Atoll.Lagoon.LlmsTxt.LlmsTxtGenerator";
@@ -1101,7 +1109,7 @@ public sealed class BuildCommandHandler
         // Create generator instance: new LlmsTxtGenerator(outputDirectory)
         var generator = Activator.CreateInstance(generatorType, outputDirectory)!;
 
-        // Find GenerateAsync(CollectionQuery, ILlmsTxtConfiguration) by scanning methods
+        // Find GenerateAsync(CollectionQuery, ILlmsTxtConfiguration, CancellationToken) by scanning methods
         MethodInfo? generateMethod = null;
         foreach (var method in generatorType.GetMethods())
         {
@@ -1111,8 +1119,9 @@ public sealed class BuildCommandHandler
             }
 
             var parameters = method.GetParameters();
-            if (parameters.Length == 2
-                && parameters[0].ParameterType == typeof(CollectionQuery))
+            if (parameters.Length == 3
+                && parameters[0].ParameterType == typeof(CollectionQuery)
+                && parameters[2].ParameterType == typeof(CancellationToken))
             {
                 generateMethod = method;
                 break;
@@ -1125,7 +1134,7 @@ public sealed class BuildCommandHandler
             return;
         }
 
-        var task = (Task)generateMethod.Invoke(generator, [collectionQuery, configInstance])!;
+        var task = (Task)generateMethod.Invoke(generator, [collectionQuery, configInstance, cancellationToken])!;
         await task;
 
         // Get result stats via dynamic to avoid reflection on Task<T>.Result

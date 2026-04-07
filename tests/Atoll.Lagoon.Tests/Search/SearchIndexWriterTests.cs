@@ -5,6 +5,7 @@ namespace Atoll.Lagoon.Tests.Search;
 
 public sealed class SearchIndexWriterTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
     private readonly SearchIndexWriter _writer = new SearchIndexWriter();
 
     // ── Serialize ──
@@ -168,7 +169,7 @@ public sealed class SearchIndexWriterTests
         {
             var index = new SearchIndex([], DateTimeOffset.UtcNow);
 
-            await _writer.WriteAsync(index, outputDir);
+            await _writer.WriteAsync(index, outputDir, _ct);
 
             var expectedPath = Path.Combine(outputDir, "search-index.json");
             File.Exists(expectedPath).ShouldBeTrue();
@@ -191,7 +192,7 @@ public sealed class SearchIndexWriterTests
             Directory.Exists(outputDir).ShouldBeFalse("directory should not exist yet");
 
             var index = new SearchIndex([], DateTimeOffset.UtcNow);
-            await _writer.WriteAsync(index, outputDir);
+            await _writer.WriteAsync(index, outputDir, _ct);
 
             Directory.Exists(outputDir).ShouldBeTrue("directory should be created");
         }

@@ -7,6 +7,7 @@ namespace Atoll.Build.Tests.Pipeline;
 
 public sealed class AssetPipelineTests : IDisposable
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
     private readonly string _testDir;
     private readonly string _outputDir;
     private readonly string _publicDir;
@@ -41,7 +42,8 @@ public sealed class AssetPipelineTests : IDisposable
 
         var result = await pipeline.RunAsync(
             new[] { typeof(StyledCard) },
-            Array.Empty<string>());
+            Array.Empty<string>(),
+            _ct);
 
         result.Css.HasContent.ShouldBeTrue();
         var cssFilePath = Path.Combine(_outputDir, result.Css.OutputPath);
@@ -63,7 +65,8 @@ public sealed class AssetPipelineTests : IDisposable
 
         var result = await pipeline.RunAsync(
             Array.Empty<Type>(),
-            new[] { "console.log('hello');" });
+            new[] { "console.log('hello');" },
+            _ct);
 
         result.Js.HasContent.ShouldBeTrue();
         var jsFilePath = Path.Combine(_outputDir, result.Js.OutputPath);
@@ -86,7 +89,8 @@ public sealed class AssetPipelineTests : IDisposable
 
         var result = await pipeline.RunAsync(
             Array.Empty<Type>(),
-            Array.Empty<string>());
+            Array.Empty<string>(),
+            _ct);
 
         result.StaticAssets.ShouldNotBeNull();
         result.StaticAssets!.Count.ShouldBe(1);
@@ -102,7 +106,8 @@ public sealed class AssetPipelineTests : IDisposable
 
         var result = await pipeline.RunAsync(
             Array.Empty<Type>(),
-            Array.Empty<string>());
+            Array.Empty<string>(),
+            _ct);
 
         result.StaticAssets.ShouldBeNull();
     }
@@ -119,7 +124,8 @@ public sealed class AssetPipelineTests : IDisposable
 
         var result = await pipeline.RunAsync(
             new[] { typeof(StyledCard) },
-            new[] { "var x = 1;" });
+            new[] { "var x = 1;" },
+            _ct);
 
         result.Css.Hash.ShouldNotBeNull();
         result.Css.FileName.ShouldContain(result.Css.Hash!);
@@ -143,7 +149,8 @@ public sealed class AssetPipelineTests : IDisposable
 
         var result = await pipeline.RunAsync(
             new[] { typeof(StyledCard) },
-            new[] { "console.log('init');" });
+            new[] { "console.log('init');" },
+            _ct);
 
         result.Css.HasContent.ShouldBeTrue();
         result.Js.HasContent.ShouldBeTrue();
@@ -166,7 +173,8 @@ public sealed class AssetPipelineTests : IDisposable
 
         var result = await pipeline.RunAsync(
             new[] { typeof(StyledCard) },
-            new[] { "var x = 1;" });
+            new[] { "var x = 1;" },
+            _ct);
 
         result.Css.OutputPath.ShouldStartWith("_assets");
         result.Js.OutputPath.ShouldStartWith("_assets");
@@ -190,7 +198,8 @@ public sealed class AssetPipelineTests : IDisposable
 
         var result = await pipeline.RunAsync(
             aggregator,
-            Array.Empty<string>());
+            Array.Empty<string>(),
+            _ct);
 
         result.Css.HasContent.ShouldBeTrue();
         var cssFilePath = Path.Combine(_outputDir, result.Css.OutputPath);
@@ -211,7 +220,8 @@ public sealed class AssetPipelineTests : IDisposable
 
         var result = await pipeline.RunAsync(
             Array.Empty<Type>(),
-            Array.Empty<string>());
+            Array.Empty<string>(),
+            _ct);
 
         result.Css.HasContent.ShouldBeFalse();
         // No CSS file should be written
@@ -230,7 +240,8 @@ public sealed class AssetPipelineTests : IDisposable
 
         var result = await pipeline.RunAsync(
             Array.Empty<Type>(),
-            Array.Empty<string>());
+            Array.Empty<string>(),
+            _ct);
 
         result.Js.HasContent.ShouldBeFalse();
         Directory.GetFiles(_outputDir, "*.js", SearchOption.AllDirectories).Length.ShouldBe(0);
@@ -279,7 +290,8 @@ public sealed class AssetPipelineTests : IDisposable
 
         var result = await pipeline.RunAsync(
             new[] { typeof(UrlCard) },
-            Array.Empty<string>());
+            Array.Empty<string>(),
+            _ct);
 
         result.Css.HasContent.ShouldBeTrue();
         var cssContent = File.ReadAllText(Path.Combine(_outputDir, result.Css.OutputPath));

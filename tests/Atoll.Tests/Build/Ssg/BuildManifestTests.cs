@@ -8,6 +8,7 @@ namespace Atoll.Build.Tests.Ssg;
 
 public sealed class BuildManifestTests : IDisposable
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
     private readonly string _testDir;
     private readonly string _outputDir;
 
@@ -217,7 +218,7 @@ public sealed class BuildManifestTests : IDisposable
         };
 
         var writer = new BuildManifestWriter(_outputDir);
-        var filePath = await writer.WriteAsync(manifest);
+        var filePath = await writer.WriteAsync(manifest, _ct);
 
         File.Exists(filePath).ShouldBeTrue();
         filePath.ShouldEndWith(Path.Combine(".atoll", "manifest.json"));
@@ -233,7 +234,7 @@ public sealed class BuildManifestTests : IDisposable
         var manifest = new BuildManifest();
 
         var writer = new BuildManifestWriter(_outputDir);
-        await writer.WriteAsync(manifest);
+        await writer.WriteAsync(manifest, _ct);
 
         Directory.Exists(Path.Combine(_outputDir, ".atoll")).ShouldBeTrue();
     }
@@ -287,10 +288,10 @@ public sealed class BuildManifestTests : IDisposable
         var writer = new BuildManifestWriter(_outputDir);
 
         var manifest1 = new BuildManifest { BaseUrl = "https://first.com" };
-        await writer.WriteAsync(manifest1);
+        await writer.WriteAsync(manifest1, _ct);
 
         var manifest2 = new BuildManifest { BaseUrl = "https://second.com" };
-        var filePath = await writer.WriteAsync(manifest2);
+        var filePath = await writer.WriteAsync(manifest2, _ct);
 
         var content = File.ReadAllText(filePath);
         content.ShouldContain("https://second.com");

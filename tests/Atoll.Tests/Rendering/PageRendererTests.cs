@@ -8,6 +8,7 @@ namespace Atoll.Tests.Rendering;
 
 public sealed class PageRendererTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
     // ── Simple page components for testing ──
 
     private sealed class SimplePage : AtollComponent
@@ -302,7 +303,7 @@ public sealed class PageRendererTests
         var result = await renderer.RenderPageAsync<SimplePage>();
 
         using var stream = new MemoryStream();
-        await result.WriteToStreamAsync(stream);
+        await result.WriteToStreamAsync(stream, _ct);
 
         stream.Position = 0;
         using var reader = new StreamReader(stream);
@@ -398,7 +399,7 @@ public sealed class PageRendererTests
         var result = new PageRenderResult("<html></html>");
 
         await Should.ThrowAsync<ArgumentNullException>(
-            () => result.WriteToStreamAsync(null!));
+            () => result.WriteToStreamAsync(null!, _ct));
     }
 
     // ── Untested overloads ──
@@ -436,7 +437,7 @@ public sealed class PageRendererTests
         var result = new PageRenderResult("<!DOCTYPE html><html><body>Test</body></html>");
 
         using var stream = new MemoryStream();
-        await result.WriteToStreamAsync(stream, System.Text.Encoding.ASCII);
+        await result.WriteToStreamAsync(stream, System.Text.Encoding.ASCII, _ct);
 
         stream.Position = 0;
         using var reader = new StreamReader(stream, System.Text.Encoding.ASCII);
@@ -451,7 +452,7 @@ public sealed class PageRendererTests
         var result = new PageRenderResult("<html></html>");
 
         await Should.ThrowAsync<ArgumentNullException>(
-            () => result.WriteToStreamAsync(new MemoryStream(), null!));
+            () => result.WriteToStreamAsync(new MemoryStream(), null!, _ct));
     }
 
     [Fact]
