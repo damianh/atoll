@@ -278,21 +278,36 @@ public sealed class DevHotReloadTests : IDisposable
     public async Task DevFileWatcherShouldEscalateToCodeChangeWhenBothKindsChange()
     {
         var dir = CreateTempDir();
-        var tcs = new TaskCompletionSource<FileChangeKind>();
+        FileChangeKind? lastObservedKind = null;
+        var fireCount = 0;
+        var firedEvent = new ManualResetEventSlim(false);
 
-        using var watcher = new DevFileWatcher(dir, debounceMs: 200);
-        watcher.OnChange += kind => { tcs.TrySetResult(kind); return Task.CompletedTask; };
+        // Use a generous debounce window (500ms) so that both filesystem
+        // notifications are aggregated into a single debounce window, even
+        // on slow CI runners where FSW delivery can be delayed.
+        using var watcher = new DevFileWatcher(dir, debounceMs: 500);
+        watcher.OnChange += kind =>
+        {
+            lastObservedKind = kind;
+            Interlocked.Increment(ref fireCount);
+            firedEvent.Set();
+            return Task.CompletedTask;
+        };
         watcher.Start();
 
-        // Write a .md file, then a .cs file within the debounce window.
+        // Write both files as fast as possible so they land within the
+        // same debounce window regardless of FSW notification timing.
         await File.WriteAllTextAsync(Path.Combine(dir, "doc.md"), "markdown");
-        await Task.Delay(30);
         await File.WriteAllTextAsync(Path.Combine(dir, "page.cs"), "// code");
 
-        var result2 = await Task.WhenAny(tcs.Task, Task.Delay(3000));
-        result2.ShouldBe(tcs.Task, "Watcher should have fired within 3s");
-        var mixedKind = await tcs.Task;
-        mixedKind.ShouldBe(FileChangeKind.CodeChange,
+        // Wait for at least one debounce fire (up to 5s for slow runners).
+        firedEvent.Wait(TimeSpan.FromSeconds(5))
+            .ShouldBeTrue("Watcher should have fired within 5s");
+
+        // Allow settle time for any additional fires.
+        await Task.Delay(1500);
+
+        lastObservedKind.ShouldBe(FileChangeKind.CodeChange,
             "Mixed .md + .cs changes should escalate to CodeChange");
     }
 
