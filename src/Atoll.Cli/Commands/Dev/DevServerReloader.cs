@@ -105,7 +105,7 @@ internal sealed class DevServerReloader
         }
 
         var counter = System.Threading.Interlocked.Increment(ref _alcCounter);
-        var (loadContext, assembly) = LoadAssembly(assemblyPath, $"AtollDev-{counter}");
+        var (loadContext, assembly, shadowDir) = LoadAssembly(assemblyPath, $"AtollDev-{counter}");
         if (assembly is null)
         {
             return (currentState ?? BuildEmptyState(), "Failed to load compiled assembly.");
@@ -124,7 +124,7 @@ internal sealed class DevServerReloader
         Console.WriteLine($"  Islands: {islandAssets.Count} JS asset(s) loaded");
         Console.WriteLine($"  Reload complete ({sw.ElapsedMilliseconds}ms)");
 
-        return (new DevServerState(new RouteMatcher(routes), options, loadContext, assembly, globalCss, islandAssets, searchIndex), null);
+        return (new DevServerState(new RouteMatcher(routes), options, loadContext, assembly, globalCss, islandAssets, searchIndex, shadowDir), null);
     }
 
     // ── Private: content-only reload ───────────────────────────────────────────
@@ -150,7 +150,7 @@ internal sealed class DevServerReloader
             : current.SearchIndexJson;
 
         return Task.FromResult(
-            new DevServerState(current.RouteMatcher, options, current.LoadContext, current.UserAssembly, current.GlobalCss, current.IslandAssets, searchIndex));
+            new DevServerState(current.RouteMatcher, options, current.LoadContext, current.UserAssembly, current.GlobalCss, current.IslandAssets, searchIndex, current.ShadowCopyDir));
     }
 
     // ── Private: shared helpers ─────────────────────────────────────────────────
@@ -158,7 +158,7 @@ internal sealed class DevServerReloader
     private static DevServerState BuildEmptyState()
     {
         var options = new AtollOptions();
-        return new DevServerState(new RouteMatcher([]), options, null, null, "", new ReadOnlyDictionary<string, byte[]>(new Dictionary<string, byte[]>()), null);
+        return new DevServerState(new RouteMatcher([]), options, null, null, "", new ReadOnlyDictionary<string, byte[]>(new Dictionary<string, byte[]>()), null, null);
     }
 
     private static AtollOptions BuildOptions(CollectionQuery? collectionQuery)
@@ -661,15 +661,34 @@ internal sealed class DevServerReloader
     /// <summary>
     /// Loads an assembly using a new collectible <see cref="AssemblyLoadContext"/>.
     /// Collectible contexts allow the old assembly to be garbage-collected after
-    /// hot-reload. Returns <c>(null, null)</c> on failure.
+    /// hot-reload. The assembly and its sibling files are shadow-copied to a
+    /// temporary directory so that <c>dotnet build</c> can overwrite the originals
+    /// in <c>bin/</c> without file-locking errors.
+    /// Returns <c>(null, null, null)</c> on failure.
     /// </summary>
-    private (AssemblyLoadContext? Context, Assembly? Assembly) LoadAssembly(
+    private (AssemblyLoadContext? Context, Assembly? Assembly, string? ShadowDir) LoadAssembly(
         string assemblyPath,
         string contextName)
     {
         try
         {
             var absolutePath = Path.GetFullPath(assemblyPath);
+            var sourceDir = Path.GetDirectoryName(absolutePath)!;
+            var assemblyFileName = Path.GetFileName(absolutePath);
+
+            // Shadow-copy the entire TFM output directory (e.g. bin/Release/net10.0/)
+            // to a temp folder so that the originals in bin/ are never locked by this
+            // process. This prevents MSB3027 "file in use" errors during rebuilds.
+            var shadowDir = Path.Combine(Path.GetTempPath(), "atoll-dev-shadow", contextName);
+            Directory.CreateDirectory(shadowDir);
+
+            foreach (var sourceFile in Directory.EnumerateFiles(sourceDir))
+            {
+                var destFile = Path.Combine(shadowDir, Path.GetFileName(sourceFile));
+                File.Copy(sourceFile, destFile, overwrite: true);
+            }
+
+            var shadowAssemblyPath = Path.Combine(shadowDir, assemblyFileName);
 
             // isCollectible: true — allows this ALC to be unloaded after hot-reload,
             // preventing memory leaks from accumulated assembly loads.
@@ -679,17 +698,17 @@ internal sealed class DevServerReloader
             // parsing the user project's .deps.json and probing the NuGet cache.
             // AssemblyDependencyResolver does not work for class library projects
             // (no .runtimeconfig.json), so we use our own resolver.
-            var resolver = DepsJsonAssemblyResolver.Create(absolutePath);
+            var resolver = DepsJsonAssemblyResolver.Create(shadowAssemblyPath);
             resolver?.Attach(loadContext);
 
-            var assembly = loadContext.LoadFromAssemblyPath(absolutePath);
-            return (loadContext, assembly);
+            var assembly = loadContext.LoadFromAssemblyPath(shadowAssemblyPath);
+            return (loadContext, assembly, shadowDir);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to load assembly '{Path}'", assemblyPath);
             Console.WriteLine($"  Warning: Failed to load assembly: {ex.Message}");
-            return (null, null);
+            return (null, null, null);
         }
     }
 }
