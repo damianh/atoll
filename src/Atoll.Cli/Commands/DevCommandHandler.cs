@@ -36,14 +36,21 @@ public sealed class DevCommandHandler
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseUrls($"http://{config.Server.Host}:{effectivePort}");
 
-        // Suppress Kestrel and ASP.NET Core request-logging noise in the console.
+        // Suppress Kestrel and ASP.NET Core infrastructure noise while allowing
+        // our own request-logging middleware to emit at Information level.
         builder.Logging.SetMinimumLevel(LogLevel.Warning);
+        builder.Logging.AddFilter<Microsoft.Extensions.Logging.Console.ConsoleLoggerProvider>(
+            "Atoll.Middleware.Server.DevServer.DevRequestLoggingMiddleware",
+            LogLevel.Information);
 
         // Register the live-reload handler so LiveReloadMiddleware can resolve it.
         builder.Services.AddSingleton(liveReloadHandler);
 
         var app = builder.Build();
         var loggerFactory = app.Services.GetRequiredService<ILoggerFactory>();
+
+        // ── Request logging ──────────────────────────────────────────────────
+        app.UseMiddleware<DevRequestLoggingMiddleware>();
 
         // ── Live-reload WebSocket endpoint + HTML script injection ────────────
         // Must be registered before the DevAtollRequestHandler lambda so that:
