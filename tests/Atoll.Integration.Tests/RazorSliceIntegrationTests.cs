@@ -3,8 +3,6 @@ using Atoll.Components;
 using Atoll.Routing;
 using Atoll.Routing.FileSystem;
 using Atoll.Samples.Blog.Pages;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Integration.Tests;
 

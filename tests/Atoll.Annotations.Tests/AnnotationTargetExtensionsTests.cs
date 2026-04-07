@@ -1,5 +1,3 @@
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Annotations.Tests;
 

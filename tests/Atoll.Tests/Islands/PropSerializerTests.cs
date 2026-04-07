@@ -1,8 +1,6 @@
 using System.Numerics;
 using System.Text.Json;
 using Atoll.Islands;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Tests.Islands;
 

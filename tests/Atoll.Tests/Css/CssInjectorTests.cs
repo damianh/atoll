@@ -1,7 +1,5 @@
 using Atoll.Css;
 using Atoll.Head;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Tests.Css;
 

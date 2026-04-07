@@ -2,8 +2,6 @@ using Atoll.Components;
 using Atoll.Lagoon.Configuration;
 using Atoll.Lagoon.Layouts;
 using Atoll.Rendering;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Lagoon.Tests.Layouts;
 

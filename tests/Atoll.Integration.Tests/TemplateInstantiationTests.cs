@@ -1,6 +1,4 @@
 using System.Diagnostics;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Integration.Tests;
 
@@ -31,7 +29,7 @@ public sealed class TemplateFixture : IAsyncLifetime
     /// <summary>Root directory for the atoll-portfolio template output.</summary>
     public string PortfolioDir => Path.Combine(_tempDir, "MyPortfolio");
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         _tempDir = Path.Combine(
             Path.GetTempPath(),
@@ -53,7 +51,7 @@ public sealed class TemplateFixture : IAsyncLifetime
         await RunDotnetAsync($"new atoll-portfolio -n MyPortfolio -o \"{PortfolioDir}\"", _tempDir);
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         if (TemplatesInstalled)
         {

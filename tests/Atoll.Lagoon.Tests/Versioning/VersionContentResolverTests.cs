@@ -1,6 +1,4 @@
 using Atoll.Lagoon.Versioning;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Lagoon.Tests.Versioning;
 

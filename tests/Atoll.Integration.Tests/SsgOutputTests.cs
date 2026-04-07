@@ -3,8 +3,6 @@ using Atoll.Build.Pipeline;
 using Atoll.Build.Ssg;
 using Atoll.Routing;
 using Atoll.Samples.Portfolio.Pages;
-using Shouldly;
-using Xunit;
 
 using BlogAboutPage = Atoll.Samples.Blog.Pages.AboutPage;
 using BlogIndexPage = Atoll.Samples.Blog.Pages.IndexPage;

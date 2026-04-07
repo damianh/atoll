@@ -7,8 +7,6 @@ using Atoll.Lagoon.Navigation;
 using Atoll.Lagoon.Versioning;
 using Atoll.Rendering;
 using Atoll.Slots;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Lagoon.Tests.Layouts;
 

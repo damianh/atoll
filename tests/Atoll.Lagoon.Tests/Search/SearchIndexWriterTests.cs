@@ -1,7 +1,5 @@
 using System.Text.Json;
 using Atoll.Lagoon.Search;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Lagoon.Tests.Search;
 

@@ -1,6 +1,4 @@
 using Atoll.Lagoon.Markdown;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Lagoon.Tests.Markdown;
 

@@ -2,8 +2,7 @@ using Atoll.Build.Content.Collections;
 using Atoll.Build.Content.Markdown;
 using Atoll.Components;
 using Atoll.Rendering;
-using Shouldly;
-using Xunit;
+using Atoll.Slots;
 
 namespace Atoll.Build.Tests.Content.Collections;
 

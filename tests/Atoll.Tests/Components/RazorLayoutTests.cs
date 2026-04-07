@@ -1,8 +1,6 @@
 using Atoll.Components;
 using Atoll.Rendering;
 using Atoll.Tests.Components.Fixtures;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Tests.Components;
 

@@ -1,6 +1,4 @@
 using Atoll.Build.Diagnostics;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Build.Tests.Diagnostics;
 

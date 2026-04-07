@@ -1,6 +1,4 @@
 using Atoll.Lagoon.I18n;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Lagoon.Tests.I18n;
 

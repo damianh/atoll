@@ -1,6 +1,4 @@
 using Atoll.Cli.Commands;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Integration.Tests;
 

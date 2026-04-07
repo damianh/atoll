@@ -1,8 +1,7 @@
 using Atoll.Components;
 using Atoll.Islands;
 using Atoll.Rendering;
-using Shouldly;
-using Xunit;
+using Atoll.Slots;
 
 namespace Atoll.Tests.Components;
 

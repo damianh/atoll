@@ -11,8 +11,6 @@ using Atoll.Lagoon.Search;
 using Atoll.Lagoon.Styles;
 using Atoll.Rendering;
 using Atoll.Routing;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Integration.Tests;
 

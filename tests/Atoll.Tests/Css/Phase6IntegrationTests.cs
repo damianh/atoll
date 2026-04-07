@@ -2,8 +2,6 @@ using Atoll.Components;
 using Atoll.Css;
 using Atoll.Head;
 using Atoll.Rendering;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Tests.Css;
 

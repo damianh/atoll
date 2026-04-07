@@ -1,8 +1,6 @@
 using System.Text.Json;
 using Atoll.Build.Ssg;
 using Atoll.Redirects;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Build.Tests.Ssg;
 

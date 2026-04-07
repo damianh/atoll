@@ -1,6 +1,4 @@
 using Atoll.DrawIo.Content;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.DrawIo.Tests.Content;
 

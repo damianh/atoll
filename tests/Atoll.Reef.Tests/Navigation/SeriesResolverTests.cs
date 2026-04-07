@@ -1,8 +1,6 @@
 using Atoll.Build.Content.Collections;
 using Atoll.Reef.Configuration;
 using Atoll.Reef.Navigation;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Reef.Tests.Navigation;
 

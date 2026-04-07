@@ -2,8 +2,6 @@ using Atoll.Components;
 using Atoll.Reef.Components;
 using Atoll.Rendering;
 using Atoll.Slots;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Reef.Tests.Components;
 

@@ -1,7 +1,5 @@
 using Atoll.DrawIo.Model;
 using Atoll.DrawIo.Parsing;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.DrawIo.Tests.Parsing;
 

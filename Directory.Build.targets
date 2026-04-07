@@ -1,5 +1,6 @@
 <Project>
   <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+    <OutputType>Exe</OutputType>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <DocumentationFile />
   </PropertyGroup>

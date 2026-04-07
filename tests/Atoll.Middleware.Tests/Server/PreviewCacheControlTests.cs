@@ -2,8 +2,7 @@ using System.Net;
 using Atoll.Build.Pipeline;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.FileProviders;
-using Shouldly;
-using Xunit;
+using Microsoft.Extensions.Hosting;
 
 namespace Atoll.Middleware.Tests.Server;
 

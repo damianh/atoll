@@ -1,8 +1,7 @@
 using Atoll.Build.Content.Markdown;
 using Atoll.Components;
 using Atoll.Lagoon.Markdown;
-using Shouldly;
-using Xunit;
+using Atoll.Rendering;
 
 namespace Atoll.Lagoon.Tests.Markdown;
 

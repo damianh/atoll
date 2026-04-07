@@ -2,8 +2,6 @@ using Atoll.Islands;
 using Atoll.Rendering;
 using Atoll.Slots;
 using Atoll.Tests.Islands.Fixtures;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Tests.Islands;
 

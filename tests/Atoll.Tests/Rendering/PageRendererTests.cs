@@ -3,8 +3,6 @@ using Atoll.Head;
 using Atoll.Instructions;
 using Atoll.Rendering;
 using Atoll.Slots;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Tests.Rendering;
 

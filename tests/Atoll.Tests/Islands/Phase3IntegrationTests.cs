@@ -3,8 +3,6 @@ using Atoll.Instructions;
 using Atoll.Islands;
 using Atoll.Rendering;
 using Atoll.Slots;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Tests.Islands;
 

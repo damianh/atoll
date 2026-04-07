@@ -1,8 +1,6 @@
 using Atoll.Build.Content.Collections;
 using Atoll.Lagoon.Configuration;
 using Atoll.Lagoon.OpenGraph;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Lagoon.Tests.OpenGraph;
 
