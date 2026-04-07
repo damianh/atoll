@@ -394,13 +394,35 @@ public static class MarkdownRenderer
         {
             if (block is HeadingBlock headingBlock)
             {
-                var text = ExtractInlineText(headingBlock.Inline);
+                var text = TrimHeadingText(ExtractInlineText(headingBlock.Inline));
                 var id = headingBlock.TryGetAttributes()?.Id;
                 headings.Add(new MarkdownHeading(headingBlock.Level, text, id));
             }
         }
 
         return headings;
+    }
+
+    /// <summary>
+    /// Truncates heading text at the first em dash or spaced dash separator,
+    /// keeping only the human-readable label for the table of contents.
+    /// For example, "Grid view — ArticleGrid + ArticleCard" becomes "Grid view".
+    /// </summary>
+    private static string TrimHeadingText(string text)
+    {
+        // Truncate at em dash (—) or spaced dash ( - ).
+        var emDashIndex = text.IndexOf('—');
+        var spacedDashIndex = text.IndexOf(" - ", StringComparison.Ordinal);
+
+        var cutIndex = (emDashIndex, spacedDashIndex) switch
+        {
+            ( >= 0, >= 0) => Math.Min(emDashIndex, spacedDashIndex),
+            ( >= 0, _) => emDashIndex,
+            (_, >= 0) => spacedDashIndex,
+            _ => -1,
+        };
+
+        return cutIndex > 0 ? text[..cutIndex].TrimEnd() : text;
     }
 
     private static string ExtractInlineText(ContainerInline? inline)
@@ -416,6 +438,10 @@ public static class MarkdownRenderer
             if (child is LiteralInline literal)
             {
                 text.Append(literal.Content);
+            }
+            else if (child is CodeInline code)
+            {
+                text.Append(code.Content);
             }
             else if (child is ContainerInline container)
             {

@@ -345,4 +345,54 @@ public sealed class MarkdownRendererTests
 
         result.Html.ShouldNotContain("id=");
     }
+
+    [Fact]
+    public void ShouldExtractInlineCodeInHeadingText()
+    {
+        var markdown = "## Grid view — `ArticleGrid` + `ArticleCard`";
+        var result = MarkdownRenderer.Render(markdown);
+
+        result.Headings.Count.ShouldBe(1);
+        result.Headings[0].Text.ShouldBe("Grid view");
+    }
+
+    [Fact]
+    public void ShouldExtractSingleInlineCodeInHeadingText()
+    {
+        var markdown = "### List view — `ArticleList`";
+        var result = MarkdownRenderer.Render(markdown);
+
+        result.Headings.Count.ShouldBe(1);
+        result.Headings[0].Text.ShouldBe("List view");
+    }
+
+    [Fact]
+    public void ShouldTruncateHeadingAtSpacedDash()
+    {
+        var markdown = "## Configuration - advanced options";
+        var result = MarkdownRenderer.Render(markdown);
+
+        result.Headings.Count.ShouldBe(1);
+        result.Headings[0].Text.ShouldBe("Configuration");
+    }
+
+    [Fact]
+    public void ShouldNotTruncateHeadingWithoutDash()
+    {
+        var markdown = "## Pagination strategy";
+        var result = MarkdownRenderer.Render(markdown);
+
+        result.Headings.Count.ShouldBe(1);
+        result.Headings[0].Text.ShouldBe("Pagination strategy");
+    }
+
+    [Fact]
+    public void ShouldNotTruncateHeadingWithHyphenatedWord()
+    {
+        var markdown = "## Auto-generated content";
+        var result = MarkdownRenderer.Render(markdown);
+
+        result.Headings.Count.ShouldBe(1);
+        result.Headings[0].Text.ShouldBe("Auto-generated content");
+    }
 }
