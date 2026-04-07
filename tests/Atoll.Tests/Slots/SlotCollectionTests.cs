@@ -1,7 +1,5 @@
 using Atoll.Rendering;
 using Atoll.Slots;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Tests.Slots;
 

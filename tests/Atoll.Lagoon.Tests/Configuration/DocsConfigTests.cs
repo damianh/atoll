@@ -1,7 +1,5 @@
 using Atoll.Lagoon.Configuration;
 using Atoll.Lagoon.I18n;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Lagoon.Tests.Configuration;
 public sealed class DocsConfigTests

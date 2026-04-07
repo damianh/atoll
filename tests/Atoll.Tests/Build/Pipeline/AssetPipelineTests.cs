@@ -2,8 +2,6 @@ using Atoll.Build.Pipeline;
 using Atoll.Build.Ssg;
 using Atoll.Components;
 using Atoll.Css;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Build.Tests.Pipeline;
 

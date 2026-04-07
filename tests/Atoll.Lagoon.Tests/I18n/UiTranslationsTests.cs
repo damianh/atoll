@@ -4,8 +4,6 @@ using Atoll.Lagoon.I18n;
 using Atoll.Lagoon.Islands;
 using Atoll.Lagoon.Navigation;
 using Atoll.Rendering;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Lagoon.Tests.I18n;
 

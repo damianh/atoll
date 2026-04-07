@@ -3,8 +3,6 @@ using Atoll.Lagoon.Components;
 using Atoll.Lagoon.I18n;
 using Atoll.Lagoon.Versioning;
 using Atoll.Rendering;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Lagoon.Tests.Components;
 

@@ -1,7 +1,6 @@
 using Atoll.Build.Content.Markdown;
 using Atoll.Components;
-using Shouldly;
-using Xunit;
+using Atoll.Rendering;
 
 namespace Atoll.Build.Tests.Content.Markdown;
 

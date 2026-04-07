@@ -1,7 +1,5 @@
 using Atoll.Build.Content.Collections;
 using Atoll.Lagoon.LlmsTxt;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Lagoon.Tests.LlmsTxt;
 

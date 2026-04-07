@@ -4,8 +4,6 @@ using Atoll.Lagoon.Components;
 using Atoll.Lagoon.Islands;
 using Atoll.Rendering;
 using Atoll.Slots;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Lagoon.Tests.Islands;
 

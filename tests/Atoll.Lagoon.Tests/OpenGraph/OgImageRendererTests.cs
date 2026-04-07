@@ -1,7 +1,5 @@
 using Atoll.Lagoon.OpenGraph;
-using Shouldly;
 using SkiaSharp;
-using Xunit;
 
 namespace Atoll.Lagoon.Tests.OpenGraph;
 

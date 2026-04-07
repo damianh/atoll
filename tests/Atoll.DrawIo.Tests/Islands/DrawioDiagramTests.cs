@@ -3,8 +3,6 @@ using Atoll.Components;
 using Atoll.DrawIo.Islands;
 using Atoll.Instructions;
 using Atoll.Rendering;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.DrawIo.Tests.Islands;
 

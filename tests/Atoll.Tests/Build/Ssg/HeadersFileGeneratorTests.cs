@@ -1,7 +1,5 @@
 using Atoll.Build.Ssg;
 using Atoll.Configuration;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Tests.Build.Ssg;
 

@@ -2,8 +2,6 @@ using Atoll.Components;
 using Atoll.Lagoon.Components;
 using Atoll.Lagoon.Navigation;
 using Atoll.Rendering;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Lagoon.Tests.Components;
 

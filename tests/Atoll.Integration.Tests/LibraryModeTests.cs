@@ -8,8 +8,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Integration.Tests;
 

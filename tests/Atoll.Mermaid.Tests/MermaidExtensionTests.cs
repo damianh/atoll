@@ -1,6 +1,4 @@
 using Markdig;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Mermaid.Tests;
 

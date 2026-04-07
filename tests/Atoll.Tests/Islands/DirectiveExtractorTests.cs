@@ -1,8 +1,6 @@
 using Atoll.Components;
 using Atoll.Instructions;
 using Atoll.Islands;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Tests.Islands;
 

@@ -2,8 +2,8 @@ using System.Net;
 using System.Net.WebSockets;
 using Atoll.Middleware.Server.DevServer;
 using Microsoft.AspNetCore.TestHost;
-using Shouldly;
-using Xunit;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace Atoll.Middleware.Tests.Server.DevServer;
 

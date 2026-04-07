@@ -3,8 +3,6 @@ using Atoll.Reef.Configuration;
 using Atoll.Reef.Layouts;
 using Atoll.Rendering;
 using Atoll.Slots;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Reef.Tests.Layouts;
 

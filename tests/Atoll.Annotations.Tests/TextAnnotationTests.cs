@@ -1,8 +1,6 @@
 using Atoll.Components;
 using Atoll.Instructions;
 using Atoll.Rendering;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Annotations.Tests;
 

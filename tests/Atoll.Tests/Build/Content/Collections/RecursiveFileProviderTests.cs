@@ -1,6 +1,4 @@
 using Atoll.Build.Content.Collections;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Build.Tests.Content.Collections;
 

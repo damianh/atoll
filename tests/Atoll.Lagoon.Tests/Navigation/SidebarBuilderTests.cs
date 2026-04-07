@@ -1,7 +1,5 @@
 using Atoll.Lagoon.Configuration;
 using Atoll.Lagoon.Navigation;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Lagoon.Tests.Navigation;
 

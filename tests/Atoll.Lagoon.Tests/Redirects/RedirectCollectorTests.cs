@@ -1,6 +1,5 @@
 using Atoll.Lagoon.Redirects;
-using Shouldly;
-using Xunit;
+using Atoll.Redirects;
 
 namespace Atoll.Lagoon.Tests.Redirects;
 

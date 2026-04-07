@@ -1,8 +1,6 @@
 using Atoll.Reef.Components;
 using Atoll.Reef.Configuration;
 using Atoll.Reef.Feed;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Reef.Tests.Feed;
 

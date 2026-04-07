@@ -1,7 +1,5 @@
 using System.Text.Json;
 using Atoll.Configuration;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Tests.Configuration;
 

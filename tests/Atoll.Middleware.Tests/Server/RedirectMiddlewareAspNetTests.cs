@@ -2,8 +2,7 @@ using System.Net;
 using Atoll.Middleware.Server.Hosting;
 using Atoll.Redirects;
 using Microsoft.AspNetCore.TestHost;
-using Shouldly;
-using Xunit;
+using Microsoft.Extensions.Hosting;
 
 namespace Atoll.Middleware.Tests.Server;
 

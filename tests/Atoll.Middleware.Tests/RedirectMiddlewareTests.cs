@@ -1,7 +1,5 @@
 using Atoll.Redirects;
 using Atoll.Routing;
-using Shouldly;
-using Xunit;
 
 namespace Atoll.Middleware.Tests;
 
