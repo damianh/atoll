@@ -20,7 +20,6 @@ jobs:
     environment: nuget.org
     permissions:
       contents: write
-      packages: write
 
     steps:
     - uses: actions/checkout@v4
@@ -74,11 +73,6 @@ jobs:
         dotnet pack src/Atoll.Middleware/Atoll.Middleware.csproj -c Release --no-build --output ./packages
         dotnet pack src/Atoll.Reef/Atoll.Reef.csproj -c Release --no-build --output ./packages
         dotnet pack templates/Atoll.Templates.csproj -c Release --output ./packages
-
-    - name: Push to GitHub Packages
-      run: |
-        dotnet nuget add source --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" || true
-        dotnet nuget push "./packages/*.nupkg" --source "github" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
 
     - name: Push to NuGet.org
       if: ${{ inputs.push_to_nuget }}
