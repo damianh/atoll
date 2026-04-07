@@ -41,6 +41,7 @@ public sealed class OutputWriter
     /// </summary>
     /// <param name="urlPath">The URL path (e.g., <c>/about</c> or <c>/blog/my-post</c>).</param>
     /// <param name="html">The rendered HTML content.</param>
+    /// <param name="cancellationToken">A token to cancel the write operation.</param>
     /// <returns>The full file path that was written.</returns>
     /// <remarks>
     /// <para>URL path mapping:</para>
@@ -50,7 +51,7 @@ public sealed class OutputWriter
     /// <item><description><c>/blog/my-post</c> → <c>blog/my-post/index.html</c></description></item>
     /// </list>
     /// </remarks>
-    public async Task<string> WritePageAsync(string urlPath, string html)
+    public async Task<string> WritePageAsync(string urlPath, string html, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(urlPath);
         ArgumentNullException.ThrowIfNull(html);
@@ -64,7 +65,7 @@ public sealed class OutputWriter
             Directory.CreateDirectory(directory);
         }
 
-        await File.WriteAllTextAsync(fullPath, html, _encoding);
+        await File.WriteAllTextAsync(fullPath, html, _encoding, cancellationToken);
         return fullPath;
     }
 
@@ -73,8 +74,9 @@ public sealed class OutputWriter
     /// </summary>
     /// <param name="relativePath">The relative file path (e.g., <c>assets/style.css</c>).</param>
     /// <param name="content">The file content.</param>
+    /// <param name="cancellationToken">A token to cancel the write operation.</param>
     /// <returns>The full file path that was written.</returns>
-    public async Task<string> WriteFileAsync(string relativePath, string content)
+    public async Task<string> WriteFileAsync(string relativePath, string content, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(relativePath);
         ArgumentNullException.ThrowIfNull(content);
@@ -87,7 +89,7 @@ public sealed class OutputWriter
             Directory.CreateDirectory(directory);
         }
 
-        await File.WriteAllTextAsync(fullPath, content, _encoding);
+        await File.WriteAllTextAsync(fullPath, content, _encoding, cancellationToken);
         return fullPath;
     }
 
@@ -96,8 +98,9 @@ public sealed class OutputWriter
     /// </summary>
     /// <param name="relativePath">The relative file path.</param>
     /// <param name="content">The binary content.</param>
+    /// <param name="cancellationToken">A token to cancel the write operation.</param>
     /// <returns>The full file path that was written.</returns>
-    public async Task<string> WriteBinaryFileAsync(string relativePath, byte[] content)
+    public async Task<string> WriteBinaryFileAsync(string relativePath, byte[] content, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(relativePath);
         ArgumentNullException.ThrowIfNull(content);
@@ -110,7 +113,7 @@ public sealed class OutputWriter
             Directory.CreateDirectory(directory);
         }
 
-        await File.WriteAllBytesAsync(fullPath, content);
+        await File.WriteAllBytesAsync(fullPath, content, cancellationToken);
         return fullPath;
     }
 

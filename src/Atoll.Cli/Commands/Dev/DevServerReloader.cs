@@ -88,7 +88,7 @@ internal sealed class DevServerReloader
 
         // Phase 1: Config
         bar.Advance();
-        var config = await AtollConfigLoader.LoadAsync(_projectRoot);
+        var config = await AtollConfigLoader.LoadAsync(_projectRoot, CancellationToken.None);
         var pagesDirectory = AtollConfigLoader.ResolveSrcDirectory(config, _projectRoot);
 
         // Phase 2: Compile

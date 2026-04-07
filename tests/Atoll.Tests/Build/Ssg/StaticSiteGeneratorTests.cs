@@ -6,6 +6,7 @@ namespace Atoll.Build.Tests.Ssg;
 
 public sealed class StaticSiteGeneratorTests : IDisposable
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
     private readonly string _outputDir;
 
     public StaticSiteGeneratorTests()
@@ -30,7 +31,7 @@ public sealed class StaticSiteGeneratorTests : IDisposable
             new RouteEntry("/", typeof(TestHomePage), "index.cs"),
         };
 
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         result.IsSuccess.ShouldBeTrue();
         result.TotalCount.ShouldBe(1);
@@ -55,7 +56,7 @@ public sealed class StaticSiteGeneratorTests : IDisposable
             new RouteEntry("/contact", typeof(TestContactPage), "contact.cs"),
         };
 
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         result.IsSuccess.ShouldBeTrue();
         result.TotalCount.ShouldBe(3);
@@ -75,7 +76,7 @@ public sealed class StaticSiteGeneratorTests : IDisposable
             new RouteEntry("/blog/[slug]", typeof(TestBlogPage), "blog/[slug].cs"),
         };
 
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         result.IsSuccess.ShouldBeTrue();
         result.TotalCount.ShouldBe(2);
@@ -94,7 +95,7 @@ public sealed class StaticSiteGeneratorTests : IDisposable
             new RouteEntry("/blog/[slug]", typeof(TestBlogPageWithProps), "blog/[slug].cs"),
         };
 
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         result.IsSuccess.ShouldBeTrue();
         result.TotalCount.ShouldBe(1);
@@ -111,7 +112,7 @@ public sealed class StaticSiteGeneratorTests : IDisposable
             new RouteEntry("/api/posts", typeof(TestApiEndpoint), "api/posts.cs"),
         };
 
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         result.TotalCount.ShouldBe(1);
         result.PageResults[0].Route.UrlPath.ShouldBe("/");
@@ -127,7 +128,7 @@ public sealed class StaticSiteGeneratorTests : IDisposable
             new RouteEntry("/about", typeof(TestAboutPage), "about.cs"),
         };
 
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         result.IsSuccess.ShouldBeTrue();
 
@@ -152,7 +153,7 @@ public sealed class StaticSiteGeneratorTests : IDisposable
             new RouteEntry("/", typeof(TestHomePage), "index.cs"),
         };
 
-        await generator.GenerateAsync(routes);
+        await generator.GenerateAsync(routes, _ct);
 
         File.Exists(oldFile).ShouldBeFalse();
     }
@@ -171,7 +172,7 @@ public sealed class StaticSiteGeneratorTests : IDisposable
             new RouteEntry("/", typeof(TestHomePage), "index.cs"),
         };
 
-        await generator.GenerateAsync(routes);
+        await generator.GenerateAsync(routes, _ct);
 
         File.Exists(oldFile).ShouldBeTrue();
     }
@@ -180,7 +181,7 @@ public sealed class StaticSiteGeneratorTests : IDisposable
     public async Task ShouldHandleEmptyRouteTable()
     {
         var generator = CreateGenerator();
-        var result = await generator.GenerateAsync([]);
+        var result = await generator.GenerateAsync([], _ct);
 
         result.IsSuccess.ShouldBeTrue();
         result.TotalCount.ShouldBe(0);
@@ -195,7 +196,7 @@ public sealed class StaticSiteGeneratorTests : IDisposable
             new RouteEntry("/", typeof(TestHomePage), "index.cs"),
         };
 
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         result.TotalElapsed.ShouldBeGreaterThan(TimeSpan.Zero);
         result.PageResults[0].Elapsed.ShouldBeGreaterThan(TimeSpan.Zero);
@@ -211,7 +212,7 @@ public sealed class StaticSiteGeneratorTests : IDisposable
             new RouteEntry("/error", typeof(TestErrorPage), "error.cs"),
         };
 
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         result.IsSuccess.ShouldBeFalse();
         result.SuccessCount.ShouldBe(1);
@@ -232,7 +233,7 @@ public sealed class StaticSiteGeneratorTests : IDisposable
             new RouteEntry("/", typeof(TestPageWithLayout), "index.cs"),
         };
 
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         result.IsSuccess.ShouldBeTrue();
         var html = result.PageResults[0].Html;
@@ -254,7 +255,7 @@ public sealed class StaticSiteGeneratorTests : IDisposable
             new RouteEntry("/about", typeof(TestAboutPage), "about.cs"),
         };
 
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         result.IsSuccess.ShouldBeTrue();
         result.TotalCount.ShouldBe(2);
@@ -271,7 +272,7 @@ public sealed class StaticSiteGeneratorTests : IDisposable
             new RouteEntry("/page3", typeof(TestContactPage), "page3.cs"),
         };
 
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         result.IsSuccess.ShouldBeTrue();
         result.TotalCount.ShouldBe(3);
@@ -286,7 +287,7 @@ public sealed class StaticSiteGeneratorTests : IDisposable
             new RouteEntry("/blog/[slug]", typeof(TestBlogPage), "blog/[slug].cs"),
         };
 
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         result.IsSuccess.ShouldBeTrue();
 
@@ -304,7 +305,7 @@ public sealed class StaticSiteGeneratorTests : IDisposable
     public void ShouldThrowOnNullRoutes()
     {
         var generator = CreateGenerator();
-        Should.ThrowAsync<ArgumentNullException>(() => generator.GenerateAsync(null!));
+        Should.ThrowAsync<ArgumentNullException>(() => generator.GenerateAsync(null!, _ct));
     }
 
     [Fact]
@@ -324,7 +325,7 @@ public sealed class StaticSiteGeneratorTests : IDisposable
             new RouteEntry("/blog/[slug]", typeof(TestBlogPage), "blog/[slug].cs"),
         };
 
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         result.IsSuccess.ShouldBeTrue();
         result.TotalCount.ShouldBe(4); // 2 static + 2 dynamic
@@ -345,7 +346,7 @@ public sealed class StaticSiteGeneratorTests : IDisposable
             new RouteEntry("/", typeof(TestHomePage), "index.cs"),
         };
 
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         result.PageResults[0].Html.ShouldStartWith("<!DOCTYPE html>");
     }

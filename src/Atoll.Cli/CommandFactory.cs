@@ -34,7 +34,7 @@ public static class CommandFactory
         {
             var root = parseResult.GetValue<string>("--root")!;
             var handler = new Commands.BuildCommandHandler();
-            await handler.ExecuteAsync(root);
+            await handler.ExecuteAsync(root, cancellationToken);
         });
 
         return command;
@@ -55,7 +55,7 @@ public static class CommandFactory
             var root = parseResult.GetValue<string>("--root")!;
             var port = parseResult.GetValue(portOption);
             var handler = new Commands.DevCommandHandler();
-            await handler.ExecuteAsync(root, port);
+            await handler.ExecuteAsync(root, port, cancellationToken);
         });
 
         return command;
@@ -76,7 +76,7 @@ public static class CommandFactory
             var root = parseResult.GetValue<string>("--root")!;
             var port = parseResult.GetValue(portOption);
             var handler = new Commands.PreviewCommandHandler();
-            await handler.ExecuteAsync(root, port);
+            await handler.ExecuteAsync(root, port, cancellationToken);
         });
 
         return command;

@@ -4,6 +4,7 @@ namespace Atoll.Build.Tests.Ssg;
 
 public sealed class OutputWriterTests : IDisposable
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
     private readonly string _testOutputDir;
     private readonly OutputWriter _writer;
 
@@ -25,7 +26,7 @@ public sealed class OutputWriterTests : IDisposable
     [Fact]
     public async Task ShouldWriteRootPageAsIndexHtml()
     {
-        var path = await _writer.WritePageAsync("/", "<h1>Home</h1>");
+        var path = await _writer.WritePageAsync("/", "<h1>Home</h1>", _ct);
 
         File.Exists(path).ShouldBeTrue();
         var content = await File.ReadAllTextAsync(path);
@@ -36,7 +37,7 @@ public sealed class OutputWriterTests : IDisposable
     [Fact]
     public async Task ShouldWritePageWithCleanUrl()
     {
-        var path = await _writer.WritePageAsync("/about", "<h1>About</h1>");
+        var path = await _writer.WritePageAsync("/about", "<h1>About</h1>", _ct);
 
         File.Exists(path).ShouldBeTrue();
         path.ShouldContain("about");
@@ -48,7 +49,7 @@ public sealed class OutputWriterTests : IDisposable
     [Fact]
     public async Task ShouldWriteNestedPage()
     {
-        var path = await _writer.WritePageAsync("/blog/my-post", "<h1>Blog Post</h1>");
+        var path = await _writer.WritePageAsync("/blog/my-post", "<h1>Blog Post</h1>", _ct);
 
         File.Exists(path).ShouldBeTrue();
         path.ShouldContain("blog");
@@ -59,7 +60,7 @@ public sealed class OutputWriterTests : IDisposable
     [Fact]
     public async Task ShouldWriteDeeplyNestedPage()
     {
-        var path = await _writer.WritePageAsync("/docs/guides/advanced/setup", "<h1>Setup</h1>");
+        var path = await _writer.WritePageAsync("/docs/guides/advanced/setup", "<h1>Setup</h1>", _ct);
 
         File.Exists(path).ShouldBeTrue();
         path.ShouldContain("docs");
@@ -71,7 +72,7 @@ public sealed class OutputWriterTests : IDisposable
     [Fact]
     public async Task ShouldWriteFileWithRelativePath()
     {
-        var path = await _writer.WriteFileAsync("assets/style.css", "body { margin: 0; }");
+        var path = await _writer.WriteFileAsync("assets/style.css", "body { margin: 0; }", _ct);
 
         File.Exists(path).ShouldBeTrue();
         var content = await File.ReadAllTextAsync(path);
@@ -82,7 +83,7 @@ public sealed class OutputWriterTests : IDisposable
     public async Task ShouldWriteBinaryFile()
     {
         var content = new byte[] { 0x89, 0x50, 0x4E, 0x47 }; // PNG header
-        var path = await _writer.WriteBinaryFileAsync("images/logo.png", content);
+        var path = await _writer.WriteBinaryFileAsync("images/logo.png", content, _ct);
 
         File.Exists(path).ShouldBeTrue();
         var written = await File.ReadAllBytesAsync(path);
@@ -130,7 +131,7 @@ public sealed class OutputWriterTests : IDisposable
     [InlineData("/blog/my-post", "blog")]
     public async Task ShouldConvertUrlPathToCorrectFilePath(string urlPath, string expectedContains)
     {
-        var path = await _writer.WritePageAsync(urlPath, "<html></html>");
+        var path = await _writer.WritePageAsync(urlPath, "<html></html>", _ct);
 
         path.ShouldEndWith("index.html");
         path.ShouldContain(expectedContains);
@@ -140,7 +141,7 @@ public sealed class OutputWriterTests : IDisposable
     [Fact]
     public async Task ShouldWriteRootUrlToIndexHtml()
     {
-        var path = await _writer.WritePageAsync("/", "<html></html>");
+        var path = await _writer.WritePageAsync("/", "<html></html>", _ct);
 
         // The path should be directly in the output dir as index.html
         Path.GetFileName(path).ShouldBe("index.html");
@@ -150,13 +151,13 @@ public sealed class OutputWriterTests : IDisposable
     [Fact]
     public void ShouldThrowOnNullUrlPath()
     {
-        Should.ThrowAsync<ArgumentNullException>(() => _writer.WritePageAsync(null!, "html"));
+        Should.ThrowAsync<ArgumentNullException>(() => _writer.WritePageAsync(null!, "html", _ct));
     }
 
     [Fact]
     public void ShouldThrowOnNullHtml()
     {
-        Should.ThrowAsync<ArgumentNullException>(() => _writer.WritePageAsync("/", null!));
+        Should.ThrowAsync<ArgumentNullException>(() => _writer.WritePageAsync("/", null!, _ct));
     }
 
     [Fact]

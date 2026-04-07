@@ -4,6 +4,7 @@ namespace Atoll.Tests.Islands;
 
 public sealed class IslandAssetWriterTests : IDisposable
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
     private readonly string _outputDir;
 
     public IslandAssetWriterTests()
@@ -32,7 +33,7 @@ public sealed class IslandAssetWriterTests : IDisposable
             assembly);
 
         var writer = new IslandAssetWriter(_outputDir);
-        var result = await writer.WriteAsync([descriptor]);
+        var result = await writer.WriteAsync([descriptor], _ct);
 
         result.FileCount.ShouldBe(1);
         var expectedPath = Path.Combine(_outputDir, "scripts", "atoll-island.js");
@@ -49,7 +50,7 @@ public sealed class IslandAssetWriterTests : IDisposable
             assembly);
 
         var writer = new IslandAssetWriter(_outputDir);
-        await writer.WriteAsync([descriptor]);
+        await writer.WriteAsync([descriptor], _ct);
 
         var expectedPath = Path.Combine(_outputDir, "deep", "sub", "dir", "atoll-island.js");
         File.Exists(expectedPath).ShouldBeTrue();
@@ -72,7 +73,7 @@ public sealed class IslandAssetWriterTests : IDisposable
         };
 
         var writer = new IslandAssetWriter(_outputDir);
-        var result = await writer.WriteAsync(descriptors);
+        var result = await writer.WriteAsync(descriptors, _ct);
 
         result.FileCount.ShouldBe(2);
         result.WrittenPaths.Count.ShouldBe(2);
@@ -88,7 +89,7 @@ public sealed class IslandAssetWriterTests : IDisposable
             assembly);
 
         var writer = new IslandAssetWriter(_outputDir);
-        await writer.WriteAsync([descriptor]);
+        await writer.WriteAsync([descriptor], _ct);
 
         var content = await File.ReadAllTextAsync(Path.Combine(_outputDir, "scripts", "atoll-island.js"));
         content.ShouldNotBeNullOrWhiteSpace();
@@ -106,7 +107,7 @@ public sealed class IslandAssetWriterTests : IDisposable
         var writer = new IslandAssetWriter(_outputDir);
 
         await Should.ThrowAsync<InvalidOperationException>(
-            async () => await writer.WriteAsync([descriptor]));
+            async () => await writer.WriteAsync([descriptor], _ct));
     }
 
     [Fact]
@@ -115,7 +116,7 @@ public sealed class IslandAssetWriterTests : IDisposable
         var writer = new IslandAssetWriter(_outputDir);
 
         await Should.ThrowAsync<ArgumentNullException>(
-            async () => await writer.WriteAsync(null!));
+            async () => await writer.WriteAsync(null!, _ct));
     }
 
     // ── Constructor ──

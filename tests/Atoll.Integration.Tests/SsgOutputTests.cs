@@ -18,6 +18,7 @@ namespace Atoll.Integration.Tests;
 /// </summary>
 public sealed class SsgOutputTests : IDisposable
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
     private readonly string _outputDir;
 
     public SsgOutputTests()
@@ -43,7 +44,7 @@ public sealed class SsgOutputTests : IDisposable
         var generator = new StaticSiteGenerator(ssgOptions);
 
         var routes = CreatePortfolioRoutes();
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         result.IsSuccess.ShouldBeTrue();
         result.TotalCount.ShouldBe(4);
@@ -248,7 +249,8 @@ public sealed class SsgOutputTests : IDisposable
         var pipeline = new AssetPipeline(pipelineOptions, outputWriter);
         var assetResult = await pipeline.RunAsync(
             Array.Empty<Type>(),
-            new[] { "document.addEventListener('DOMContentLoaded', function(){});" });
+            new[] { "document.addEventListener('DOMContentLoaded', function(){});" },
+            _ct);
 
         // Post-process HTML with explicit CSS href (simulating extracted CSS from inline styles)
         // and the real JS href from the pipeline
@@ -306,11 +308,11 @@ public sealed class SsgOutputTests : IDisposable
     {
         var ssgOptions = new SsgOptions(_outputDir) { BaseUrl = "https://alexchen.dev" };
         var generator = new StaticSiteGenerator(ssgOptions);
-        var ssgResult = await generator.GenerateAsync(CreatePortfolioRoutes());
+        var ssgResult = await generator.GenerateAsync(CreatePortfolioRoutes(), _ct);
 
         var manifestWriter = new BuildManifestWriter(_outputDir);
         var manifest = BuildManifestWriter.BuildFrom(ssgResult, null, ssgOptions);
-        var manifestPath = await manifestWriter.WriteAsync(manifest);
+        var manifestPath = await manifestWriter.WriteAsync(manifest, _ct);
 
         File.Exists(manifestPath).ShouldBeTrue();
         var json = await File.ReadAllTextAsync(manifestPath);
@@ -359,7 +361,7 @@ public sealed class SsgOutputTests : IDisposable
         // Build with sequential rendering
         var sequentialOptions = new SsgOptions(_outputDir) { MaxConcurrency = 1 };
         var generator = new StaticSiteGenerator(sequentialOptions);
-        var result = await generator.GenerateAsync(CreatePortfolioRoutes());
+        var result = await generator.GenerateAsync(CreatePortfolioRoutes(), _ct);
 
         result.IsSuccess.ShouldBeTrue();
         result.TotalCount.ShouldBe(4);
@@ -382,7 +384,7 @@ public sealed class SsgOutputTests : IDisposable
 
         var ssgOptions = new SsgOptions(_outputDir) { CleanOutputDirectory = true };
         var generator = new StaticSiteGenerator(ssgOptions);
-        await generator.GenerateAsync(CreatePortfolioRoutes());
+        await generator.GenerateAsync(CreatePortfolioRoutes(), _ct);
 
         File.Exists(Path.Combine(_outputDir, "stale.html")).ShouldBeFalse();
         File.Exists(Path.Combine(_outputDir, "index.html")).ShouldBeTrue();
@@ -396,7 +398,7 @@ public sealed class SsgOutputTests : IDisposable
 
         var ssgOptions = new SsgOptions(_outputDir) { CleanOutputDirectory = false };
         var generator = new StaticSiteGenerator(ssgOptions);
-        await generator.GenerateAsync(CreatePortfolioRoutes());
+        await generator.GenerateAsync(CreatePortfolioRoutes(), _ct);
 
         File.Exists(Path.Combine(_outputDir, "extra.txt")).ShouldBeTrue();
         File.Exists(Path.Combine(_outputDir, "index.html")).ShouldBeTrue();
@@ -427,13 +429,13 @@ public sealed class SsgOutputTests : IDisposable
         var portfolioDir = Path.Combine(_outputDir, "portfolio");
         var portfolioOptions = new SsgOptions(portfolioDir);
         var portfolioGenerator = new StaticSiteGenerator(portfolioOptions);
-        var portfolioResult = await portfolioGenerator.GenerateAsync(CreatePortfolioRoutes());
+        var portfolioResult = await portfolioGenerator.GenerateAsync(CreatePortfolioRoutes(), _ct);
 
         // Build blog static pages
         var blogDir = Path.Combine(_outputDir, "blog");
         var blogOptions = new SsgOptions(blogDir);
         var blogGenerator = new StaticSiteGenerator(blogOptions);
-        var blogResult = await blogGenerator.GenerateAsync(CreateBlogStaticRoutes());
+        var blogResult = await blogGenerator.GenerateAsync(CreateBlogStaticRoutes(), _ct);
 
         portfolioResult.IsSuccess.ShouldBeTrue();
         blogResult.IsSuccess.ShouldBeTrue();
@@ -502,7 +504,7 @@ public sealed class SsgOutputTests : IDisposable
         var ssgOptions = new SsgOptions(_outputDir);
         var generator = new StaticSiteGenerator(ssgOptions);
 
-        var result = await generator.GenerateAsync(Array.Empty<RouteEntry>());
+        var result = await generator.GenerateAsync(Array.Empty<RouteEntry>(), _ct);
 
         result.IsSuccess.ShouldBeTrue();
         result.TotalCount.ShouldBe(0);
@@ -547,7 +549,7 @@ public sealed class SsgOutputTests : IDisposable
     {
         var ssgOptions = new SsgOptions(_outputDir) { BasePath = "/portfolio" };
         var generator = new StaticSiteGenerator(ssgOptions);
-        var result = await generator.GenerateAsync(CreatePortfolioRoutes());
+        var result = await generator.GenerateAsync(CreatePortfolioRoutes(), _ct);
 
         result.IsSuccess.ShouldBeTrue();
 
@@ -561,7 +563,7 @@ public sealed class SsgOutputTests : IDisposable
     {
         var ssgOptions = new SsgOptions(_outputDir) { BasePath = "/portfolio" };
         var generator = new StaticSiteGenerator(ssgOptions);
-        var result = await generator.GenerateAsync(CreatePortfolioRoutes());
+        var result = await generator.GenerateAsync(CreatePortfolioRoutes(), _ct);
 
         var postProcessor = new HtmlPostProcessor(new HtmlPostProcessorOptions
         {
@@ -622,14 +624,14 @@ public sealed class SsgOutputTests : IDisposable
     {
         var ssgOptions = new SsgOptions(_outputDir);
         var generator = new StaticSiteGenerator(ssgOptions);
-        return await generator.GenerateAsync(CreatePortfolioRoutes());
+        return await generator.GenerateAsync(CreatePortfolioRoutes(), _ct);
     }
 
     private async Task<SsgResult> BuildBlogStaticPagesAsync()
     {
         var ssgOptions = new SsgOptions(_outputDir);
         var generator = new StaticSiteGenerator(ssgOptions);
-        return await generator.GenerateAsync(CreateBlogStaticRoutes());
+        return await generator.GenerateAsync(CreateBlogStaticRoutes(), _ct);
     }
 
     private async Task<string> ReadOutputFileAsync(string relativePath)

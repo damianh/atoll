@@ -81,7 +81,7 @@ public sealed class LiveReloadMiddleware
 
             context.Response.Body = originalBody;
             context.Response.ContentLength = responseBody.Length;
-            await context.Response.Body.WriteAsync(responseBody);
+            await context.Response.Body.WriteAsync(responseBody, context.RequestAborted);
         }
         catch
         {

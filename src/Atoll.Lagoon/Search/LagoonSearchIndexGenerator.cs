@@ -39,10 +39,12 @@ public sealed class LagoonSearchIndexGenerator
     /// </summary>
     /// <param name="query">The content collection query for accessing content entries.</param>
     /// <param name="configuration">The search index configuration that provides documents to index.</param>
+    /// <param name="cancellationToken">A token to cancel the generation operation.</param>
     /// <returns>A <see cref="SearchIndexGenerationResult"/> with stats about the generated index.</returns>
     public async Task<SearchIndexGenerationResult> GenerateAsync(
         CollectionQuery query,
-        ISearchIndexConfiguration configuration)
+        ISearchIndexConfiguration configuration,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
         ArgumentNullException.ThrowIfNull(configuration);
@@ -56,7 +58,7 @@ public sealed class LagoonSearchIndexGenerator
         }
 
         var index = builder.Build();
-        await _writer.WriteAsync(index, _outputDirectory);
+        await _writer.WriteAsync(index, _outputDirectory, cancellationToken);
 
         sw.Stop();
         var outputPath = Path.Combine(_outputDirectory, "search-index.json");
@@ -68,12 +70,14 @@ public sealed class LagoonSearchIndexGenerator
     /// writes <c>search-index.json</c> to the output directory.
     /// </summary>
     /// <param name="documents">The documents to include in the search index.</param>
+    /// <param name="cancellationToken">A token to cancel the generation operation.</param>
     /// <returns>A <see cref="SearchIndexGenerationResult"/> with stats about the generated index.</returns>
     public async Task<SearchIndexGenerationResult> GenerateAsync(
-        IEnumerable<SearchDocumentInput> documents)
+        IEnumerable<SearchDocumentInput> documents,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(documents);
-        return await GenerateFromDocumentsAsync(documents, "", "");
+        return await GenerateFromDocumentsAsync(documents, "", "", cancellationToken);
     }
 
     /// <summary>
@@ -86,14 +90,16 @@ public sealed class LagoonSearchIndexGenerator
     /// <c>{outputDirectory}/{localePrefix}/search-index.json</c>.
     /// When empty, the index is written to <c>{outputDirectory}/search-index.json</c>.
     /// </param>
+    /// <param name="cancellationToken">A token to cancel the generation operation.</param>
     /// <returns>A <see cref="SearchIndexGenerationResult"/> with stats about the generated index.</returns>
     public async Task<SearchIndexGenerationResult> GenerateAsync(
         IEnumerable<SearchDocumentInput> documents,
-        string localePrefix)
+        string localePrefix,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(documents);
         ArgumentNullException.ThrowIfNull(localePrefix);
-        return await GenerateFromDocumentsAsync(documents, localePrefix, "");
+        return await GenerateFromDocumentsAsync(documents, localePrefix, "", cancellationToken);
     }
 
     /// <summary>
@@ -112,22 +118,25 @@ public sealed class LagoonSearchIndexGenerator
     /// When both are non-empty, the index is written to
     /// <c>{outputDirectory}/{localePrefix}/{versionPrefix}/search-index.json</c>.
     /// </param>
+    /// <param name="cancellationToken">A token to cancel the generation operation.</param>
     /// <returns>A <see cref="SearchIndexGenerationResult"/> with stats about the generated index.</returns>
     public async Task<SearchIndexGenerationResult> GenerateAsync(
         IEnumerable<SearchDocumentInput> documents,
         string localePrefix,
-        string versionPrefix)
+        string versionPrefix,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(documents);
         ArgumentNullException.ThrowIfNull(localePrefix);
         ArgumentNullException.ThrowIfNull(versionPrefix);
-        return await GenerateFromDocumentsAsync(documents, localePrefix, versionPrefix);
+        return await GenerateFromDocumentsAsync(documents, localePrefix, versionPrefix, cancellationToken);
     }
 
     private async Task<SearchIndexGenerationResult> GenerateFromDocumentsAsync(
         IEnumerable<SearchDocumentInput> documents,
         string localePrefix,
-        string versionPrefix)
+        string versionPrefix,
+        CancellationToken cancellationToken)
     {
         var sw = Stopwatch.StartNew();
 
@@ -140,7 +149,7 @@ public sealed class LagoonSearchIndexGenerator
         var index = builder.Build();
 
         var targetDirectory = ResolveOutputDirectory(localePrefix, versionPrefix);
-        await _writer.WriteAsync(index, targetDirectory);
+        await _writer.WriteAsync(index, targetDirectory, cancellationToken);
 
         sw.Stop();
         var outputPath = Path.Combine(targetDirectory, "search-index.json");

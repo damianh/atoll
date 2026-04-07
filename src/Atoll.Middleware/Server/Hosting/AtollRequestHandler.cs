@@ -139,7 +139,7 @@ public sealed class AtollRequestHandler
 
         var response = await EndpointDispatcher.DispatchAsync(endpoint, endpointContext);
 
-        await WriteAtollResponseAsync(httpContext.Response, response);
+        await WriteAtollResponseAsync(httpContext.Response, response, httpContext.RequestAborted);
     }
 
     /// <summary>
@@ -203,13 +203,13 @@ public sealed class AtollRequestHandler
             httpContext.Response.ContentType = "text/html; charset=utf-8";
             httpContext.Response.Headers["ETag"] = etag;
             httpContext.Response.Headers["Cache-Control"] = "no-cache";
-            await httpContext.Response.Body.WriteAsync(bodyBytes);
+            await httpContext.Response.Body.WriteAsync(bodyBytes, httpContext.RequestAborted);
         }
         else
         {
             httpContext.Response.StatusCode = result.StatusCode;
             httpContext.Response.ContentType = "text/html; charset=utf-8";
-            await result.WriteToStreamAsync(httpContext.Response.Body);
+            await result.WriteToStreamAsync(httpContext.Response.Body, httpContext.RequestAborted);
         }
     }
 
@@ -264,7 +264,10 @@ public sealed class AtollRequestHandler
     /// <summary>
     /// Writes an <see cref="AtollResponse"/> to the ASP.NET Core <see cref="HttpResponse"/>.
     /// </summary>
-    private static async Task WriteAtollResponseAsync(HttpResponse httpResponse, AtollResponse atollResponse)
+    private static async Task WriteAtollResponseAsync(
+        HttpResponse httpResponse,
+        AtollResponse atollResponse,
+        CancellationToken cancellationToken)
     {
         httpResponse.StatusCode = atollResponse.StatusCode;
 
@@ -275,7 +278,7 @@ public sealed class AtollRequestHandler
 
         if (atollResponse.Body is not null)
         {
-            await httpResponse.Body.WriteAsync(atollResponse.Body);
+            await httpResponse.Body.WriteAsync(atollResponse.Body, cancellationToken);
         }
     }
 }

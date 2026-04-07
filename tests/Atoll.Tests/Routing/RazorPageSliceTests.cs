@@ -14,6 +14,7 @@ namespace Atoll.Tests.Routing;
 /// </summary>
 public sealed class RazorPageSliceTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
     // ── Proxy type checks ──
 
     [Fact]
@@ -80,7 +81,7 @@ public sealed class RazorPageSliceTests
                 new RouteEntry("/razor-about", typeof(AboutRazorPage), "/razor-about"),
             };
 
-            var result = await generator.GenerateAsync(routes);
+            var result = await generator.GenerateAsync(routes, _ct);
 
             if (!result.IsSuccess)
             {

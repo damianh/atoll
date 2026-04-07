@@ -50,8 +50,9 @@ public sealed class StaticAssetCopier
     /// preserving the relative directory structure.
     /// </summary>
     /// <param name="sourceDirectory">The directory containing static assets.</param>
+    /// <param name="cancellationToken">A token to cancel the copy operation.</param>
     /// <returns>A <see cref="CopyResult"/> listing the files that were copied.</returns>
-    public async Task<CopyResult> CopyAsync(string sourceDirectory)
+    public async Task<CopyResult> CopyAsync(string sourceDirectory, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(sourceDirectory);
 
@@ -61,7 +62,7 @@ public sealed class StaticAssetCopier
         }
 
         var copiedFiles = new List<CopiedFile>();
-        await CopyDirectoryAsync(sourceDirectory, _outputDirectory, sourceDirectory, copiedFiles);
+        await CopyDirectoryAsync(sourceDirectory, _outputDirectory, sourceDirectory, copiedFiles, cancellationToken);
         return new CopyResult(copiedFiles);
     }
 
@@ -96,19 +97,22 @@ public sealed class StaticAssetCopier
         string sourceDir,
         string destDir,
         string rootSource,
-        List<CopiedFile> copiedFiles)
+        List<CopiedFile> copiedFiles,
+        CancellationToken cancellationToken)
     {
         Directory.CreateDirectory(destDir);
 
         // Copy files
         foreach (var filePath in Directory.GetFiles(sourceDir))
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var fileName = Path.GetFileName(filePath);
             var destPath = Path.Combine(destDir, fileName);
 
             await using var sourceStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 4096, useAsync: true);
             await using var destStream = new FileStream(destPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true);
-            await sourceStream.CopyToAsync(destStream);
+            await sourceStream.CopyToAsync(destStream, cancellationToken);
 
             var relativePath = Path.GetRelativePath(rootSource, filePath);
             copiedFiles.Add(new CopiedFile(relativePath, destPath, new FileInfo(filePath).Length));
@@ -118,7 +122,7 @@ public sealed class StaticAssetCopier
         foreach (var dirPath in Directory.GetDirectories(sourceDir))
         {
             var dirName = Path.GetFileName(dirPath);
-            await CopyDirectoryAsync(dirPath, Path.Combine(destDir, dirName), rootSource, copiedFiles);
+            await CopyDirectoryAsync(dirPath, Path.Combine(destDir, dirName), rootSource, copiedFiles, cancellationToken);
         }
     }
 }

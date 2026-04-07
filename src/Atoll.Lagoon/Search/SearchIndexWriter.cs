@@ -38,15 +38,16 @@ public sealed class SearchIndexWriter
     /// </summary>
     /// <param name="index">The search index to write.</param>
     /// <param name="outputDirectory">The directory to write the file into.</param>
+    /// <param name="cancellationToken">A token to cancel the write operation.</param>
     /// <returns>A task representing the asynchronous write operation.</returns>
-    public async Task WriteAsync(SearchIndex index, string outputDirectory)
+    public async Task WriteAsync(SearchIndex index, string outputDirectory, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(index);
         ArgumentNullException.ThrowIfNull(outputDirectory);
         var path = Path.Combine(outputDirectory, "search-index.json");
         var json = Serialize(index);
         Directory.CreateDirectory(outputDirectory);
-        await File.WriteAllTextAsync(path, json);
+        await File.WriteAllTextAsync(path, json, cancellationToken);
     }
 
     /// <summary>

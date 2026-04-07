@@ -5,6 +5,7 @@ namespace Atoll.Lagoon.Tests.Redirects;
 
 public sealed class LagoonRedirectGeneratorTests : IDisposable
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
     private readonly string _outputDir;
 
     public LagoonRedirectGeneratorTests()
@@ -29,7 +30,7 @@ public sealed class LagoonRedirectGeneratorTests : IDisposable
         var generator = new LagoonRedirectGenerator(_outputDir);
         var config = new StubRedirectConfig([]);
 
-        await generator.GenerateAsync(CreateEmptyQuery(), config);
+        await generator.GenerateAsync(CreateEmptyQuery(), config, _ct);
 
         var content = await File.ReadAllTextAsync(Path.Combine(_outputDir, "_redirects"));
         content.ShouldBeEmpty();
@@ -41,7 +42,7 @@ public sealed class LagoonRedirectGeneratorTests : IDisposable
         var generator = new LagoonRedirectGenerator(_outputDir);
         var config = new StubRedirectConfig([new RedirectRule("/old", "/new", 301)]);
 
-        await generator.GenerateAsync(CreateEmptyQuery(), config);
+        await generator.GenerateAsync(CreateEmptyQuery(), config, _ct);
 
         var content = await File.ReadAllTextAsync(Path.Combine(_outputDir, "_redirects"));
         content.ShouldContain("/old /new 301");
@@ -53,7 +54,7 @@ public sealed class LagoonRedirectGeneratorTests : IDisposable
         var generator = new LagoonRedirectGenerator(_outputDir);
         var config = new StubRedirectConfig([new RedirectRule("/temp", "/destination", 302)]);
 
-        await generator.GenerateAsync(CreateEmptyQuery(), config);
+        await generator.GenerateAsync(CreateEmptyQuery(), config, _ct);
 
         var content = await File.ReadAllTextAsync(Path.Combine(_outputDir, "_redirects"));
         content.ShouldContain("/temp /destination 302");
@@ -70,7 +71,7 @@ public sealed class LagoonRedirectGeneratorTests : IDisposable
             new RedirectRule("/third", "/c", 301),
         ]);
 
-        await generator.GenerateAsync(CreateEmptyQuery(), config);
+        await generator.GenerateAsync(CreateEmptyQuery(), config, _ct);
 
         var lines = (await File.ReadAllTextAsync(Path.Combine(_outputDir, "_redirects")))
             .Split('\n', StringSplitOptions.RemoveEmptyEntries);
@@ -91,7 +92,7 @@ public sealed class LagoonRedirectGeneratorTests : IDisposable
             new RedirectRule("/valid", "/dest", 301),
         ]);
 
-        var result = await generator.GenerateAsync(CreateEmptyQuery(), config);
+        var result = await generator.GenerateAsync(CreateEmptyQuery(), config, _ct);
 
         result.RuleCount.ShouldBe(1);
         var content = await File.ReadAllTextAsync(Path.Combine(_outputDir, "_redirects"));
@@ -109,7 +110,7 @@ public sealed class LagoonRedirectGeneratorTests : IDisposable
             new RedirectRule("/valid", "/dest", 301),
         ]);
 
-        var result = await generator.GenerateAsync(CreateEmptyQuery(), config);
+        var result = await generator.GenerateAsync(CreateEmptyQuery(), config, _ct);
 
         result.RuleCount.ShouldBe(1);
         var content = await File.ReadAllTextAsync(Path.Combine(_outputDir, "_redirects"));
@@ -124,7 +125,7 @@ public sealed class LagoonRedirectGeneratorTests : IDisposable
         var generator = new LagoonRedirectGenerator(_outputDir);
         var config = new StubRedirectConfig([new RedirectRule("/old", "/new")]);
 
-        await generator.GenerateAsync(CreateEmptyQuery(), config);
+        await generator.GenerateAsync(CreateEmptyQuery(), config, _ct);
 
         File.Exists(Path.Combine(_outputDir, "_redirects")).ShouldBeTrue();
     }
@@ -142,7 +143,7 @@ public sealed class LagoonRedirectGeneratorTests : IDisposable
             new RedirectRule("/c", "/z"),
         ]);
 
-        var result = await generator.GenerateAsync(CreateEmptyQuery(), config);
+        var result = await generator.GenerateAsync(CreateEmptyQuery(), config, _ct);
 
         result.RuleCount.ShouldBe(3);
     }
@@ -153,7 +154,7 @@ public sealed class LagoonRedirectGeneratorTests : IDisposable
         var generator = new LagoonRedirectGenerator(_outputDir);
         var config = new StubRedirectConfig([new RedirectRule("/old", "/new")]);
 
-        var result = await generator.GenerateAsync(CreateEmptyQuery(), config);
+        var result = await generator.GenerateAsync(CreateEmptyQuery(), config, _ct);
 
         result.Elapsed.ShouldBeGreaterThanOrEqualTo(TimeSpan.Zero);
     }

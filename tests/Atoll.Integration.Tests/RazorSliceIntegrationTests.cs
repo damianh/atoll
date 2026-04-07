@@ -13,6 +13,7 @@ namespace Atoll.Integration.Tests;
 /// </summary>
 public sealed class RazorSliceIntegrationTests : IDisposable
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
     private readonly string _outputDir;
 
     public RazorSliceIntegrationTests()
@@ -71,7 +72,7 @@ public sealed class RazorSliceIntegrationTests : IDisposable
             new RouteEntry("/about-razor", typeof(AboutRazorPage), "about-razor.cs"),
         };
 
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         if (!result.IsSuccess)
         {
@@ -97,7 +98,7 @@ public sealed class RazorSliceIntegrationTests : IDisposable
             new RouteEntry("/about-razor", typeof(AboutRazorPage), "about-razor.cs"),
         };
 
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         result.IsSuccess.ShouldBeTrue();
         var html = result.PageResults[0].Html;
@@ -127,7 +128,7 @@ public sealed class RazorSliceIntegrationTests : IDisposable
             new RouteEntry("/about-razor", typeof(AboutRazorPage), "about-razor.cs"),
         };
 
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         result.IsSuccess.ShouldBeTrue();
         result.TotalCount.ShouldBe(2);
@@ -147,7 +148,7 @@ public sealed class RazorSliceIntegrationTests : IDisposable
             new RouteEntry("/about-razor", typeof(AboutRazorPage), "about-razor.cs"),
         };
 
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         result.IsSuccess.ShouldBeTrue();
         var aboutHtml = result.PageResults.First(r => r.Route.UrlPath == "/about").Html;
@@ -170,7 +171,7 @@ public sealed class RazorSliceIntegrationTests : IDisposable
             new RouteEntry("/about-razor", typeof(AboutRazorPage), "about-razor.cs"),
         };
 
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         result.IsSuccess.ShouldBeTrue();
         var razorHtml = result.PageResults.First(r => r.Route.UrlPath == "/about-razor").Html;
@@ -193,7 +194,7 @@ public sealed class RazorSliceIntegrationTests : IDisposable
             new RouteEntry("/about-razor", typeof(AboutRazorPage), "about-razor.cs"),
         };
 
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         result.IsSuccess.ShouldBeTrue();
         foreach (var pageResult in result.PageResults)
@@ -225,7 +226,7 @@ public sealed class RazorSliceIntegrationTests : IDisposable
             new RouteEntry("/about-razor", typeof(AboutRazorPage), "about-razor.cs"),
         };
 
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
         result.IsSuccess.ShouldBeTrue();
 
         var html = result.PageResults[0].Html;
@@ -252,7 +253,7 @@ public sealed class RazorSliceIntegrationTests : IDisposable
             new RouteEntry("/about-razor", typeof(AboutRazorPage), "about-razor.cs"),
         };
 
-        var result = await generator.GenerateAsync(routes);
+        var result = await generator.GenerateAsync(routes, _ct);
 
         result.IsSuccess.ShouldBeTrue();
 

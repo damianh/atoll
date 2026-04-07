@@ -4,6 +4,7 @@ namespace Atoll.Tests.Configuration;
 
 public sealed class AtollConfigLoaderTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
     // ── Deserialization ──
 
     [Fact]
@@ -196,7 +197,7 @@ public sealed class AtollConfigLoaderTests
 
         try
         {
-            var config = await AtollConfigLoader.LoadAsync(tempDir);
+            var config = await AtollConfigLoader.LoadAsync(tempDir, _ct);
 
             config.ShouldNotBeNull();
             config.Site.ShouldBe("");
@@ -219,7 +220,7 @@ public sealed class AtollConfigLoaderTests
             var json = """{ "site": "https://test.com", "outDir": "output" }""";
             await File.WriteAllTextAsync(Path.Combine(tempDir, "atoll.json"), json);
 
-            var config = await AtollConfigLoader.LoadAsync(tempDir);
+            var config = await AtollConfigLoader.LoadAsync(tempDir, _ct);
 
             config.Site.ShouldBe("https://test.com");
             config.OutDir.ShouldBe("output");
@@ -234,7 +235,7 @@ public sealed class AtollConfigLoaderTests
     public async Task ShouldThrowOnNullDirectoryForLoadAsync()
     {
         await Should.ThrowAsync<ArgumentNullException>(() =>
-            AtollConfigLoader.LoadAsync(null!));
+            AtollConfigLoader.LoadAsync(null!, _ct));
     }
 
     // ── LoadFromFileAsync ──
@@ -243,7 +244,7 @@ public sealed class AtollConfigLoaderTests
     public async Task ShouldReturnDefaultConfigWhenSpecificFileDoesNotExist()
     {
         var config = await AtollConfigLoader.LoadFromFileAsync(
-            Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString(), "atoll.json"));
+            Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString(), "atoll.json"), _ct);
 
         config.ShouldNotBeNull();
         config.Site.ShouldBe("");
@@ -259,7 +260,7 @@ public sealed class AtollConfigLoaderTests
             await File.WriteAllTextAsync(tempFile,
                 """{ "site": "https://file-test.com" }""");
 
-            var config = await AtollConfigLoader.LoadFromFileAsync(tempFile);
+            var config = await AtollConfigLoader.LoadFromFileAsync(tempFile, _ct);
             config.Site.ShouldBe("https://file-test.com");
         }
         finally
@@ -275,7 +276,7 @@ public sealed class AtollConfigLoaderTests
     public async Task ShouldThrowOnNullFilePathForLoadFromFileAsync()
     {
         await Should.ThrowAsync<ArgumentNullException>(() =>
-            AtollConfigLoader.LoadFromFileAsync(null!));
+            AtollConfigLoader.LoadFromFileAsync(null!, _ct));
     }
 
     // ── DefaultFileName ──
@@ -494,7 +495,7 @@ public sealed class AtollConfigLoaderTests
                 """;
             await File.WriteAllTextAsync(Path.Combine(tempDir, "atoll.json"), json);
 
-            var config = await AtollConfigLoader.LoadAsync(tempDir);
+            var config = await AtollConfigLoader.LoadAsync(tempDir, _ct);
 
             config.Site.ShouldBe("https://test.com");
             config.OutDir.ShouldBe("output");

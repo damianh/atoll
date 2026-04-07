@@ -133,8 +133,9 @@ public sealed class BuildManifestWriter
     /// Writes a <see cref="BuildManifest"/> to the output directory as JSON.
     /// </summary>
     /// <param name="manifest">The manifest to write.</param>
+    /// <param name="cancellationToken">A token to cancel the write operation.</param>
     /// <returns>The full file path that was written.</returns>
-    public async Task<string> WriteAsync(BuildManifest manifest)
+    public async Task<string> WriteAsync(BuildManifest manifest, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(manifest);
 
@@ -143,7 +144,7 @@ public sealed class BuildManifestWriter
         Directory.CreateDirectory(manifestDir);
 
         var filePath = Path.Combine(manifestDir, ManifestFileName);
-        await File.WriteAllTextAsync(filePath, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+        await File.WriteAllTextAsync(filePath, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), cancellationToken);
 
         return filePath;
     }

@@ -76,10 +76,11 @@ public sealed class RedirectsFileWriter
     /// Writes a <c>redirects.json</c> file to the output directory using the default status code 301.
     /// </summary>
     /// <param name="redirectMap">The redirect map to write.</param>
+    /// <param name="cancellationToken">A token to cancel the write operation.</param>
     /// <returns>A task that completes when the file has been written.</returns>
-    public Task WriteAsync(RedirectMap redirectMap)
+    public Task WriteAsync(RedirectMap redirectMap, CancellationToken cancellationToken)
     {
-        return WriteAsync(redirectMap, 301);
+        return WriteAsync(redirectMap, 301, cancellationToken);
     }
 
     /// <summary>
@@ -87,14 +88,15 @@ public sealed class RedirectsFileWriter
     /// </summary>
     /// <param name="redirectMap">The redirect map to write.</param>
     /// <param name="statusCode">The HTTP redirect status code to embed in each entry.</param>
+    /// <param name="cancellationToken">A token to cancel the write operation.</param>
     /// <returns>A task that completes when the file has been written.</returns>
-    public async Task WriteAsync(RedirectMap redirectMap, int statusCode)
+    public async Task WriteAsync(RedirectMap redirectMap, int statusCode, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(redirectMap);
 
         var json = Serialize(redirectMap, statusCode);
         var filePath = Path.Combine(_outputDirectory, FileName);
-        await File.WriteAllTextAsync(filePath, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+        await File.WriteAllTextAsync(filePath, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), cancellationToken);
     }
 
     private sealed record RedirectEntry(string From, string To, int Status);

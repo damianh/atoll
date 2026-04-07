@@ -48,10 +48,12 @@ public sealed class LlmsTxtGenerator
     /// </summary>
     /// <param name="query">The content collection query for accessing content entries.</param>
     /// <param name="configuration">The LLM export configuration that provides site info and documents.</param>
+    /// <param name="cancellationToken">A token to cancel the generation operation.</param>
     /// <returns>A <see cref="LlmsTxtGenerationResult"/> with stats about the generated files.</returns>
     public async Task<LlmsTxtGenerationResult> GenerateAsync(
         CollectionQuery query,
-        ILlmsTxtConfiguration configuration)
+        ILlmsTxtConfiguration configuration,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
         ArgumentNullException.ThrowIfNull(configuration);
@@ -65,14 +67,14 @@ public sealed class LlmsTxtGenerator
 
         var llmsTxtPath = Path.Combine(_outputDirectory, "llms.txt");
         var llmsTxtContent = BuildLlmsTxt(siteInfo, documents);
-        await File.WriteAllTextAsync(llmsTxtPath, llmsTxtContent, Utf8NoBom);
+        await File.WriteAllTextAsync(llmsTxtPath, llmsTxtContent, Utf8NoBom, cancellationToken);
 
         string? llmsFullTxtPath = null;
         if (documents.Any(d => d.MarkdownBody is not null))
         {
             llmsFullTxtPath = Path.Combine(_outputDirectory, "llms-full.txt");
             var llmsFullContent = BuildLlmsFullTxt(siteInfo, documents);
-            await File.WriteAllTextAsync(llmsFullTxtPath, llmsFullContent, Utf8NoBom);
+            await File.WriteAllTextAsync(llmsFullTxtPath, llmsFullContent, Utf8NoBom, cancellationToken);
         }
 
         sw.Stop();
@@ -85,10 +87,12 @@ public sealed class LlmsTxtGenerator
     /// </summary>
     /// <param name="siteInfo">The site title and optional description.</param>
     /// <param name="documents">The documents to include in the output.</param>
+    /// <param name="cancellationToken">A token to cancel the generation operation.</param>
     /// <returns>A <see cref="LlmsTxtGenerationResult"/> with stats about the generated files.</returns>
     public async Task<LlmsTxtGenerationResult> GenerateAsync(
         LlmsTxtSiteInfo siteInfo,
-        IEnumerable<LlmsTxtDocumentInput> documents)
+        IEnumerable<LlmsTxtDocumentInput> documents,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(siteInfo);
         ArgumentNullException.ThrowIfNull(documents);
@@ -101,14 +105,14 @@ public sealed class LlmsTxtGenerator
 
         var llmsTxtPath = Path.Combine(_outputDirectory, "llms.txt");
         var llmsTxtContent = BuildLlmsTxt(siteInfo, documentList);
-        await File.WriteAllTextAsync(llmsTxtPath, llmsTxtContent, Utf8NoBom);
+        await File.WriteAllTextAsync(llmsTxtPath, llmsTxtContent, Utf8NoBom, cancellationToken);
 
         string? llmsFullTxtPath = null;
         if (documentList.Any(d => d.MarkdownBody is not null))
         {
             llmsFullTxtPath = Path.Combine(_outputDirectory, "llms-full.txt");
             var llmsFullContent = BuildLlmsFullTxt(siteInfo, documentList);
-            await File.WriteAllTextAsync(llmsFullTxtPath, llmsFullContent, Utf8NoBom);
+            await File.WriteAllTextAsync(llmsFullTxtPath, llmsFullContent, Utf8NoBom, cancellationToken);
         }
 
         sw.Stop();

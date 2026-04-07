@@ -6,6 +6,7 @@ namespace Atoll.Lagoon.Tests.OpenGraph;
 
 public sealed class OgImageGeneratorTests : IDisposable
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
     private readonly string _tempDir;
 
     public OgImageGeneratorTests()
@@ -47,7 +48,7 @@ public sealed class OgImageGeneratorTests : IDisposable
         var config = new TestOgConfig();
         var query = CreateEmptyQuery();
 
-        var result = await generator.GenerateAsync(query, config);
+        var result = await generator.GenerateAsync(query, config, _ct);
 
         result.ImageCount.ShouldBe(3);
         File.Exists(Path.Combine(_tempDir, "og", "docs", "getting-started.png")).ShouldBeTrue();
@@ -62,7 +63,7 @@ public sealed class OgImageGeneratorTests : IDisposable
         var config = new TestOgConfig();
         var query = CreateEmptyQuery();
 
-        await generator.GenerateAsync(query, config);
+        await generator.GenerateAsync(query, config, _ct);
 
         var pngPath = Path.Combine(_tempDir, "og", "docs", "getting-started.png");
         var bytes = await File.ReadAllBytesAsync(pngPath);
@@ -81,7 +82,7 @@ public sealed class OgImageGeneratorTests : IDisposable
         var config = new TestOgConfig();
         var query = CreateEmptyQuery();
 
-        var result = await generator.GenerateAsync(query, config);
+        var result = await generator.GenerateAsync(query, config, _ct);
 
         result.ImageCount.ShouldBe(3);
         result.Elapsed.ShouldBeGreaterThan(TimeSpan.Zero);
@@ -96,7 +97,7 @@ public sealed class OgImageGeneratorTests : IDisposable
         var config = new TestOgConfig();
         var query = CreateEmptyQuery();
 
-        await generator.GenerateAsync(query, config);
+        await generator.GenerateAsync(query, config, _ct);
 
         Directory.Exists(Path.Combine(outputDir, "og")).ShouldBeTrue();
     }

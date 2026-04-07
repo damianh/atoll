@@ -43,13 +43,15 @@ public sealed class OgImageGenerator
     /// </summary>
     /// <param name="query">The content collection query for accessing content entries.</param>
     /// <param name="configuration">The OG image configuration providing documents and rendering config.</param>
+    /// <param name="cancellationToken">A token to cancel the generation operation.</param>
     /// <returns>A <see cref="OgImageGenerationResult"/> with stats about the generated images.</returns>
     public Task<OgImageGenerationResult> GenerateAsync(
         CollectionQuery query,
-        IOgImageConfiguration configuration)
+        IOgImageConfiguration configuration,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(configuration);
-        return GenerateAsync(query, configuration, configuration.GetOpenGraphConfig());
+        return GenerateAsync(query, configuration, configuration.GetOpenGraphConfig(), cancellationToken);
     }
 
     /// <summary>
@@ -59,11 +61,13 @@ public sealed class OgImageGenerator
     /// <param name="query">The content collection query for accessing content entries.</param>
     /// <param name="configuration">The OG image configuration providing documents to generate images for.</param>
     /// <param name="ogConfig">The OpenGraph rendering configuration (background image, fonts, colors).</param>
+    /// <param name="cancellationToken">A token to cancel the generation operation.</param>
     /// <returns>A <see cref="OgImageGenerationResult"/> with stats about the generated images.</returns>
     public async Task<OgImageGenerationResult> GenerateAsync(
         CollectionQuery query,
         IOgImageConfiguration configuration,
-        OpenGraphConfig ogConfig)
+        OpenGraphConfig ogConfig,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
         ArgumentNullException.ThrowIfNull(configuration);
@@ -91,7 +95,9 @@ public sealed class OgImageGenerator
                 Directory.CreateDirectory(outputDir);
             }
 
-            await File.WriteAllBytesAsync(outputPath, pngBytes);
+            cancellationToken.ThrowIfCancellationRequested();
+
+            await File.WriteAllBytesAsync(outputPath, pngBytes, cancellationToken);
             count++;
         }
 

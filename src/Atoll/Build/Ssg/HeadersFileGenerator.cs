@@ -84,13 +84,14 @@ public sealed class HeadersFileGenerator
     /// Writes the <c>_headers</c> file to the specified output directory.
     /// </summary>
     /// <param name="outputDirectory">The directory in which to write <c>_headers</c>.</param>
-    public async Task WriteAsync(string outputDirectory)
+    /// <param name="cancellationToken">A token to cancel the write operation.</param>
+    public async Task WriteAsync(string outputDirectory, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(outputDirectory);
 
         var content = Generate();
         var path = Path.Combine(outputDirectory, "_headers");
-        await File.WriteAllTextAsync(path, content, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+        await File.WriteAllTextAsync(path, content, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), cancellationToken);
     }
 
     private static void AppendRule(StringBuilder sb, string path, string headerName, string headerValue)

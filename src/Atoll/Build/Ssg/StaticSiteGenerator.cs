@@ -86,8 +86,9 @@ public sealed class StaticSiteGenerator
     /// Generates a static site from the specified route entries.
     /// </summary>
     /// <param name="routes">The route entries to generate pages from.</param>
+    /// <param name="cancellationToken">A token to cancel the generation operation.</param>
     /// <returns>An <see cref="SsgResult"/> with per-page results and timing.</returns>
-    public async Task<SsgResult> GenerateAsync(IEnumerable<RouteEntry> routes)
+    public async Task<SsgResult> GenerateAsync(IEnumerable<RouteEntry> routes, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(routes);
 
@@ -103,7 +104,7 @@ public sealed class StaticSiteGenerator
         }
 
         // Render all pages
-        var pageResults = await RenderAllPagesAsync(ssgRoutes);
+        var pageResults = await RenderAllPagesAsync(ssgRoutes, cancellationToken);
 
         totalStopwatch.Stop();
         return new SsgResult(pageResults, totalStopwatch.Elapsed);
@@ -112,7 +113,9 @@ public sealed class StaticSiteGenerator
     /// <summary>
     /// Renders all pages, optionally in parallel based on configuration.
     /// </summary>
-    private async Task<IReadOnlyList<SsgPageResult>> RenderAllPagesAsync(IReadOnlyList<SsgRoute> routes)
+    private async Task<IReadOnlyList<SsgPageResult>> RenderAllPagesAsync(
+        IReadOnlyList<SsgRoute> routes,
+        CancellationToken cancellationToken)
     {
         if (routes.Count == 0)
         {
@@ -123,19 +126,22 @@ public sealed class StaticSiteGenerator
         if (maxConcurrency == 1)
         {
             // Sequential rendering
-            return await RenderSequentialAsync(routes);
+            return await RenderSequentialAsync(routes, cancellationToken);
         }
 
         // Parallel rendering
-        return await RenderParallelAsync(routes, maxConcurrency);
+        return await RenderParallelAsync(routes, maxConcurrency, cancellationToken);
     }
 
-    private async Task<IReadOnlyList<SsgPageResult>> RenderSequentialAsync(IReadOnlyList<SsgRoute> routes)
+    private async Task<IReadOnlyList<SsgPageResult>> RenderSequentialAsync(
+        IReadOnlyList<SsgRoute> routes,
+        CancellationToken cancellationToken)
     {
         var results = new List<SsgPageResult>(routes.Count);
         foreach (var route in routes)
         {
-            var result = await RenderSinglePageAsync(route);
+            cancellationToken.ThrowIfCancellationRequested();
+            var result = await RenderSinglePageAsync(route, cancellationToken);
             results.Add(result);
         }
 
@@ -144,9 +150,13 @@ public sealed class StaticSiteGenerator
 
     private async Task<IReadOnlyList<SsgPageResult>> RenderParallelAsync(
         IReadOnlyList<SsgRoute> routes,
-        int maxConcurrency)
+        int maxConcurrency,
+        CancellationToken cancellationToken)
     {
-        var parallelOptions = new ParallelOptions();
+        var parallelOptions = new ParallelOptions
+        {
+            CancellationToken = cancellationToken,
+        };
         if (maxConcurrency > 0)
         {
             parallelOptions.MaxDegreeOfParallelism = maxConcurrency;
@@ -157,9 +167,9 @@ public sealed class StaticSiteGenerator
         await Parallel.ForEachAsync(
             Enumerable.Range(0, routes.Count),
             parallelOptions,
-            async (index, cancellationToken) =>
+            async (index, ct) =>
             {
-                results[index] = await RenderSinglePageAsync(routes[index]);
+                results[index] = await RenderSinglePageAsync(routes[index], ct);
             });
 
         return results;
@@ -168,14 +178,14 @@ public sealed class StaticSiteGenerator
     /// <summary>
     /// Renders a single page and writes it to the output directory.
     /// </summary>
-    private async Task<SsgPageResult> RenderSinglePageAsync(SsgRoute route)
+    private async Task<SsgPageResult> RenderSinglePageAsync(SsgRoute route, CancellationToken cancellationToken)
     {
         var stopwatch = Stopwatch.StartNew();
 
         try
         {
             var html = await RenderPageToHtmlAsync(route);
-            var outputPath = await _outputWriter.WritePageAsync(route.UrlPath, html);
+            var outputPath = await _outputWriter.WritePageAsync(route.UrlPath, html, cancellationToken);
 
             stopwatch.Stop();
             return new SsgPageResult(route, outputPath, html, stopwatch.Elapsed);
