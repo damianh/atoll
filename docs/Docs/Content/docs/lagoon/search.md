@@ -55,7 +55,66 @@ public sealed class SearchConfig : ISearchIndexConfiguration
 | `Headings` | `IReadOnlyList<string>` | `[]` | Pre-extracted headings; if empty, parsed from `HtmlBody` |
 | `PlainBody` | `string?` | `null` | Plain-text override; when set, `HtmlBody` is ignored for body text |
 | `MaxBodyLength` | `int` | `500` | Maximum plain-text body length in characters (truncated if exceeded) |
+| `Topics` | `IReadOnlyList<string>` | `[]` | Topic labels for filtering (e.g. `["API", "Security"]`). When empty, topics are auto-seeded from `Section` |
 | `Draft` | `bool` | `false` | Caller-side draft marker. When `true`, callers should exclude this document from the search index before passing it to the generator |
+
+## Topic-based filtering
+
+Pages can be tagged with one or more topics that appear as filter chips in the search dialog. Users can select one or more topics to narrow results; topic badges are displayed on each result group.
+
+### Adding topics via frontmatter
+
+Add a `topics:` list to the page frontmatter. Topics are free-form strings — use whatever taxonomy makes sense for your site:
+
+```yaml
+---
+title: Token Validation
+description: How IdentityServer validates tokens.
+topics:
+  - IdentityServer
+  - Security
+---
+```
+
+To support this, add a `Topics` property to your frontmatter schema:
+
+```csharp
+public sealed class DocSchema
+{
+    // ... other properties ...
+
+    /// <summary>Topic labels for search filtering.</summary>
+    public List<string>? Topics { get; set; }
+}
+```
+
+### Wiring topics in SearchConfig
+
+Pass the `Topics` from your schema to `SearchDocumentInput` using the `is { Count: > 0 }` pattern to avoid passing empty lists:
+
+```csharp
+yield return new SearchDocumentInput(entry.Data.Title, $"/docs/{entry.Slug}")
+{
+    Description = entry.Data.Description,
+    Section     = entry.Data.Section.Length > 0 ? entry.Data.Section : null,
+    HtmlBody    = rendered.Html,
+    Topics      = entry.Data.Topics is { Count: > 0 } topics ? topics : [],
+};
+```
+
+### Auto-seeding from Section
+
+When `Topics` is empty but `Section` is set, `SearchIndexBuilder` automatically seeds the topics from the section label. This means existing sites without explicit topic frontmatter immediately benefit from section-based filtering — no changes required.
+
+Explicit `topics:` frontmatter always takes precedence over auto-seeding.
+
+### Client-side behaviour
+
+- A topic chip bar appears above search results when any indexed entry has topics.
+- The **"All"** chip is selected by default and shows all results.
+- Clicking a topic chip toggles it; multiple chips can be selected simultaneously (OR logic — results matching any selected topic are shown).
+- Topic badges appear on each result group header.
+- The chip bar is hidden when no entries have topics.
 
 ## Search index processing
 
@@ -67,7 +126,7 @@ When building the index, `SearchIndexBuilder`:
 4. Extracts headings from `<h1>`–`<h6>` elements if `Headings` is empty
 5. Writes the complete index as `search-index.json` via `SearchIndexWriter`
 
-The resulting JSON is an array of entries, each with `title`, `href`, `description`, `section`, `headings`, and `body` fields.
+The resulting JSON is an array of entries, each with `title`, `href`, `description`, `section`, `headings`, `body`, and (when present) `topics` fields.
 
 ## `SearchDialog` island
 

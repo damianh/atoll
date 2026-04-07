@@ -26,6 +26,13 @@ All Lagoon options live in a single `DocsConfig` instance. Create one in a stati
 | `Footer` | `FooterConfig?` | `null` | Custom footer content. When `null`, the default "Built with Atoll" footer is rendered |
 | `FaviconHref` | `string?` | `null` | URL or path to the site favicon. When `null`, the built-in Atoll logo is used |
 | `BasePath` | `string` | `""` | URL prefix when hosting at a sub-path (e.g. `"/docs"`) |
+| `EnableSyntaxHighlighting` | `bool` | `false` | When `true`, fenced code blocks are syntax-highlighted at build time using TextMate grammars |
+| `Translations` | `UiTranslations` | English | UI string translations for all Lagoon components. Defaults to `UiTranslations.Default` (English). See [Internationalisation](./i18n) |
+| `DefaultLang` | `string` | `"en"` | BCP-47 language tag for the `<html lang>` attribute when no locale configuration is set |
+| `SidebarChevronPosition` | `SidebarChevronPosition` | `End` | Position of the collapse chevron on sidebar group headings. `End` = after label (Starlight-style); `Start` = before label |
+| `Redirects` | `IReadOnlyDictionary<string, string>?` | `null` | Config-based redirect map. Keys are source paths, values are target paths (both base-relative) |
+| `OpenGraph` | `OpenGraphConfig?` | `null` | Build-time branded 1200×630 OG image generation. When set, OG/Twitter Card meta tags are rendered automatically |
+| `Banner` | `BannerConfig?` | `null` | Site-wide announcement banner rendered above page content. See [Global Banner](./banner) |
 | `Locales` | `IReadOnlyDictionary<string, LocaleConfig>?` | `null` | Locale configuration for multi-language sites. See [Internationalisation](./i18n) |
 | `Versions` | `IReadOnlyDictionary<string, VersionConfig>?` | `null` | Version configuration for multi-version documentation. See [Versioned Documentation](./versioning) |
 

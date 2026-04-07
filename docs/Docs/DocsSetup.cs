@@ -79,6 +79,9 @@ public static class DocsSetup
                     new SidebarItem { Label = "Theme & Styling",       Link = "/docs/lagoon/theming" },
                     new SidebarItem { Label = "Components & Layout",   Link = "/docs/lagoon/components" },
                     new SidebarItem { Label = "Site Search",           Link = "/docs/lagoon/search" },
+                    new SidebarItem { Label = "Global Banner",         Link = "/docs/lagoon/banner" },
+                    new SidebarItem { Label = "LLM Content Export",   Link = "/docs/lagoon/llms-txt" },
+                    new SidebarItem { Label = "Custom 404 Pages",      Link = "/docs/lagoon/custom-404" },
                     new SidebarItem { Label = "Islands & Mermaid",     Link = "/docs/lagoon/islands-and-mermaid" },
                     new SidebarItem { Label = "Content Components",   Link = "/docs/lagoon/content-components" },
                     new SidebarItem { Label = "Internationalisation",  Link = "/docs/lagoon/i18n" },
@@ -98,7 +101,6 @@ public static class DocsSetup
                     new SidebarItem { Label = "Views & Layouts",      Link = "/docs/reef/views-and-layouts" },
                     new SidebarItem { Label = "Feeds & SEO",          Link = "/docs/reef/feeds-and-seo" },
                     new SidebarItem { Label = "Series & Navigation",  Link = "/docs/reef/series-and-navigation" },
-                    new SidebarItem { Label = "Live Demo",            Link = "/docs/reef/live-demo" },
                 ],
             },
             new SidebarItem

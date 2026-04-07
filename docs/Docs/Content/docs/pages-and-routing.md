@@ -94,3 +94,35 @@ var routes = new[]
     new RouteEntry("/blog/[slug]", typeof(BlogPostPage), ""),
 };
 ```
+
+## Custom error pages
+
+Page components can implement `IPageStatusCodeProvider` from `Atoll.Components` to signal a non-200 HTTP status code after rendering:
+
+```csharp
+using Atoll.Components;
+
+[PageRoute("/docs/[...slug]")]
+public sealed class DocsPage : AtollComponent, IAtollPage, IPageStatusCodeProvider
+{
+    public int ResponseStatusCode { get; private set; } = 200;
+
+    protected override async Task RenderCoreAsync(RenderContext context)
+    {
+        var entry = Query.GetEntry<DocSchema>("docs", Slug);
+
+        if (entry is null)
+        {
+            ResponseStatusCode = 404;
+            WriteHtml("<h1>Page Not Found</h1>");
+            return;
+        }
+
+        // ... render found page
+    }
+}
+```
+
+After a page component renders, `AtollRequestHandler` and `DevAtollRequestHandler` check for `IPageStatusCodeProvider` and write `ResponseStatusCode` to the HTTP response. Pages that do not implement the interface always return 200.
+
+See [Custom 404 Pages](./lagoon/custom-404) for Lagoon's convention-based 404 support built on this interface.
