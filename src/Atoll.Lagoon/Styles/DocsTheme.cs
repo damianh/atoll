@@ -1155,13 +1155,21 @@ public sealed class DocsTheme : AtollComponent
             mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 16 16'%3E%3Cpath d='M8 0v12m6 0H8'/%3E%3C/svg%3E");
         }
 
-        /* Section/topic badge */
-        .search-result-badge {
-            font-size: 0.6875rem;
-            color: var(--docs-text-muted);
+        /* Section/topic badge row — sits at the bottom of each result group */
+        .search-result-badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
             padding: 0.35rem 0.75rem;
             background: var(--docs-bg);
             border-top: 1px solid var(--docs-border);
+        }
+        .search-result-badge {
+            font-size: 0.6875rem;
+            color: var(--docs-text-muted);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
         }
         .search-result-badge::before {
             content: '';
@@ -1170,8 +1178,45 @@ public sealed class DocsTheme : AtollComponent
             height: 0.5rem;
             border: 1px solid var(--docs-border);
             border-radius: 0.125rem;
-            margin-right: 0.35rem;
-            vertical-align: middle;
+            flex-shrink: 0;
+        }
+
+        /* Topic filter chip bar */
+        .search-topic-filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid var(--docs-border);
+        }
+        .search-topic-filter:empty {
+            display: none;
+        }
+        .search-topic-chip {
+            font-size: 0.75rem;
+            line-height: 1;
+            padding: 0.25rem 0.625rem;
+            border-radius: 9999px;
+            border: 1px solid var(--docs-border);
+            background: var(--docs-bg-subtle);
+            color: var(--docs-text-muted);
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+        }
+        .search-topic-chip:hover {
+            background: var(--docs-bg-hover);
+            color: var(--docs-text);
+            border-color: var(--docs-text-faint);
+        }
+        .search-topic-chip-active {
+            background: var(--docs-accent);
+            color: var(--docs-accent-text, #fff);
+            border-color: var(--docs-accent);
+        }
+        .search-topic-chip-active:hover {
+            background: var(--docs-accent);
+            color: var(--docs-accent-text, #fff);
+            border-color: var(--docs-accent);
         }
 
         /* Shared link + text styles */

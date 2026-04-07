@@ -12,6 +12,12 @@
  * The search index URL is read from the wrapper element's `data-index-url` attribute,
  * defaulting to `/search-index.json` if not set. Set `data-index-url` to support
  * sites hosted at a base path (e.g. `/docs/search-index.json`).
+ *
+ * Topic filtering: entries may carry a `topics` array (e.g. `["IdentityServer","Security"]`).
+ * A chip bar is rendered above the results when the index contains any topics.
+ * Selecting one or more chips narrows results to entries that share at least one
+ * selected topic. Old indices that only have a `section` field are supported via
+ * automatic fallback.
  */
 
 let index = null;
@@ -63,19 +69,52 @@ function slugify(text) {
 }
 
 /**
+ * Returns the effective topic list for an entry.
+ * Prefers `entry.topics` (new multi-topic field); falls back to `[entry.section]`
+ * for backward compatibility with older indices that only carry `section`.
+ */
+function getEntryTopics(entry) {
+    if (entry.topics && entry.topics.length > 0) return entry.topics;
+    if (entry.section) return [entry.section];
+    return [];
+}
+
+/**
+ * Extracts all unique topic values from the index entries, sorted alphabetically.
+ */
+function buildTopicList(entries) {
+    const seen = new Set();
+    for (const entry of entries) {
+        for (const topic of getEntryTopics(entry)) {
+            seen.add(topic);
+        }
+    }
+    return Array.from(seen).sort();
+}
+
+/**
  * Searches the index and returns results grouped by page.
  * Each result includes the page entry and which headings matched the query.
+ * When `selectedTopics` is a non-empty Set, only entries whose effective topics
+ * include at least one selected topic are returned.
  */
-function search(entries, query) {
+function search(entries, query, selectedTopics) {
     const q = query.trim().toLowerCase();
     if (!q) return [];
     return entries
-        .filter(e =>
-            e.title.toLowerCase().includes(q) ||
-            (e.description && e.description.toLowerCase().includes(q)) ||
-            (e.body && e.body.toLowerCase().includes(q)) ||
-            (e.headings && e.headings.some(h => h.toLowerCase().includes(q)))
-        )
+        .filter(e => {
+            const textMatch =
+                e.title.toLowerCase().includes(q) ||
+                (e.description && e.description.toLowerCase().includes(q)) ||
+                (e.body && e.body.toLowerCase().includes(q)) ||
+                (e.headings && e.headings.some(h => h.toLowerCase().includes(q)));
+            if (!textMatch) return false;
+            if (selectedTopics && selectedTopics.size > 0) {
+                const entryTopics = getEntryTopics(e);
+                return entryTopics.some(t => selectedTopics.has(t));
+            }
+            return true;
+        })
         .slice(0, 8)
         .map(e => {
             const matchedHeadings = (e.headings || []).filter(h =>
@@ -99,6 +138,48 @@ function getSnippet(body, query) {
     if (start > 0) snippet = '…' + snippet;
     if (end < body.length) snippet += '…';
     return highlight(escapeHtml(snippet), query);
+}
+
+/**
+ * Renders the topic filter chip bar into `container`.
+ * `topics` is a sorted array of unique topic strings.
+ * `selectedTopics` is the current Set of active topic filters.
+ * `onFilterChange` is called with the updated Set after a chip is toggled.
+ * `filterLabel` is the accessible aria-label for the chip bar (defaults to "Filter by topic").
+ */
+function renderTopicFilter(container, topics, selectedTopics, onFilterChange, filterLabel) {
+    container.innerHTML = '';
+    if (!topics.length) return;
+
+    const label = filterLabel || 'Filter by topic';
+    container.setAttribute('aria-label', label);
+
+    // "All" chip — clears selection
+    const allChip = document.createElement('button');
+    allChip.type = 'button';
+    allChip.className = 'search-topic-chip' + (selectedTopics.size === 0 ? ' search-topic-chip-active' : '');
+    allChip.textContent = 'All';
+    allChip.addEventListener('click', () => {
+        onFilterChange(new Set());
+    });
+    container.appendChild(allChip);
+
+    for (const topic of topics) {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'search-topic-chip' + (selectedTopics.has(topic) ? ' search-topic-chip-active' : '');
+        chip.textContent = topic;
+        chip.addEventListener('click', () => {
+            const next = new Set(selectedTopics);
+            if (next.has(topic)) {
+                next.delete(topic);
+            } else {
+                next.add(topic);
+            }
+            onFilterChange(next);
+        });
+        container.appendChild(chip);
+    }
 }
 
 function renderResults(container, results, query, noResultsText) {
@@ -151,12 +232,18 @@ function renderResults(container, results, query, noResultsText) {
             group.appendChild(headingEl);
         });
 
-        // -- Section/topic badge --
-        if (r.section) {
-            const badge = document.createElement('div');
-            badge.className = 'search-result-badge';
-            badge.textContent = 'Topic: ' + r.section;
-            group.appendChild(badge);
+        // -- Topic badges: render one per topic (topics array preferred, section as fallback) --
+        const entryTopics = getEntryTopics(r);
+        if (entryTopics.length > 0) {
+            const badgeRow = document.createElement('div');
+            badgeRow.className = 'search-result-badge-row';
+            for (const topic of entryTopics) {
+                const badge = document.createElement('span');
+                badge.className = 'search-result-badge';
+                badge.textContent = topic;
+                badgeRow.appendChild(badge);
+            }
+            group.appendChild(badgeRow);
         }
 
         container.appendChild(group);
@@ -166,13 +253,39 @@ function renderResults(container, results, query, noResultsText) {
 export default function init(element) {
     const wrapper = element.querySelector('.search-wrapper') || element;
     const noResultsText = wrapper.dataset.noResults || 'No results found.';
+    const topicFilterLabel = wrapper.dataset.topicFilterLabel || 'Filter by topic';
     const trigger = element.querySelector('#search-trigger');
     const dialog = element.querySelector('#search-dialog');
     const input = element.querySelector('#search-input');
     const results = element.querySelector('#search-results');
+    const topicsContainer = element.querySelector('#search-topics');
     const closeBtn = element.querySelector('#search-close');
 
     if (!trigger || !dialog) return;
+
+    let selectedTopics = new Set();
+    let allTopics = [];
+
+    function runSearch() {
+        if (!input || !results) return;
+        const q = input.value;
+        if (!q.trim()) {
+            results.innerHTML = '';
+            return;
+        }
+        const data = index;
+        if (!data) return;
+        const hits = search(data.entries || data, q, selectedTopics);
+        renderResults(results, hits, q, noResultsText);
+    }
+
+    function onTopicFilterChange(newSelection) {
+        selectedTopics = newSelection;
+        if (topicsContainer) {
+            renderTopicFilter(topicsContainer, allTopics, selectedTopics, onTopicFilterChange, topicFilterLabel);
+        }
+        runSearch();
+    }
 
     function openDialog() {
         dialog.showModal();
@@ -226,7 +339,17 @@ export default function init(element) {
             return;
         }
         const data = await loadIndex(wrapper);
-        const hits = search(data.entries || data, q);
+        // Build and render the topic filter on first load (or whenever index changes)
+        if (topicsContainer) {
+            const newTopics = buildTopicList(data.entries || data);
+            if (newTopics.join(',') !== allTopics.join(',')) {
+                allTopics = newTopics;
+                // Reset selection when index changes
+                selectedTopics = new Set();
+                renderTopicFilter(topicsContainer, allTopics, selectedTopics, onTopicFilterChange, topicFilterLabel);
+            }
+        }
+        const hits = search(data.entries || data, q, selectedTopics);
         results && renderResults(results, hits, q, noResultsText);
     });
 }

@@ -21,6 +21,7 @@ public sealed class SearchConfig : ISearchIndexConfiguration
                 Description = entry.Data.Description,
                 Section = entry.Data.Section.Length > 0 ? entry.Data.Section : null,
                 HtmlBody = rendered.Html,
+                Topics = entry.Data.Topics is { Count: > 0 } topics ? topics : [],
             };
         }
     }

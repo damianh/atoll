@@ -59,6 +59,8 @@ public sealed class SearchDialog : VanillaJsIsland
         WriteHtml(System.Net.WebUtility.HtmlEncode(BasePath.TrimEnd('/')));
         WriteHtml("\" data-no-results=\"");
         WriteHtml(System.Net.WebUtility.HtmlEncode(Translations.SearchNoResults));
+        WriteHtml("\" data-topic-filter-label=\"");
+        WriteHtml(System.Net.WebUtility.HtmlEncode(Translations.SearchTopicFilterLabel));
         WriteHtml("\">");
         WriteHtml($"<button id=\"search-trigger\" type=\"button\" aria-label=\"{System.Net.WebUtility.HtmlEncode(Translations.SearchLabel)}\" aria-haspopup=\"dialog\">");
         WriteText(EffectivePlaceholder);
@@ -74,6 +76,7 @@ public sealed class SearchDialog : VanillaJsIsland
         WriteHtml("\" autofocus />");
         WriteHtml($"<button id=\"search-close\" type=\"button\" aria-label=\"{System.Net.WebUtility.HtmlEncode(Translations.SearchCloseLabel)}\">&times;</button>");
         WriteHtml("</div>");
+        WriteHtml("<div id=\"search-topics\" class=\"search-topic-filter\" role=\"group\"></div>");
         WriteHtml($"<div id=\"search-results\" role=\"listbox\" aria-label=\"{System.Net.WebUtility.HtmlEncode(Translations.SearchResultsLabel)}\"></div>");
         WriteHtml("<footer class=\"search-dialog-footer\">");
         WriteHtml("<kbd>↑↓</kbd> navigate <kbd>↵</kbd> select <kbd>esc</kbd> close");

@@ -162,6 +162,69 @@ public sealed class SearchIndexBuilderTests
         index.Entries[0].Headings.ShouldContain("Sub-topic");
     }
 
+    // --- Topics ---
+
+    [Fact]
+    public void ShouldPreserveExplicitTopics()
+    {
+        var input = new SearchDocumentInput("Guide", "/docs/guide/")
+        {
+            Topics = ["IdentityServer", "Security"]
+        };
+        var index = new SearchIndexBuilder().Add(input).Build();
+
+        index.Entries[0].Topics.ShouldNotBeNull();
+        index.Entries[0].Topics.ShouldBe(["IdentityServer", "Security"]);
+    }
+
+    [Fact]
+    public void ShouldAutoSeedTopicsFromSectionWhenTopicsIsEmpty()
+    {
+        var input = new SearchDocumentInput("Guide", "/docs/guide/")
+        {
+            Section = "Getting Started"
+        };
+        var index = new SearchIndexBuilder().Add(input).Build();
+
+        index.Entries[0].Topics.ShouldNotBeNull();
+        index.Entries[0].Topics.ShouldBe(["Getting Started"]);
+    }
+
+    [Fact]
+    public void ShouldNotAutoSeedTopicsWhenExplicitTopicsAreSet()
+    {
+        var input = new SearchDocumentInput("Guide", "/docs/guide/")
+        {
+            Section = "Getting Started",
+            Topics = ["IdentityServer"]
+        };
+        var index = new SearchIndexBuilder().Add(input).Build();
+
+        index.Entries[0].Topics.ShouldBe(["IdentityServer"]);
+        index.Entries[0].Topics!.ShouldNotContain("Getting Started");
+    }
+
+    [Fact]
+    public void ShouldLeaveTopicsNullWhenNeitherSectionNorTopicsAreSet()
+    {
+        var input = new SearchDocumentInput("Guide", "/docs/guide/");
+        var index = new SearchIndexBuilder().Add(input).Build();
+
+        index.Entries[0].Topics.ShouldBeNull();
+    }
+
+    [Fact]
+    public void ShouldPreserveMultipleTopicsInOrder()
+    {
+        var input = new SearchDocumentInput("Guide", "/docs/guide/")
+        {
+            Topics = ["Zebra", "Alpha", "Mango"]
+        };
+        var index = new SearchIndexBuilder().Add(input).Build();
+
+        index.Entries[0].Topics.ShouldBe(["Zebra", "Alpha", "Mango"]);
+    }
+
     // --- Timestamp ---
 
     [Fact]

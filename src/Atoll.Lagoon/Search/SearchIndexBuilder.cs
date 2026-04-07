@@ -21,6 +21,7 @@ public sealed class SearchDocumentInput
         Title = title;
         Href = href;
         Headings = [];
+        Topics = [];
     }
 
     /// <summary>Gets or sets the document title.</summary>
@@ -40,6 +41,13 @@ public sealed class SearchDocumentInput
 
     /// <summary>Gets or sets pre-extracted headings. If empty, will be parsed from <see cref="HtmlBody"/>.</summary>
     public IReadOnlyList<string> Headings { get; set; }
+
+    /// <summary>
+    /// Gets or sets the topic labels for this document (e.g., <c>["IdentityServer", "Security"]</c>).
+    /// When set, takes priority over <see cref="Section"/> for topic display and filtering.
+    /// When empty, the builder will auto-seed topics from <see cref="Section"/> if it is set.
+    /// </summary>
+    public IReadOnlyList<string> Topics { get; set; } = [];
 
     /// <summary>Gets or sets a direct plain-text body override. When set, <see cref="HtmlBody"/> is ignored.</summary>
     public string? PlainBody { get; set; }
@@ -129,7 +137,19 @@ public sealed class SearchIndexBuilder
             ? doc.Headings
             : ExtractHeadingsFromHtml(doc.HtmlBody);
 
-        return new SearchEntry(doc.Title, doc.Href, doc.Description, doc.Section, headings, plainBody);
+        // Auto-seed topics from Section when no explicit topics are provided.
+        // This ensures existing callers using only Section get topic support for free.
+        IReadOnlyList<string>? topics = null;
+        if (doc.Topics.Count > 0)
+        {
+            topics = doc.Topics;
+        }
+        else if (doc.Section != null)
+        {
+            topics = [doc.Section];
+        }
+
+        return new SearchEntry(doc.Title, doc.Href, doc.Description, doc.Section, headings, plainBody, topics);
     }
 
     /// <summary>
