@@ -96,6 +96,73 @@ public sealed class LinkResolutionExtensionTests
     }
 
     [Fact]
+    public void ShouldRewriteRootRelativeMdLink()
+    {
+        var options = new MarkdownOptions
+        {
+            LinkResolution = new LinkResolutionOptions { BasePath = "/docs" }
+        };
+
+        var result = MarkdownRenderer.Render("[link](/docs/tokens/pop.md)", options);
+
+        result.Html.ShouldContain("href=\"/docs/tokens/pop/\"");
+    }
+
+    [Fact]
+    public void ShouldRewriteRootRelativeMdLinkWithFragment()
+    {
+        var options = new MarkdownOptions
+        {
+            LinkResolution = new LinkResolutionOptions { BasePath = "/docs" }
+        };
+
+        var result = MarkdownRenderer.Render("[link](/docs/tokens/pop.md#section)", options);
+
+        result.Html.ShouldContain("href=\"/docs/tokens/pop/#section\"");
+    }
+
+    [Fact]
+    public void ShouldRewriteRootRelativeMdxLink()
+    {
+        var options = new MarkdownOptions
+        {
+            LinkResolution = new LinkResolutionOptions { BasePath = "/docs" }
+        };
+
+        var result = MarkdownRenderer.Render("[link](/docs/tokens/pop.mdx)", options);
+
+        result.Html.ShouldContain("href=\"/docs/tokens/pop/\"");
+    }
+
+    [Fact]
+    public void ShouldNotRewriteRootRelativePdfLink()
+    {
+        var options = new MarkdownOptions
+        {
+            LinkResolution = new LinkResolutionOptions { BasePath = "/docs" }
+        };
+
+        var result = MarkdownRenderer.Render("[link](/downloads/file.pdf)", options);
+
+        result.Html.ShouldContain("href=\"/downloads/file.pdf\"");
+    }
+
+    [Fact]
+    public void ShouldNotPrependBasePathToRootRelativeLink()
+    {
+        var options = new MarkdownOptions
+        {
+            LinkResolution = new LinkResolutionOptions { BasePath = "/site" }
+        };
+
+        var result = MarkdownRenderer.Render("[link](/docs/page.md)", options);
+
+        // Should NOT prepend /site — the link already has its full path.
+        result.Html.ShouldContain("href=\"/docs/page/\"");
+        result.Html.ShouldNotContain("href=\"/site/docs/page/\"");
+    }
+
+    [Fact]
     public void ShouldNotAddTrailingSlashWhenDisabled()
     {
         var options = new MarkdownOptions
