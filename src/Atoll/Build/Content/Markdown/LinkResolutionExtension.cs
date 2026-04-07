@@ -7,11 +7,11 @@ using Markdig.Syntax.Inlines;
 namespace Atoll.Build.Content.Markdown;
 
 /// <summary>
-/// Markdig extension that rewrites relative Markdown file links to clean URL paths.
-/// For example, <c>[page](./other-page.md)</c> is rewritten to <c>&lt;a href="/docs/other-page/"&gt;page&lt;/a&gt;</c>.
-/// Only relative links ending in a configured extension (e.g., <c>.md</c>, <c>.mdx</c>, <c>.mda</c>) are rewritten.
-/// Absolute URLs (starting with <c>http://</c> or <c>https://</c>) and root-relative paths
-/// (starting with <c>/</c>) are left untouched.
+/// Markdig extension that rewrites Markdown file links to clean URL paths.
+/// For example, <c>[page](./other-page.md)</c> is rewritten to <c>&lt;a href="/docs/other-page/"&gt;page&lt;/a&gt;</c>
+/// and <c>[page](/docs/other-page.md)</c> is rewritten to <c>&lt;a href="/docs/other-page/"&gt;page&lt;/a&gt;</c>.
+/// Both relative and root-relative links ending in a configured extension (e.g., <c>.md</c>, <c>.mdx</c>,
+/// <c>.mda</c>) are rewritten. Absolute URLs (starting with <c>http://</c> or <c>https://</c>) are left untouched.
 /// </summary>
 internal sealed class LinkResolutionExtension : IMarkdownExtension
 {
@@ -101,8 +101,7 @@ internal sealed class AtollLinkInlineRenderer : LinkInlineRenderer
     private static bool ShouldResolve(string url, LinkResolutionOptions options)
     {
         if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-            url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
-            url.StartsWith('/'))
+            url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
         {
             return false;
         }
@@ -121,6 +120,7 @@ internal sealed class AtollLinkInlineRenderer : LinkInlineRenderer
 
     private static string Resolve(string url, LinkResolutionOptions options)
     {
+        var isRootRelative = url.StartsWith('/');
         var path = StripFragment(url, out var fragment);
 
         foreach (var ext in options.ExtensionsToStrip)
@@ -132,17 +132,27 @@ internal sealed class AtollLinkInlineRenderer : LinkInlineRenderer
             }
         }
 
-        if (path.StartsWith("./", StringComparison.Ordinal))
+        string resolved;
+
+        if (isRootRelative)
         {
-            path = path[2..];
+            // Root-relative links already have their full path — don't prepend BasePath.
+            resolved = path;
         }
+        else
+        {
+            if (path.StartsWith("./", StringComparison.Ordinal))
+            {
+                path = path[2..];
+            }
 
-        var basePath = options.BasePath.TrimEnd('/');
-        var slug = path.TrimStart('/');
+            var basePath = options.BasePath.TrimEnd('/');
+            var slug = path.TrimStart('/');
 
-        var resolved = string.IsNullOrEmpty(slug)
-            ? basePath + "/"
-            : $"{basePath}/{slug}";
+            resolved = string.IsNullOrEmpty(slug)
+                ? basePath + "/"
+                : $"{basePath}/{slug}";
+        }
 
         if (options.AddTrailingSlash && !resolved.EndsWith('/'))
         {
