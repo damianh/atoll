@@ -50,7 +50,9 @@ public sealed class ArticleTable : AtollComponent
             var basePath = BasePath.TrimEnd('/');
             var href = HtmlEncode($"{basePath}/{item.Slug.TrimStart('/')}");
 
-            WriteHtml("<tr>");
+            var tagsAttr = HtmlEncode(string.Join(",", item.Tags));
+            var authorAttr = HtmlEncode(item.Author ?? "");
+            WriteHtml($"<tr data-tags=\"{tagsAttr}\" data-author=\"{authorAttr}\">");
 
             WriteHtml("<td class=\"article-table__title\">");
             WriteHtml("<a href=\"");

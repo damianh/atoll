@@ -56,6 +56,7 @@ public sealed class ArticleIndexPage : AtollComponent, IAtollPage
             .ToList();
 
         // Controls bar: view toggle + article filter
+        WriteHtml("<div class=\"reef-listing\" data-view-container>");
         WriteHtml("<div class=\"reef-listing-controls\">");
 
         await IslandRenderer.RenderIslandAsync<ViewToggle>(
@@ -85,5 +86,6 @@ public sealed class ArticleIndexPage : AtollComponent, IAtollPage
             [nameof(ArticleList.BasePath)] = ArticlesConfig.Current.BasePath,
         });
         await RenderAsync(listFragment);
+        WriteHtml("</div>"); // close data-view-container
     }
 }

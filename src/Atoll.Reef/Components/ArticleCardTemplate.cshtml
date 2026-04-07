@@ -1,6 +1,6 @@
 @inherits Atoll.Components.AtollSlice<Atoll.Reef.Components.ArticleCardModel>
 @using Atoll.Reef.Components
-<article class="article-card">
+<article class="article-card" data-tags="@string.Join(",", Model.Tags)" data-author="@Model.Author">
     @if (!string.IsNullOrEmpty(Model.ImageSrc))
     {
         <a class="article-card-image-link" href="@Model.Href" tabindex="-1" aria-hidden="true">
