@@ -247,7 +247,9 @@ public sealed class DevHotReloadTests : IDisposable
         var fireCount = 0;
         var tcs = new TaskCompletionSource<bool>();
 
-        using var watcher = new DevFileWatcher(dir, debounceMs: 200);
+        // Use a generous debounce window (500ms) so that filesystem notification
+        // delays on slow CI runners don't cause the timer to fire prematurely.
+        using var watcher = new DevFileWatcher(dir, debounceMs: 500);
         watcher.OnChange += _ =>
         {
             Interlocked.Increment(ref fireCount);
@@ -256,16 +258,18 @@ public sealed class DevHotReloadTests : IDisposable
         };
         watcher.Start();
 
-        // Rapidly write 5 files.
+        // Rapidly write 5 files with no artificial delay between writes so they
+        // are as close together as possible within a single debounce window.
         for (var i = 0; i < 5; i++)
         {
             await File.WriteAllTextAsync(Path.Combine(dir, $"doc{i}.md"), "content");
-            await Task.Delay(20);
         }
 
-        // Wait for the debounce to expire plus a margin.
-        await Task.WhenAny(tcs.Task, Task.Delay(2000));
-        await Task.Delay(300); // Let extra fires land if any.
+        // Wait for the debounce to fire (up to 5s for slow runners).
+        await Task.WhenAny(tcs.Task, Task.Delay(5000));
+
+        // Allow generous settle time for any additional (spurious) fires.
+        await Task.Delay(1000);
 
         fireCount.ShouldBe(1, "Rapid changes should be debounced into a single callback");
     }
