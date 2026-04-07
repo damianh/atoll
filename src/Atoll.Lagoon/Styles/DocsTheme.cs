@@ -18,7 +18,7 @@ namespace Atoll.Lagoon.Styles;
 [GlobalStyle]
 [Styles(Reset + LightTokens + DarkTokens + Layout + ScrollbarStyles + Typography + Prose + CodeBlocks + SyntaxHighlightTokens + CodeCopyButtonStyles + ExpressiveCodeStyles +
         SidebarNav + TocNav + PaginationStyles + BreadcrumbStyles + HeroStyles + SplashStyles + SearchStyles +
-        LanguagePickerStyles + UntranslatedNoticeStyles + AsideStyles + ContentFooterStyles + FooterLinkStyles)]
+        LanguagePickerStyles + UntranslatedNoticeStyles + AsideStyles + ContentFooterStyles + FooterLinkStyles + BannerStyles)]
 public sealed class DocsTheme : AtollComponent
 {
     // -------------------------------------------------------------------------
@@ -1415,6 +1415,58 @@ public sealed class DocsTheme : AtollComponent
             transition: color 0.1s;
         }
         .docs-footer a:hover { color: var(--docs-link-hover); text-decoration: none; }
+        """;
+
+    private const string BannerStyles = """
+        /* ---- Site-wide announcement banner ---- */
+        .docs-banner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.5rem;
+            text-align: center;
+            font-size: 0.875rem;
+            width: 100%;
+        }
+        .docs-banner[hidden] { display: none; }
+        .docs-banner-info {
+            background: var(--aside-note-bg);
+            color: var(--aside-note-text);
+            border-bottom: 1px solid var(--aside-note-border);
+        }
+        .docs-banner-warning {
+            background: var(--aside-caution-bg);
+            color: var(--aside-caution-text);
+            border-bottom: 1px solid var(--aside-caution-border);
+        }
+        .docs-banner-success {
+            background: var(--aside-tip-bg);
+            color: var(--aside-tip-text);
+            border-bottom: 1px solid var(--aside-tip-border);
+        }
+        .docs-banner-danger {
+            background: var(--aside-danger-bg);
+            color: var(--aside-danger-text);
+            border-bottom: 1px solid var(--aside-danger-border);
+        }
+        .docs-banner a {
+            color: inherit;
+            font-weight: 600;
+            text-decoration: underline;
+        }
+        .docs-banner-dismiss {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: inherit;
+            font-size: 1.25rem;
+            line-height: 1;
+            margin-left: 0.5rem;
+            opacity: 0.7;
+            padding: 0.25rem;
+        }
+        .docs-banner-dismiss:hover { opacity: 1; }
         """;
 
     /// <inheritdoc />

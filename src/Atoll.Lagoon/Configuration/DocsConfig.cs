@@ -135,6 +135,14 @@ public sealed class DocsConfig
     public FooterConfig? Footer { get; set; }
 
     /// <summary>
+    /// Gets or sets the site-wide announcement banner configuration.
+    /// When set, a banner is rendered above the main content in both <c>DocsLayout</c>
+    /// and <c>SplashLayout</c>.
+    /// When <c>null</c> (default), no banner HTML is rendered.
+    /// </summary>
+    public BannerConfig? Banner { get; set; }
+
+    /// <summary>
     /// Gets or sets config-based redirect mappings.
     /// Keys are source paths (e.g. <c>"/old-page"</c>), values are redirect target paths
     /// (e.g. <c>"/new-page"</c>). Paths are base-relative and do not include

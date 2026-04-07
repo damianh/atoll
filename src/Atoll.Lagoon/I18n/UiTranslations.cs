@@ -107,6 +107,9 @@ public sealed record UiTranslations
     /// <summary>Gets the link text in the deprecated version notice pointing to the current version.</summary>
     public string OutdatedVersionLinkText { get; init; } = "View latest version";
 
+    /// <summary>Gets the accessible label for the banner dismiss button.</summary>
+    public string BannerDismissLabel { get; init; } = "Dismiss banner";
+
     /// <summary>English defaults.</summary>
     public static UiTranslations Default { get; } = new();
 }

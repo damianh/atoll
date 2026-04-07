@@ -1051,4 +1051,159 @@ public sealed class DocsLayoutTests
 
         html.ShouldContain("data-index-url=\"/fr/v1.0/search-index.json\"");
     }
+
+    // --- Banner ---
+
+    [Fact]
+    public async Task ShouldNotRenderBannerWhenBannerIsNull()
+    {
+        var html = await RenderLayoutAsync(MakeConfig());
+
+        html.ShouldNotContain("docs-banner");
+    }
+
+    [Fact]
+    public async Task ShouldNotRenderBannerWhenBannerDisabled()
+    {
+        var config = new DocsConfig { Title = "Docs", Banner = new BannerConfig { Enabled = false, Content = "Hello" } };
+
+        var html = await RenderLayoutAsync(config);
+
+        html.ShouldNotContain("docs-banner");
+    }
+
+    [Fact]
+    public async Task ShouldNotRenderBannerWhenContentEmpty()
+    {
+        var config = new DocsConfig { Title = "Docs", Banner = new BannerConfig { Content = "" } };
+
+        var html = await RenderLayoutAsync(config);
+
+        html.ShouldNotContain("docs-banner");
+    }
+
+    [Fact]
+    public async Task ShouldRenderBannerWithInfoVariantByDefault()
+    {
+        var config = new DocsConfig { Title = "Docs", Banner = new BannerConfig { Content = "Announcement" } };
+
+        var html = await RenderLayoutAsync(config);
+
+        html.ShouldContain("docs-banner-info");
+        html.ShouldContain("Announcement");
+    }
+
+    [Fact]
+    public async Task ShouldRenderBannerWithWarningVariant()
+    {
+        var config = new DocsConfig { Title = "Docs", Banner = new BannerConfig { Content = "Warning", Variant = BannerVariant.Warning } };
+
+        var html = await RenderLayoutAsync(config);
+
+        html.ShouldContain("docs-banner-warning");
+    }
+
+    [Fact]
+    public async Task ShouldRenderBannerWithSuccessVariant()
+    {
+        var config = new DocsConfig { Title = "Docs", Banner = new BannerConfig { Content = "Success", Variant = BannerVariant.Success } };
+
+        var html = await RenderLayoutAsync(config);
+
+        html.ShouldContain("docs-banner-success");
+    }
+
+    [Fact]
+    public async Task ShouldRenderBannerWithDangerVariant()
+    {
+        var config = new DocsConfig { Title = "Docs", Banner = new BannerConfig { Content = "Danger", Variant = BannerVariant.Danger } };
+
+        var html = await RenderLayoutAsync(config);
+
+        html.ShouldContain("docs-banner-danger");
+    }
+
+    [Fact]
+    public async Task ShouldRenderBannerLink()
+    {
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            Banner = new BannerConfig { Content = "See more", LinkHref = "/release-notes", LinkText = "Release notes" },
+        };
+
+        var html = await RenderLayoutAsync(config);
+
+        html.ShouldContain("href=\"/release-notes\"");
+        html.ShouldContain("Release notes");
+    }
+
+    [Fact]
+    public async Task ShouldNotRenderBannerLinkWhenHrefIsNull()
+    {
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            Banner = new BannerConfig { Content = "Announcement", LinkHref = null, LinkText = null },
+        };
+
+        var html = await RenderLayoutAsync(config);
+
+        // No anchor tag inside the banner
+        var bannerStart = html.IndexOf("id=\"docs-banner\"", StringComparison.Ordinal);
+        var bannerEnd = html.IndexOf("</div>", bannerStart, StringComparison.Ordinal);
+        var bannerHtml = html.Substring(bannerStart, bannerEnd - bannerStart);
+        bannerHtml.ShouldNotContain("<a href=");
+    }
+
+    [Fact]
+    public async Task ShouldRenderDismissButtonWhenDismissible()
+    {
+        var config = new DocsConfig { Title = "Docs", Banner = new BannerConfig { Content = "Announcement", Dismissible = true } };
+
+        var html = await RenderLayoutAsync(config);
+
+        html.ShouldContain("docs-banner-dismiss");
+        html.ShouldContain("localStorage");
+    }
+
+    [Fact]
+    public async Task ShouldNotRenderDismissButtonWhenNotDismissible()
+    {
+        var config = new DocsConfig { Title = "Docs", Banner = new BannerConfig { Content = "Announcement", Dismissible = false } };
+
+        var html = await RenderLayoutAsync(config);
+
+        html.ShouldNotContain("docs-banner-dismiss");
+    }
+
+    [Fact]
+    public async Task ShouldRenderCustomDismissKey()
+    {
+        var config = new DocsConfig { Title = "Docs", Banner = new BannerConfig { Content = "Announcement", DismissKey = "v2-banner" } };
+
+        var html = await RenderLayoutAsync(config);
+
+        html.ShouldContain("data-dismiss-key=\"v2-banner\"");
+    }
+
+    [Fact]
+    public async Task ShouldRenderBannerContentAsRawHtml()
+    {
+        var config = new DocsConfig { Title = "Docs", Banner = new BannerConfig { Content = "<strong>Important</strong>" } };
+
+        var html = await RenderLayoutAsync(config);
+
+        html.ShouldContain("<strong>Important</strong>");
+    }
+
+    [Fact]
+    public async Task ShouldRenderBannerWithRoleStatus()
+    {
+        var config = new DocsConfig { Title = "Docs", Banner = new BannerConfig { Content = "Announcement" } };
+
+        var html = await RenderLayoutAsync(config);
+
+        html.ShouldContain("role=\"status\"");
+    }
 }

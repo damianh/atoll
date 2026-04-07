@@ -4,7 +4,6 @@ using Shouldly;
 using Xunit;
 
 namespace Atoll.Lagoon.Tests.Configuration;
-
 public sealed class DocsConfigTests
 {
     [Fact]
@@ -170,5 +169,54 @@ public sealed class DocsConfigTests
         config.Footer.Links.Count.ShouldBe(1);
         config.Footer.Links[0].Label.ShouldBe("Privacy");
         config.Footer.Links[0].Href.ShouldBe("/privacy");
+    }
+
+    // --- BannerConfig defaults ---
+
+    [Fact]
+    public void BannerConfigShouldHaveCorrectDefaults()
+    {
+        var banner = new BannerConfig();
+
+        banner.Content.ShouldBe("");
+        banner.Variant.ShouldBe(BannerVariant.Info);
+        banner.LinkHref.ShouldBeNull();
+        banner.LinkText.ShouldBeNull();
+        banner.Dismissible.ShouldBeTrue();
+        banner.DismissKey.ShouldBe("atoll-banner-dismissed");
+        banner.Enabled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void DocsConfigBannerShouldDefaultToNull()
+    {
+        var config = new DocsConfig();
+
+        config.Banner.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DocsConfigShouldAcceptBannerConfig()
+    {
+        var banner = new BannerConfig
+        {
+            Content = "<strong>New release!</strong>",
+            Variant = BannerVariant.Success,
+            LinkHref = "/release-notes",
+            LinkText = "Read more",
+            Dismissible = false,
+            DismissKey = "v2-banner",
+            Enabled = true,
+        };
+        var config = new DocsConfig { Banner = banner };
+
+        config.Banner.ShouldNotBeNull();
+        config.Banner.Content.ShouldBe("<strong>New release!</strong>");
+        config.Banner.Variant.ShouldBe(BannerVariant.Success);
+        config.Banner.LinkHref.ShouldBe("/release-notes");
+        config.Banner.LinkText.ShouldBe("Read more");
+        config.Banner.Dismissible.ShouldBeFalse();
+        config.Banner.DismissKey.ShouldBe("v2-banner");
+        config.Banner.Enabled.ShouldBeTrue();
     }
 }
