@@ -409,44 +409,13 @@ internal sealed class DevServerReloader
             return null;
         }
 
-        // Find the GenerateToStreamAsync(CollectionQuery, ISearchIndexConfiguration, Stream) method,
-        // or fall back to GenerateAsync and capture the output differently.
-        // First, try to find a stream-based generator method.
-        MethodInfo? generateMethod = null;
-        foreach (var method in generatorType.GetMethods())
-        {
-            if (method.Name != "GenerateToStreamAsync")
-            {
-                continue;
-            }
-
-            var parameters = method.GetParameters();
-            if (parameters.Length == 3
-                && parameters[0].ParameterType == typeof(CollectionQuery)
-                && parameters[2].ParameterType == typeof(Stream))
-            {
-                generateMethod = method;
-                break;
-            }
-        }
-
+        // Find GenerateAsync(CollectionQuery, ISearchIndexConfiguration, CancellationToken)
+        // matching the 3-parameter overload on LagoonSearchIndexGenerator.
+        // Generate to a temp directory, read the output, and return as bytes.
         try
         {
             var configInstance = Activator.CreateInstance(configType)!;
 
-            if (generateMethod is not null)
-            {
-                // Use stream-based generation if available.
-                using var ms = new MemoryStream();
-                var generator = Activator.CreateInstance(generatorType)!;
-                var task = (Task)generateMethod.Invoke(generator, [collectionQuery, configInstance, ms])!;
-                task.GetAwaiter().GetResult();
-                var bytes = ms.ToArray();
-                _logger.LogDebug("Search index generated: {Bytes} bytes", bytes.Length);
-                return bytes;
-            }
-
-            // Fall back to the file-based generator: create a temp directory, generate, read, clean up.
             var tempDir = Path.Combine(Path.GetTempPath(), "atoll-dev-search-" + Guid.NewGuid().ToString("N")[..8]);
             Directory.CreateDirectory(tempDir);
             try
@@ -460,8 +429,9 @@ internal sealed class DevServerReloader
                     }
 
                     var parameters = method.GetParameters();
-                    if (parameters.Length == 2
-                        && parameters[0].ParameterType == typeof(CollectionQuery))
+                    if (parameters.Length == 3
+                        && parameters[0].ParameterType == typeof(CollectionQuery)
+                        && parameters[2].ParameterType == typeof(CancellationToken))
                     {
                         fileGenerateMethod = method;
                         break;
@@ -475,7 +445,7 @@ internal sealed class DevServerReloader
                 }
 
                 var fileGenerator = Activator.CreateInstance(generatorType, tempDir)!;
-                var fileTask = (Task)fileGenerateMethod.Invoke(fileGenerator, [collectionQuery, configInstance])!;
+                var fileTask = (Task)fileGenerateMethod.Invoke(fileGenerator, [collectionQuery, configInstance, CancellationToken.None])!;
                 fileTask.GetAwaiter().GetResult();
 
                 var indexPath = Path.Combine(tempDir, "search-index.json");
