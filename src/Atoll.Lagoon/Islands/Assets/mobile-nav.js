@@ -33,24 +33,25 @@ function trapFocus(element) {
 export default function init(element) {
     const toggle = element.querySelector('#mobile-nav-toggle');
     const menu = document.getElementById('mobile-nav-menu');
+    const wrapper = document.getElementById('sidebar-wrapper');
     const close = element.querySelector('#mobile-nav-close');
 
-    if (!toggle || !menu) return;
+    if (!toggle || !menu || !wrapper) return;
 
     function open() {
-        menu.style.display = 'block';
+        wrapper.setAttribute('aria-hidden', 'false');
+        menu.setAttribute('aria-hidden', 'false');
         document.body.classList.add(OPEN_CLASS);
         toggle.setAttribute('aria-expanded', 'true');
-        menu.setAttribute('aria-hidden', 'false');
         trapFocus(menu);
         close && close.focus();
     }
 
     function closeMenu() {
-        menu.style.display = 'none';
+        wrapper.setAttribute('aria-hidden', 'true');
+        menu.setAttribute('aria-hidden', 'true');
         document.body.classList.remove(OPEN_CLASS);
         toggle.setAttribute('aria-expanded', 'false');
-        menu.setAttribute('aria-hidden', 'true');
         toggle.focus();
     }
 
@@ -58,7 +59,7 @@ export default function init(element) {
     close && close.addEventListener('click', closeMenu);
 
     document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && menu.style.display === 'block') {
+        if (e.key === 'Escape' && wrapper.getAttribute('aria-hidden') === 'false') {
             closeMenu();
         }
     });
