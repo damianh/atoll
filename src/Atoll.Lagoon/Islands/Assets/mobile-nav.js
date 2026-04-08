@@ -38,9 +38,20 @@ export default function init(element) {
 
     if (!toggle || !menu || !wrapper) return;
 
+    // Create a backdrop overlay for tap-outside-to-close
+    const backdrop = document.createElement('div');
+    backdrop.className = 'mobile-nav-backdrop';
+    backdrop.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(backdrop);
+
+    function isOpen() {
+        return wrapper.getAttribute('aria-hidden') === 'false';
+    }
+
     function open() {
         wrapper.setAttribute('aria-hidden', 'false');
         menu.setAttribute('aria-hidden', 'false');
+        backdrop.setAttribute('aria-hidden', 'false');
         document.body.classList.add(OPEN_CLASS);
         toggle.setAttribute('aria-expanded', 'true');
         trapFocus(menu);
@@ -50,16 +61,24 @@ export default function init(element) {
     function closeMenu() {
         wrapper.setAttribute('aria-hidden', 'true');
         menu.setAttribute('aria-hidden', 'true');
+        backdrop.setAttribute('aria-hidden', 'true');
         document.body.classList.remove(OPEN_CLASS);
         toggle.setAttribute('aria-expanded', 'false');
         toggle.focus();
     }
 
-    toggle.addEventListener('click', open);
+    toggle.addEventListener('click', function () {
+        if (isOpen()) {
+            closeMenu();
+        } else {
+            open();
+        }
+    });
     close && close.addEventListener('click', closeMenu);
+    backdrop.addEventListener('click', closeMenu);
 
     document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && wrapper.getAttribute('aria-hidden') === 'false') {
+        if (e.key === 'Escape' && isOpen()) {
             closeMenu();
         }
     });

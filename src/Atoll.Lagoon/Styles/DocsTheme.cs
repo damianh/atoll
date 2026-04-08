@@ -286,6 +286,14 @@ public sealed class DocsTheme : AtollComponent
                 overflow-y: auto;
             }
             .docs-sidebar[aria-hidden="false"] { display: block; }
+            .mobile-nav-backdrop {
+                display: none;
+                position: fixed;
+                inset: 0;
+                z-index: 40;
+                background: rgba(0, 0, 0, 0.4);
+            }
+            .mobile-nav-backdrop[aria-hidden="false"] { display: block; }
             .docs-main { padding: 1.5rem; }
         }
         """;
