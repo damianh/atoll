@@ -87,7 +87,7 @@ public sealed class DevCommandHandler
                 }
             });
 
-            Console.WriteLine($"Atoll — dev server starting on http://{config.Server.Host}:{effectivePort}");
+            Console.WriteLine($"Atoll ({CliInfo.Version}) — dev server starting on http://{config.Server.Host}:{effectivePort}");
             Console.WriteLine("  Press Ctrl+C to stop.");
             Console.WriteLine("  Watching for file changes (.cs, .md, atoll.json)");
 
@@ -150,7 +150,7 @@ public sealed class DevCommandHandler
                 }
             });
 
-            Console.WriteLine($"Atoll — dev server starting on http://{config.Server.Host}:{effectivePort}");
+            Console.WriteLine($"Atoll ({CliInfo.Version}) — dev server starting on http://{config.Server.Host}:{effectivePort}");
             Console.WriteLine("  Warning: No .csproj found — starting with no routes.");
             Console.WriteLine("  Press Ctrl+C to stop.");
 
