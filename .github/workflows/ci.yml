@@ -44,6 +44,7 @@ jobs:
           dotnet pack src/Atoll.Lagoon/Atoll.Lagoon.csproj --no-build -c Release --output ./packages
           dotnet pack src/Atoll.Mermaid/Atoll.Mermaid.csproj --no-build -c Release --output ./packages
           dotnet pack src/Atoll.Middleware/Atoll.Middleware.csproj --no-build -c Release --output ./packages
+          dotnet pack src/Atoll.Charts/Atoll.Charts.csproj --no-build -c Release --output ./packages
           dotnet pack src/Atoll.Reef/Atoll.Reef.csproj --no-build -c Release --output ./packages
 
       - name: Pack Templates
