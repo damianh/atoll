@@ -2,6 +2,7 @@ using Markdig;
 using Markdig.Parsers;
 using Markdig.Renderers;
 using Markdig.Renderers.Html;
+using Markdig.Syntax;
 
 namespace Atoll.Charts;
 
@@ -29,13 +30,27 @@ public sealed class ChartExtension : IMarkdownExtension
             return;
         }
 
-        // Replace the existing CodeBlockRenderer with our Chart-aware version.
-        var existing = htmlRenderer.ObjectRenderers.FindExact<CodeBlockRenderer>();
-        if (existing is not null)
+        // Capture the current code block renderer as the fallback so that non-chart
+        // blocks continue through the existing chain (e.g., syntax highlighting → mermaid
+        // → default). This mirrors the chain-of-responsibility pattern used by the other
+        // code block extensions.
+        // Walk the renderer list looking for the first HtmlObjectRenderer<CodeBlock>
+        // that is not our own renderer.
+        IMarkdownObjectRenderer? fallback = null;
+        foreach (var r in htmlRenderer.ObjectRenderers)
         {
-            htmlRenderer.ObjectRenderers.Remove(existing);
+            if (r is HtmlObjectRenderer<CodeBlock> codeRenderer and not ChartCodeBlockRenderer)
+            {
+                fallback = codeRenderer;
+                break;
+            }
         }
 
-        htmlRenderer.ObjectRenderers.Insert(0, new ChartCodeBlockRenderer());
+        fallback ??= new CodeBlockRenderer();
+
+        // Remove the captured fallback so only one dispatcher is active.
+        htmlRenderer.ObjectRenderers.Remove(fallback);
+
+        htmlRenderer.ObjectRenderers.Insert(0, new ChartCodeBlockRenderer(fallback));
     }
 }

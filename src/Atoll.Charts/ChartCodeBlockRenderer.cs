@@ -9,12 +9,18 @@ namespace Atoll.Charts;
 /// HTML renderer for code blocks that handles <c>chart</c> language blocks specially.
 /// Renders <c>```chart</c> fenced blocks as a <c>&lt;div class="atoll-chart"&gt;</c>
 /// containing a <c>&lt;canvas data-chart-config="..."&gt;</c> element for Chart.js
-/// client-side rendering. All other code blocks are rendered using the default
-/// Markdig behaviour.
+/// client-side rendering. All other code blocks are forwarded to the previously
+/// registered renderer, preserving any existing chain (e.g., syntax highlighting).
 /// </summary>
 internal sealed class ChartCodeBlockRenderer : HtmlObjectRenderer<CodeBlock>
 {
-    private readonly CodeBlockRenderer _fallback = new();
+    private readonly IMarkdownObjectRenderer _fallback;
+
+    internal ChartCodeBlockRenderer(IMarkdownObjectRenderer fallback)
+    {
+        ArgumentNullException.ThrowIfNull(fallback);
+        _fallback = fallback;
+    }
 
     /// <inheritdoc />
     protected override void Write(HtmlRenderer renderer, CodeBlock block)
