@@ -29,7 +29,7 @@ public sealed class BuildCommandHandler
     public async Task ExecuteAsync(string projectRoot, CancellationToken cancellationToken)
     {
         var startTime = DateTime.UtcNow;
-        Console.WriteLine("Atoll — building site...");
+        Console.WriteLine($"Atoll ({CliInfo.Version}) — building site...");
 
         // Phase 1: Config — load configuration
         var bar = new ConsoleProgressBar(

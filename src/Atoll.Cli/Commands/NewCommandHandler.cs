@@ -92,7 +92,7 @@ public sealed class NewCommandHandler
 
         // Template is installed — invoke dotnet new for real
         var outputDir = Path.Combine(parentDirectory, name);
-        Console.WriteLine($"Atoll — creating new '{template}' project '{name}'...");
+        Console.WriteLine($"Atoll ({CliInfo.Version}) — creating new '{template}' project '{name}'...");
 
         var newPsi = new ProcessStartInfo
         {
@@ -144,7 +144,7 @@ public sealed class NewCommandHandler
             return;
         }
 
-        Console.WriteLine($"Atoll — creating new project '{name}'...");
+        Console.WriteLine($"Atoll ({CliInfo.Version}) — creating new project '{name}'...");
 
         // Create directory structure
         Directory.CreateDirectory(projectDir);

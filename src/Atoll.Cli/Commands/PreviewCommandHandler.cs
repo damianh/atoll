@@ -64,7 +64,7 @@ public sealed class PreviewCommandHandler
         // Fallback: serve index.html for SPA-style routing
         app.MapFallbackToFile("index.html", new StaticFileOptions { FileProvider = fileProvider });
 
-        Console.WriteLine($"Atoll — preview server starting on http://{config.Server.Host}:{effectivePort}");
+        Console.WriteLine($"Atoll ({CliInfo.Version}) — preview server starting on http://{config.Server.Host}:{effectivePort}");
         Console.WriteLine($"  Serving: {outputDir}");
         Console.WriteLine("  Press Ctrl+C to stop.");
 
