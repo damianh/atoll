@@ -294,7 +294,7 @@ public static class MarkdownRenderer
 
         if (options.EnableAutoIdentifiers)
         {
-            builder.UseAutoIdentifiers();
+            builder.Extensions.Add(new AutoIdentifierFixExtension());
         }
 
         if (options.LinkResolution is { } linkResolution)

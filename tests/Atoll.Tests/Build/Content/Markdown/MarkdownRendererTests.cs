@@ -395,4 +395,47 @@ public sealed class MarkdownRendererTests
         result.Headings.Count.ShouldBe(1);
         result.Headings[0].Text.ShouldBe("Auto-generated content");
     }
+
+    [Fact]
+    public void ShouldPreserveLeadingDigitsInHeadingId()
+    {
+        var markdown = "## 3rd Party Cookies";
+        var options = new MarkdownOptions { EnableAutoIdentifiers = true };
+        var result = MarkdownRenderer.Render(markdown, options);
+
+        result.Headings[0].Id.ShouldBe("3rd-party-cookies");
+    }
+
+    [Fact]
+    public void ShouldPreserveLeadingDigitsInMultipleHeadings()
+    {
+        var markdown = "## 1st Section\n\n## 2nd Section\n\n## 3rd Section";
+        var options = new MarkdownOptions { EnableAutoIdentifiers = true };
+        var result = MarkdownRenderer.Render(markdown, options);
+
+        result.Headings[0].Id.ShouldBe("1st-section");
+        result.Headings[1].Id.ShouldBe("2nd-section");
+        result.Headings[2].Id.ShouldBe("3rd-section");
+    }
+
+    [Fact]
+    public void ShouldHandleCollisionsWithLeadingDigitHeadings()
+    {
+        var markdown = "## 3rd Party\n\n## 3rd Party";
+        var options = new MarkdownOptions { EnableAutoIdentifiers = true };
+        var result = MarkdownRenderer.Render(markdown, options);
+
+        result.Headings[0].Id.ShouldBe("3rd-party");
+        result.Headings[1].Id.ShouldBe("3rd-party-1");
+    }
+
+    [Fact]
+    public void ShouldRenderLeadingDigitHeadingIdInHtml()
+    {
+        var markdown = "## 3rd Party Cookies";
+        var options = new MarkdownOptions { EnableAutoIdentifiers = true };
+        var result = MarkdownRenderer.Render(markdown, options);
+
+        result.Html.ShouldContain("id=\"3rd-party-cookies\"");
+    }
 }
