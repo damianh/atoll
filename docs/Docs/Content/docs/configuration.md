@@ -71,4 +71,26 @@ When using `atoll build` or `atoll dev` from the CLI, the tool automatically dis
 ```bash
 atoll build --base-url https://staging.example.com
 atoll dev --port 5001
+atoll dev --write-dist
 ```
+
+### `--write-dist` flag
+
+The `--write-dist` flag on `atoll dev` writes all rendered pages and assets to the output directory (default `dist/`) after each rebuild cycle. This keeps the output directory synchronized with the dev server state in real-time.
+
+This is useful when an external process needs to serve the site from static files during development — for example, an ASP.NET AppHost that serves `dist/` via `UseStaticFiles()`.
+
+```bash
+atoll dev --write-dist --port 4321
+```
+
+Without `--write-dist`, the dev server renders pages in-memory per-request and never writes to disk. The `dist/` directory is only populated by `atoll build`.
+
+**What gets written:**
+
+- HTML pages (all routes, including dynamic routes expanded via `GetStaticPaths`)
+- Island JavaScript assets
+- Search index JSON (if configured)
+- Core Atoll scripts (`_atoll/island.js`, `_atoll/directives.js`)
+
+**Stale file cleanup:** When pages are added or removed, the output directory is automatically updated — stale files from previous rebuilds are deleted.
