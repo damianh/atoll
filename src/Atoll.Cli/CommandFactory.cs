@@ -46,19 +46,34 @@ public static class CommandFactory
     public static Command CreateDevCommand()
     {
         var portOption = CreatePortOption();
+        var writeDistOption = CreateWriteDistOption();
 
         var command = new Command("dev", "Start the development server with live reload");
         command.Add(portOption);
+        command.Add(writeDistOption);
 
         command.SetAction(async (parseResult, cancellationToken) =>
         {
             var root = parseResult.GetValue<string>("--root")!;
             var port = parseResult.GetValue(portOption);
+            var writeDist = parseResult.GetValue(writeDistOption);
             var handler = new Commands.DevCommandHandler();
-            await handler.ExecuteAsync(root, port, cancellationToken);
+            await handler.ExecuteAsync(root, port, writeDist, cancellationToken);
         });
 
         return command;
+    }
+
+    /// <summary>
+    /// Creates the <c>--write-dist</c> option for the <c>dev</c> command.
+    /// </summary>
+    public static Option<bool> CreateWriteDistOption()
+    {
+        return new Option<bool>("--write-dist")
+        {
+            Description = "Write all pages and assets to the output directory after each rebuild (useful for AppHost or external static file servers)",
+            DefaultValueFactory = _ => false,
+        };
     }
 
     /// <summary>

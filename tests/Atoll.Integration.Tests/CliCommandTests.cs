@@ -256,6 +256,65 @@ public sealed class CliCommandTests
         result.GetValue<int>("--port").ShouldBe(0);
     }
 
+    [Fact]
+    public void ShouldCreateDevCommandWithWriteDistOption()
+    {
+        var command = CommandFactory.CreateDevCommand();
+        command.Options.ShouldContain(o => o.Name == "--write-dist");
+    }
+
+    [Fact]
+    public void ShouldParseDevWriteDistFlag()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        var result = rootCommand.Parse("dev --write-dist");
+
+        result.Errors.Count.ShouldBe(0);
+        result.GetValue<bool>("--write-dist").ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ShouldDefaultWriteDistToFalse()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        var result = rootCommand.Parse("dev");
+
+        result.Errors.Count.ShouldBe(0);
+        result.GetValue<bool>("--write-dist").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ShouldParseDevWithPortAndWriteDist()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        var result = rootCommand.Parse("dev --port 4321 --write-dist");
+
+        result.Errors.Count.ShouldBe(0);
+        result.GetValue<int>("--port").ShouldBe(4321);
+        result.GetValue<bool>("--write-dist").ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ShouldNotHaveWriteDistOptionOnBuildCommand()
+    {
+        var command = CommandFactory.CreateBuildCommand();
+        command.Options.ShouldNotContain(o => o.Name == "--write-dist");
+    }
+
+    [Fact]
+    public void ShouldNotHaveWriteDistOptionOnPreviewCommand()
+    {
+        var command = CommandFactory.CreatePreviewCommand();
+        command.Options.ShouldNotContain(o => o.Name == "--write-dist");
+    }
+
+    [Fact]
+    public void ShouldCreateWriteDistOptionWithDescription()
+    {
+        var option = CommandFactory.CreateWriteDistOption();
+        option.Description.ShouldNotBeNullOrWhiteSpace();
+    }
+
     // ── Port option on build should not exist ──
 
     [Fact]
