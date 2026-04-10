@@ -17,12 +17,26 @@ namespace Atoll.Cli.Commands;
 public sealed class DevCommandHandler
 {
     /// <summary>
-    /// Executes the dev command.
+    /// Executes the dev command without writing to the output directory.
     /// </summary>
     /// <param name="projectRoot">The project root directory.</param>
     /// <param name="port">The port override (0 = use config default).</param>
     /// <param name="cancellationToken">A token to cancel the dev server operation.</param>
-    public async Task ExecuteAsync(string projectRoot, int port, CancellationToken cancellationToken)
+    public Task ExecuteAsync(string projectRoot, int port, CancellationToken cancellationToken)
+        => ExecuteAsync(projectRoot, port, writeDist: false, cancellationToken);
+
+    /// <summary>
+    /// Executes the dev command.
+    /// </summary>
+    /// <param name="projectRoot">The project root directory.</param>
+    /// <param name="port">The port override (0 = use config default).</param>
+    /// <param name="writeDist">
+    /// When <see langword="true"/>, all rendered pages and assets are written to the output
+    /// directory after each rebuild cycle. Useful when an external process (e.g. an AppHost)
+    /// needs to serve the site from disk during development.
+    /// </param>
+    /// <param name="cancellationToken">A token to cancel the dev server operation.</param>
+    public async Task ExecuteAsync(string projectRoot, int port, bool writeDist, CancellationToken cancellationToken)
     {
         var config = await AtollConfigLoader.LoadAsync(projectRoot, cancellationToken);
         var effectivePort = port > 0 ? port : config.Server.Port;
@@ -51,6 +65,18 @@ public sealed class DevCommandHandler
         var app = builder.Build();
         var loggerFactory = app.Services.GetRequiredService<ILoggerFactory>();
 
+        // When --write-dist is enabled, create the writer and clean the output directory
+        // once before the initial build so the consumer starts with a clean slate.
+        Dev.DevDistWriter? distWriter = null;
+        if (writeDist)
+        {
+            var outputDir = AtollConfigLoader.ResolveOutputDirectory(config, projectRoot);
+            var distWriterLogger = loggerFactory.CreateLogger<Dev.DevDistWriter>();
+            distWriter = new Dev.DevDistWriter(outputDir, distWriterLogger);
+            distWriter.Clean();
+            Console.WriteLine($"  --write-dist: output directory {outputDir}");
+        }
+
         // ── Request logging ──────────────────────────────────────────────────
         app.UseMiddleware<DevRequestLoggingMiddleware>();
 
@@ -71,6 +97,16 @@ public sealed class DevCommandHandler
             if (initialBuildError is not null)
             {
                 Console.WriteLine($"  Initial build had errors:\n{initialBuildError}");
+            }
+
+            // Write initial state to dist/ if --write-dist is enabled and build succeeded.
+            if (distWriter is not null && initialBuildError is null)
+            {
+                _ = Task.Run(async () =>
+                {
+                    try { await distWriter.WriteAsync(initialState, CancellationToken.None); }
+                    catch (Exception ex) { Console.WriteLine($"  --write-dist: error — {ex.Message}"); }
+                });
             }
 
             // ── Wire file-watching + hot-reload ───────────────────────────────
@@ -117,6 +153,16 @@ public sealed class DevCommandHandler
                         // because the rendered HTML has changed.
                         await liveReloadHandler.NotifyReloadAsync();
                         Console.WriteLine("  Browser reload notification sent.");
+
+                        // Write updated dist/ in the background — does not block live-reload.
+                        if (distWriter is not null)
+                        {
+                            _ = Task.Run(async () =>
+                            {
+                                try { await distWriter.WriteAsync(newState, CancellationToken.None); }
+                                catch (Exception ex) { Console.WriteLine($"  --write-dist: error — {ex.Message}"); }
+                            });
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -153,6 +199,11 @@ public sealed class DevCommandHandler
             Console.WriteLine($"Atoll ({CliInfo.Version}) — dev server starting on http://{config.Server.Host}:{effectivePort}");
             Console.WriteLine("  Warning: No .csproj found — starting with no routes.");
             Console.WriteLine("  Press Ctrl+C to stop.");
+
+            if (distWriter is not null)
+            {
+                Console.WriteLine("  --write-dist: no project found — dist/ will be empty.");
+            }
 
             await ((IHost)app).RunAsync(cancellationToken);
         }
