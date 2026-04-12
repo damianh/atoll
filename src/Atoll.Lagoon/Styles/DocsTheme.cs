@@ -267,7 +267,10 @@ public sealed class DocsTheme : AtollComponent
             .docs-sidebar-wrapper {
                 display: none;
                 position: fixed;
-                inset: 0;
+                top: var(--docs-header-height);
+                left: 0;
+                right: 0;
+                bottom: 0;
                 z-index: 50;
                 width: 80vw;
                 max-width: 20rem;
@@ -279,7 +282,10 @@ public sealed class DocsTheme : AtollComponent
             .docs-sidebar {
                 display: none;
                 position: fixed;
-                inset: 0;
+                top: var(--docs-header-height);
+                left: 0;
+                right: 0;
+                bottom: 0;
                 z-index: 50;
                 width: 80vw;
                 max-width: 20rem;
