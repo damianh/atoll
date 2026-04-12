@@ -281,6 +281,79 @@ When multiple `Tabs` instances share the same `SyncKey`, selecting a tab in one 
 </div>
 ```
 
+### Live examples
+
+#### Basic tabs
+
+:::tabs
+:::tab-item{label="npm"}
+```sh
+npm install atoll
+```
+:::
+:::tab-item{label="pnpm"}
+```sh
+pnpm add atoll
+```
+:::
+:::tab-item{label="yarn"}
+```sh
+yarn add atoll
+```
+:::
+:::
+
+#### Synchronised tabs
+
+These two tab groups share `syncKey="pkg"` — selecting a tab in one group switches the same label in the other.
+
+:::tabs{syncKey="pkg"}
+:::tab-item{label="npm"}
+```sh
+npm install atoll
+```
+:::
+:::tab-item{label="pnpm"}
+```sh
+pnpm add atoll
+```
+:::
+:::tab-item{label="yarn"}
+```sh
+yarn add atoll
+```
+:::
+:::
+
+:::tabs{syncKey="pkg"}
+:::tab-item{label="npm"}
+```sh
+npm run build
+```
+:::
+:::tab-item{label="pnpm"}
+```sh
+pnpm build
+```
+:::
+:::tab-item{label="yarn"}
+```sh
+yarn build
+```
+:::
+:::
+
+#### Tabs with icons
+
+:::tabs
+:::tab-item{label="Stars" iconName="Star"}
+Sirius, Vega, Betelgeuse
+:::
+:::tab-item{label="Rockets" iconName="Rocket"}
+Falcon 9, Starship, Ariane 6
+:::
+:::
+
 ---
 
 ## FileTree

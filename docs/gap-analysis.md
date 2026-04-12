@@ -65,7 +65,7 @@ lacks. Grouped by priority.
 | Redirect system | `redirect_from` frontmatter + config-based redirects + build-time `redirects.json` consumed by ASP.NET Core for 301s | No redirect support | URL migration and SEO preservation impossible without manual server config |
 | Link validation (build-time) | `starlight-links-validator` checks all internal links during build | No link validation | Broken links ship undetected |
 | Dynamic OpenGraph images | `astro-opengraph-images` + Satori/React TSX template generates branded per-page OG images (category + title + description) | No OG image generation | Social sharing has no preview cards |
-| Tab sync across page | `<Tabs syncKey="language">` keeps all tab groups with the same key in sync | Tabs are independent | Multi-language docs require clicking each tab group separately |
+| ~~Tab sync across page~~ | ~~`<Tabs syncKey="language">` keeps all tab groups with the same key in sync~~ | ~~`SyncKey` implemented — `data-sync-key` attribute, CustomEvent sync, localStorage persistence~~ | ~~Resolved~~ |
 | Expressive Code blocks | Syntax highlighting with frames, markers, line diffs (`ins`/`del`), annotations, collapsible sections, titles | Standard code blocks only | Rich code block features must be built manually |
 
 ### Should-have
@@ -106,8 +106,8 @@ component directives, typed schemas, islands architecture, and topic-based searc
 **Lagoon advantages**: 6 features where Lagoon is ahead (multi-version docs, Draw.IO, annotations,
 blog/articles theme, typed frontmatter, ASP.NET middleware).
 
-**Notable gaps**: 15 total (2 resolved).
-- **5 must-have** — redirects, link validation, OG images, tab sync, expressive code blocks.
+**Notable gaps**: 15 total (3 resolved).
+- **4 must-have** — redirects, link validation, OG images, expressive code blocks. *(Tab sync resolved)*
 - **4 should-have** — auto-sidebar, trailing slash normalisation, banner, custom 404. *(LLM export and search metadata resolved)*
 - **3 architectural** — component overrides, plugin system, route data API.
 - **3 nice-to-have** — analytics hooks, heading badges, containerisation.
@@ -115,4 +115,4 @@ blog/articles theme, typed frontmatter, ASP.NET middleware).
 Lagoon covers the core requirements for a .NET documentation site, including multi-language
 support, rich content components, and multi-version documentation. The must-have gaps primarily
 affect production readiness (redirects, link validation, OG images) and content authoring
-convenience (tab sync, expressive code). The architectural gaps affect long-term extensibility.
+convenience (expressive code). The architectural gaps affect long-term extensibility.
