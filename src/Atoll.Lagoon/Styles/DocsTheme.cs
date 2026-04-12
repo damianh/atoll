@@ -18,7 +18,7 @@ namespace Atoll.Lagoon.Styles;
 [GlobalStyle]
 [Styles(Reset + LightTokens + DarkTokens + Layout + ScrollbarStyles + Typography + Prose + CodeBlocks + SyntaxHighlightTokens + CodeCopyButtonStyles + ExpressiveCodeStyles +
         SidebarNav + TocNav + PaginationStyles + BreadcrumbStyles + HeroStyles + SplashStyles + SearchStyles +
-        LanguagePickerStyles + UntranslatedNoticeStyles + AsideStyles + ContentFooterStyles + FooterLinkStyles + BannerStyles)]
+        LanguagePickerStyles + UntranslatedNoticeStyles + AsideStyles + TabsStyles + ContentFooterStyles + FooterLinkStyles + BannerStyles)]
 public sealed class DocsTheme : AtollComponent
 {
     // -------------------------------------------------------------------------
@@ -1430,6 +1430,66 @@ public sealed class DocsTheme : AtollComponent
             color: var(--docs-text);
         }
         .aside-content p:last-child { margin-bottom: 0; }
+        """;
+
+    private const string TabsStyles = """
+        /* ---- Tabs ---- */
+        .tabs {
+            border: 1px solid var(--docs-border);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            margin-bottom: 1.25rem;
+            background: var(--docs-bg);
+        }
+        .tabs-header {
+            display: flex;
+            overflow-x: auto;
+            border-bottom: 2px solid var(--docs-border);
+            background: var(--docs-bg-subtle);
+        }
+        .tab-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1.25rem;
+            border: none;
+            background: transparent;
+            color: var(--docs-text-muted);
+            font-size: 0.875rem;
+            font-family: inherit;
+            cursor: pointer;
+            white-space: nowrap;
+            box-shadow: inset 0 -2px 0 transparent;
+            margin-bottom: -2px;
+            transition: color 0.15s, box-shadow 0.15s;
+        }
+        .tab-button:hover {
+            color: var(--docs-text);
+        }
+        .tab-button:focus-visible {
+            outline: 2px solid var(--docs-primary);
+            outline-offset: -2px;
+        }
+        .tab-button-active {
+            color: var(--docs-text);
+            font-weight: 600;
+            box-shadow: inset 0 -2px 0 var(--docs-primary);
+        }
+        .tab-icon {
+            display: inline-flex;
+            width: 1em;
+            height: 1em;
+            flex-shrink: 0;
+        }
+        .tab-panel {
+            padding: 1rem 1.25rem;
+        }
+        .tab-panel[hidden] {
+            display: none;
+        }
+        .tab-panel > *:last-child {
+            margin-bottom: 0;
+        }
         """;
 
     private const string ContentFooterStyles = """
