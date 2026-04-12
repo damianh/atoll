@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/damianh/atoll/main/schemas/atoll.schema.json",
   "title": "Atoll Configuration",
-  "description": "Configuration file for Atoll, a .NET-native framework inspired by Astro. Place this file as 'atoll.json' in your project root.",
+  "description": "Configuration file for Atoll, the static site generator for .NET. Place this file as 'atoll.json' in your project root.",
   "type": "object",
   "additionalProperties": false,
   "properties": {

@@ -54,7 +54,7 @@ public sealed class BlogLayout : AtollComponent
                 </main>
                 <footer style="border-top: 1px solid var(--color-border); padding: 1.5rem 0; text-align: center; color: var(--color-muted); font-size: 0.875rem;">
                     <div class="container">
-                        <p>Built with Atoll &mdash; a .NET-native framework inspired by Astro.</p>
+                        <p>Built with Atoll &mdash; the static site generator for .NET.</p>
                     </div>
                 </footer>
             </body>

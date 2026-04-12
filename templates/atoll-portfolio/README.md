@@ -1,6 +1,6 @@
 # AtollPortfolio
 
-A portfolio/personal site built with [Atoll](https://github.com/damianh/atoll) — a .NET-native framework inspired by Astro.
+A portfolio/personal site built with [Atoll](https://github.com/damianh/atoll) — the static site generator for .NET.
 
 ## Getting Started
 
