@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Atoll.Build.Content.Collections;
 using Atoll.Build.Content.Frontmatter;
+using Atoll.Build.Content.Markdown;
 
 namespace Atoll.Build.Tests.Content.Collections;
 
@@ -305,5 +306,93 @@ public sealed class CollectionQueryTests
         rendered.Headings[0].Text.ShouldBe("My Amazing Post");
         rendered.Headings[1].Text.ShouldBe("Getting Started");
         rendered.Headings[2].Text.ShouldBe("Conclusion");
+    }
+
+    // --- Content asset URL rewriting tests ---
+
+    [Fact]
+    public void RenderShouldRewriteRelativeImageUrlWithLinkResolution()
+    {
+        var config = new CollectionConfig("content")
+            .AddCollection(ContentCollection.Define<BlogPost>("blog"));
+
+        var provider = new InMemoryFileProvider()
+            .AddFile(BlogDir, "my-post.md", """
+                ---
+                title: Post with Image
+                ---
+                ![diagram](images/diagram.svg)
+                """);
+
+        var loader = new CollectionLoader(config, provider);
+        var markdownOptions = new MarkdownOptions
+        {
+            LinkResolution = new LinkResolutionOptions { BasePath = "/docs" }
+        };
+        var query = new CollectionQuery(loader, markdownOptions);
+
+        var entry = query.GetEntry<BlogPost>("blog", "my-post")!;
+        var rendered = query.Render(entry);
+
+        // Image URL should be rewritten from "images/diagram.svg" to "/docs/blog/images/diagram.svg"
+        rendered.Html.ShouldContain("src=\"/docs/blog/images/diagram.svg\"");
+    }
+
+    [Fact]
+    public void RenderShouldRewriteRelativeImageUrlForNestedEntry()
+    {
+        var config = new CollectionConfig("content")
+            .AddCollection(ContentCollection.Define<BlogPost>("blog"));
+
+        var guidesDir = Path.Combine("content", "blog", "guides");
+        var provider = new InMemoryFileProvider()
+            .AddFile(guidesDir, "getting-started.md", """
+                ---
+                title: Getting Started Guide
+                ---
+                ![step1](./screenshots/step1.png)
+                """);
+
+        var loader = new CollectionLoader(config, provider);
+        var markdownOptions = new MarkdownOptions
+        {
+            LinkResolution = new LinkResolutionOptions { BasePath = "/docs" }
+        };
+        var query = new CollectionQuery(loader, markdownOptions);
+
+        // Use GetCollection (recursive) to find nested entries, then render.
+        var entries = query.GetCollection<BlogPost>("blog");
+        entries.Count.ShouldBe(1);
+        var entry = entries[0];
+        entry.Slug.ShouldBe("guides/getting-started");
+
+        var rendered = query.Render(entry);
+
+        // For nested entry "guides/getting-started", asset base is "/docs/blog/guides"
+        rendered.Html.ShouldContain("src=\"/docs/blog/guides/screenshots/step1.png\"");
+    }
+
+    [Fact]
+    public void RenderShouldNotRewriteImageUrlWithoutLinkResolution()
+    {
+        var config = new CollectionConfig("content")
+            .AddCollection(ContentCollection.Define<BlogPost>("blog"));
+
+        var provider = new InMemoryFileProvider()
+            .AddFile(BlogDir, "my-post.md", """
+                ---
+                title: Post with Image
+                ---
+                ![diagram](images/diagram.svg)
+                """);
+
+        var loader = new CollectionLoader(config, provider);
+        // No LinkResolution configured — images should be left as-is.
+        var query = new CollectionQuery(loader);
+
+        var entry = query.GetEntry<BlogPost>("blog", "my-post")!;
+        var rendered = query.Render(entry);
+
+        rendered.Html.ShouldContain("src=\"images/diagram.svg\"");
     }
 }

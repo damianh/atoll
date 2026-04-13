@@ -95,9 +95,73 @@ public sealed class CollectionQuery
         where TData : class, new()
     {
         ArgumentNullException.ThrowIfNull(entry);
-        var result = MarkdownRenderer.Render(entry.Body, _markdownOptions);
+
+        var options = WithContentAssetBasePath(_markdownOptions, entry);
+        var result = MarkdownRenderer.Render(entry.Body, options);
         return result.Fragments is not null
             ? new RenderedContent(result.Html, result.Headings, result.Fragments, result.AllReferences)
             : new RenderedContent(result.Html, result.Headings);
+    }
+
+    /// <summary>
+    /// Returns the markdown options with <see cref="LinkResolutionOptions.ContentAssetBasePath"/>
+    /// set for the given content entry. When link resolution is not configured or the entry
+    /// has no parent directory for relative assets, returns the original options unchanged.
+    /// </summary>
+    private static MarkdownOptions WithContentAssetBasePath<TData>(
+        MarkdownOptions options, ContentEntry<TData> entry)
+        where TData : class, new()
+    {
+        if (options.LinkResolution is null)
+        {
+            return options;
+        }
+
+        // Compute the content asset base path from the entry's collection and slug.
+        // The entry's slug directory (parent path in URL space) determines where relative
+        // asset URLs are resolved. For example:
+        //   Collection "articles", Slug "product-development-process"
+        //     → entry directory is "articles/" → asset base = "{BasePath}/articles"
+        //   Collection "docs", Slug "guides/getting-started"
+        //     → entry directory is "docs/guides/" → asset base = "{BasePath}/docs/guides"
+        var basePath = options.LinkResolution.BasePath.TrimEnd('/');
+        var entryDir = entry.Collection;
+        var lastSlash = entry.Slug.LastIndexOf('/');
+        if (lastSlash >= 0)
+        {
+            entryDir = entry.Collection + "/" + entry.Slug[..lastSlash];
+        }
+
+        var contentAssetBasePath = $"{basePath}/{entryDir}";
+
+        // Only create a new options instance if the value actually differs.
+        if (string.Equals(contentAssetBasePath, options.LinkResolution.ContentAssetBasePath, StringComparison.Ordinal))
+        {
+            return options;
+        }
+
+        // Clone the link resolution options with the entry-specific asset base path.
+        var entryLinkResolution = new LinkResolutionOptions
+        {
+            BasePath = options.LinkResolution.BasePath,
+            AddTrailingSlash = options.LinkResolution.AddTrailingSlash,
+            ExtensionsToStrip = options.LinkResolution.ExtensionsToStrip,
+            ContentAssetBasePath = contentAssetBasePath,
+        };
+
+        return new MarkdownOptions
+        {
+            EnableTables = options.EnableTables,
+            EnableAutoLinks = options.EnableAutoLinks,
+            EnableTaskLists = options.EnableTaskLists,
+            EnableEmphasisExtras = options.EnableEmphasisExtras,
+            EnableFootnotes = options.EnableFootnotes,
+            EnableAutoIdentifiers = options.EnableAutoIdentifiers,
+            CodeBlockClass = options.CodeBlockClass,
+            LinkResolution = entryLinkResolution,
+            ExternalLinks = options.ExternalLinks,
+            Components = options.Components,
+            Extensions = options.Extensions,
+        };
     }
 }

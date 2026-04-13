@@ -79,6 +79,16 @@ internal sealed class AtollLinkInlineRenderer : LinkInlineRenderer
                 url = Resolve(url, resolution);
                 link.Url = url;
             }
+            // Step 1b: Resolve relative asset URLs (images, SVGs, etc.) to absolute paths.
+            // Without this, a page at /docs/articles/my-post/ with <img src="images/diagram.svg">
+            // would resolve to /docs/articles/my-post/images/diagram.svg (browser-relative),
+            // but the actual file is at Content/articles/images/diagram.svg. By rewriting to
+            // /docs/articles/images/diagram.svg we match the content directory structure.
+            else if (LinkResolution is { ContentAssetBasePath: { } assetBase } && IsRelativeAssetUrl(url))
+            {
+                url = ResolveAsset(url, assetBase);
+                link.Url = url;
+            }
 
             // Step 2: Add target/rel to external links.
             if (ExternalLinks is { } externalLinks && IsExternal(url, externalLinks))
@@ -192,6 +202,61 @@ internal sealed class AtollLinkInlineRenderer : LinkInlineRenderer
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Determines whether a URL is a relative asset reference that should be resolved
+    /// against <see cref="LinkResolutionOptions.ContentAssetBasePath"/>.
+    /// Returns <c>true</c> for relative URLs that are not absolute, not root-relative,
+    /// and not fragment-only.
+    /// </summary>
+    private static bool IsRelativeAssetUrl(string url)
+    {
+        // Absolute URLs — leave untouched.
+        if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        // Root-relative URLs — already absolute in URL space.
+        if (url.StartsWith('/'))
+        {
+            return false;
+        }
+
+        // Fragment-only (e.g., "#section") — not an asset reference.
+        if (url.StartsWith('#'))
+        {
+            return false;
+        }
+
+        // Data URIs — not file assets.
+        if (url.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Resolves a relative asset URL against the content asset base path,
+    /// producing an absolute URL path. For example, <c>"images/diagram.svg"</c>
+    /// with base path <c>"/docs/articles"</c> becomes <c>"/docs/articles/images/diagram.svg"</c>.
+    /// </summary>
+    private static string ResolveAsset(string url, string contentAssetBasePath)
+    {
+        var path = url;
+        if (path.StartsWith("./", StringComparison.Ordinal))
+        {
+            path = path[2..];
+        }
+
+        var basePath = contentAssetBasePath.TrimEnd('/');
+        var assetPath = path.TrimStart('/');
+
+        return $"{basePath}/{assetPath}";
     }
 
     private static string StripFragment(string url, out string fragment)

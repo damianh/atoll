@@ -27,4 +27,19 @@ public sealed class LinkResolutionOptions
     /// Default: <c>[".md", ".mdx", ".mda"]</c>.
     /// </summary>
     public IReadOnlyList<string> ExtensionsToStrip { get; set; } = [".md", ".mdx", ".mda"];
+
+    /// <summary>
+    /// Gets or sets the URL-space directory path used to resolve relative asset references
+    /// (images, SVGs, etc.) in Markdown content. When set, relative URLs on image elements
+    /// and non-Markdown link targets are rewritten to absolute paths by prepending this base path.
+    /// <para>
+    /// For example, when a content entry in the <c>articles</c> collection with
+    /// <see cref="BasePath"/> <c>"/docs"</c> has <c>ContentAssetBasePath</c> set to
+    /// <c>"/docs/articles"</c>, the Markdown image <c>![alt](images/diagram.svg)</c>
+    /// is rewritten to <c>&lt;img src="/docs/articles/images/diagram.svg"&gt;</c>.
+    /// </para>
+    /// When <c>null</c>, relative asset URLs are left unchanged (browser-resolved).
+    /// Default: <c>null</c>.
+    /// </summary>
+    public string? ContentAssetBasePath { get; set; }
 }
