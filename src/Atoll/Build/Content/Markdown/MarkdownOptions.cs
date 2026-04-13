@@ -104,4 +104,21 @@ public sealed class MarkdownOptions
     /// Default: <c>null</c>.
     /// </summary>
     public IReadOnlyList<IMarkdownExtension>? Extensions { get; set; }
+
+    /// <summary>
+    /// Gets or sets the URL base path used to resolve relative asset references
+    /// (images, SVGs, PDFs, etc.) in content entries during rendering.
+    /// <para>
+    /// When set, this base path is combined with the entry's collection name and slug
+    /// directory to produce an absolute URL for relative asset references. For example,
+    /// with <c>ContentBasePath = "/docs"</c>, an image <c>![alt](images/diagram.svg)</c>
+    /// in the <c>articles</c> collection is rewritten to
+    /// <c>/docs/articles/images/diagram.svg</c>.
+    /// </para>
+    /// When <c>null</c>, relative asset URLs are left unchanged (browser-resolved).
+    /// This property is independent of <see cref="LinkResolution"/> — asset rewriting works
+    /// even when <c>.md</c> link resolution is not configured.
+    /// Default: <c>null</c>.
+    /// </summary>
+    public string? ContentBasePath { get; set; }
 }
