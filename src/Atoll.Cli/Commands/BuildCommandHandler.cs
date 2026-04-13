@@ -314,37 +314,55 @@ public sealed class BuildCommandHandler
     }
 
     /// <summary>
-    /// Discovers global CSS component types from the assembly and its referenced assemblies.
-    /// Scans the assembly's output directory for referenced DLLs and includes types decorated
-    /// with both <see cref="GlobalStyleAttribute"/> and <see cref="StylesAttribute"/>.
+    /// Resolves referenced assemblies by probing the output directory first, then falling back
+    /// to the NuGet global packages cache via <see cref="DepsJsonAssemblyResolver"/>.
+    /// This ensures assemblies from both <c>&lt;ProjectReference&gt;</c> (copied to output) and
+    /// <c>&lt;PackageReference&gt;</c> (in the NuGet cache) are discovered.
     /// </summary>
-    private static IReadOnlyList<Type> DiscoverGlobalStyleTypes(Assembly assembly)
+    private static List<Assembly> ResolveReferencedAssemblies(Assembly assembly)
     {
-        var assembliesToScan = new List<Assembly> { assembly };
+        var result = new List<Assembly> { assembly };
         var assemblyDir = Path.GetDirectoryName(assembly.Location);
+        var resolver = DepsJsonAssemblyResolver.Create(assembly.Location);
 
-        if (assemblyDir is not null)
+        foreach (var referencedName in assembly.GetReferencedAssemblies())
         {
-            foreach (var referencedName in assembly.GetReferencedAssemblies())
-            {
-                var candidatePath = Path.Combine(assemblyDir, referencedName.Name + ".dll");
-                if (!File.Exists(candidatePath))
-                {
-                    continue;
-                }
+            // Try output directory first (project references).
+            var candidatePath = assemblyDir is not null
+                ? Path.Combine(assemblyDir, referencedName.Name + ".dll")
+                : null;
 
-                try
-                {
-                    var referenced = Assembly.LoadFrom(candidatePath);
-                    assembliesToScan.Add(referenced);
-                }
-                catch
-                {
-                    // Ignore load failures for individual assemblies
-                }
+            string? resolvedPath = candidatePath is not null && File.Exists(candidatePath)
+                ? candidatePath
+                : resolver?.ResolveAssemblyToPath(referencedName);
+
+            if (resolvedPath is null)
+            {
+                continue;
+            }
+
+            try
+            {
+                var referenced = Assembly.LoadFrom(resolvedPath);
+                result.Add(referenced);
+            }
+            catch
+            {
+                // Ignore load failures for individual assemblies
             }
         }
 
+        return result;
+    }
+
+    /// <summary>
+    /// Discovers global CSS component types from the assembly and its referenced assemblies.
+    /// Scans the assembly's output directory and NuGet cache for referenced DLLs and includes
+    /// types decorated with both <see cref="GlobalStyleAttribute"/> and <see cref="StylesAttribute"/>.
+    /// </summary>
+    private static IReadOnlyList<Type> DiscoverGlobalStyleTypes(Assembly assembly)
+    {
+        var assembliesToScan = ResolveReferencedAssemblies(assembly);
         return GlobalStyleDiscovery.DiscoverGlobalStyles(assembliesToScan);
     }
 
@@ -354,30 +372,7 @@ public sealed class BuildCommandHandler
     /// </summary>
     private static async Task WriteIslandAssetsAsync(Assembly assembly, string outputDirectory, CancellationToken cancellationToken)
     {
-        var assembliesToScan = new List<Assembly> { assembly };
-        var assemblyDir = Path.GetDirectoryName(assembly.Location);
-
-        if (assemblyDir is not null)
-        {
-            foreach (var referencedName in assembly.GetReferencedAssemblies())
-            {
-                var candidatePath = Path.Combine(assemblyDir, referencedName.Name + ".dll");
-                if (!File.Exists(candidatePath))
-                {
-                    continue;
-                }
-
-                try
-                {
-                    var referenced = Assembly.LoadFrom(candidatePath);
-                    assembliesToScan.Add(referenced);
-                }
-                catch
-                {
-                    // Ignore load failures for individual assemblies
-                }
-            }
-        }
+        var assembliesToScan = ResolveReferencedAssemblies(assembly);
 
         var allAssets = new List<IslandAssetDescriptor>();
 
