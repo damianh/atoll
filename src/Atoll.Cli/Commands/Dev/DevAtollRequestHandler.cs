@@ -120,6 +120,16 @@ internal sealed class DevAtollRequestHandler
             return true;
         }
 
+        // Serve content assets (images, SVGs, PDFs, etc.) BEFORE route matching.
+        // Catch-all routes like /docs/[...slug] would otherwise swallow asset URLs
+        // such as /docs/articles/images/diagram.svg, causing 404s. Content asset
+        // serving is limited to paths with file extensions, so page routes (which
+        // never have extensions) are unaffected.
+        if (await TryServeContentAssetAsync(context, state, path))
+        {
+            return true;
+        }
+
         var requestPath = ExtractRoutePath(context.Request.Path, state.Options.BasePath);
         if (requestPath is null)
         {
@@ -130,7 +140,7 @@ internal sealed class DevAtollRequestHandler
         if (match is null)
         {
             _logger.LogDebug("No route matched for path '{Path}'", requestPath);
-            return await TryServeContentAssetAsync(context, state, path);
+            return false;
         }
 
         _logger.LogDebug(
