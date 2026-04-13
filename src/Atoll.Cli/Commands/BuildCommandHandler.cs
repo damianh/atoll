@@ -106,7 +106,7 @@ public sealed class BuildCommandHandler
             ? "/" + assetResult.Js.OutputPath.Replace('\\', '/')
             : "";
 
-        if (cssHref.Length > 0 || jsHref.Length > 0)
+        if (cssHref.Length > 0 || jsHref.Length > 0 || basePathForAssets.Length > 0)
         {
             var postProcessorOptions = new HtmlPostProcessorOptions
             {
