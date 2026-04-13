@@ -105,14 +105,19 @@ public sealed class CollectionQuery
 
     /// <summary>
     /// Returns the markdown options with <see cref="LinkResolutionOptions.ContentAssetBasePath"/>
-    /// set for the given content entry. When link resolution is not configured or the entry
-    /// has no parent directory for relative assets, returns the original options unchanged.
+    /// set for the given content entry. When no URL base path is available (neither
+    /// <see cref="MarkdownOptions.ContentBasePath"/> nor <see cref="LinkResolutionOptions.BasePath"/>
+    /// is set), returns the original options unchanged.
     /// </summary>
     private static MarkdownOptions WithContentAssetBasePath<TData>(
         MarkdownOptions options, ContentEntry<TData> entry)
         where TData : class, new()
     {
-        if (options.LinkResolution is null)
+        // Determine the URL base path: prefer ContentBasePath, fall back to LinkResolution.BasePath.
+        var urlBasePath = options.ContentBasePath
+            ?? options.LinkResolution?.BasePath;
+
+        if (urlBasePath is null)
         {
             return options;
         }
@@ -124,7 +129,7 @@ public sealed class CollectionQuery
         //     → entry directory is "articles/" → asset base = "{BasePath}/articles"
         //   Collection "docs", Slug "guides/getting-started"
         //     → entry directory is "docs/guides/" → asset base = "{BasePath}/docs/guides"
-        var basePath = options.LinkResolution.BasePath.TrimEnd('/');
+        var basePath = urlBasePath.TrimEnd('/');
         var entryDir = entry.Collection;
         var lastSlash = entry.Slug.LastIndexOf('/');
         if (lastSlash >= 0)
@@ -135,19 +140,25 @@ public sealed class CollectionQuery
         var contentAssetBasePath = $"{basePath}/{entryDir}";
 
         // Only create a new options instance if the value actually differs.
-        if (string.Equals(contentAssetBasePath, options.LinkResolution.ContentAssetBasePath, StringComparison.Ordinal))
+        if (options.LinkResolution is not null &&
+            string.Equals(contentAssetBasePath, options.LinkResolution.ContentAssetBasePath, StringComparison.Ordinal))
         {
             return options;
         }
 
-        // Clone the link resolution options with the entry-specific asset base path.
-        var entryLinkResolution = new LinkResolutionOptions
-        {
-            BasePath = options.LinkResolution.BasePath,
-            AddTrailingSlash = options.LinkResolution.AddTrailingSlash,
-            ExtensionsToStrip = options.LinkResolution.ExtensionsToStrip,
-            ContentAssetBasePath = contentAssetBasePath,
-        };
+        // Clone or create the link resolution options with the entry-specific asset base path.
+        var entryLinkResolution = options.LinkResolution is not null
+            ? new LinkResolutionOptions
+            {
+                BasePath = options.LinkResolution.BasePath,
+                AddTrailingSlash = options.LinkResolution.AddTrailingSlash,
+                ExtensionsToStrip = options.LinkResolution.ExtensionsToStrip,
+                ContentAssetBasePath = contentAssetBasePath,
+            }
+            : new LinkResolutionOptions
+            {
+                ContentAssetBasePath = contentAssetBasePath,
+            };
 
         return new MarkdownOptions
         {
@@ -162,6 +173,7 @@ public sealed class CollectionQuery
             ExternalLinks = options.ExternalLinks,
             Components = options.Components,
             Extensions = options.Extensions,
+            ContentBasePath = options.ContentBasePath,
         };
     }
 }

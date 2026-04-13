@@ -387,12 +387,72 @@ public sealed class CollectionQueryTests
                 """);
 
         var loader = new CollectionLoader(config, provider);
-        // No LinkResolution configured — images should be left as-is.
+        // No LinkResolution or ContentBasePath configured — images should be left as-is.
         var query = new CollectionQuery(loader);
 
         var entry = query.GetEntry<BlogPost>("blog", "my-post")!;
         var rendered = query.Render(entry);
 
         rendered.Html.ShouldContain("src=\"images/diagram.svg\"");
+    }
+
+    [Fact]
+    public void RenderShouldRewriteRelativeImageUrlWithContentBasePathOnly()
+    {
+        var config = new CollectionConfig("content")
+            .AddCollection(ContentCollection.Define<BlogPost>("blog"));
+
+        var provider = new InMemoryFileProvider()
+            .AddFile(BlogDir, "my-post.md", """
+                ---
+                title: Post with Image
+                ---
+                ![diagram](images/diagram.svg)
+                """);
+
+        var loader = new CollectionLoader(config, provider);
+        // Only ContentBasePath set — no LinkResolution. This is the common case
+        // when sites use Lagoon extensions (mermaid, syntax highlighting) but not
+        // .md link rewriting.
+        var markdownOptions = new MarkdownOptions
+        {
+            ContentBasePath = "/docs"
+        };
+        var query = new CollectionQuery(loader, markdownOptions);
+
+        var entry = query.GetEntry<BlogPost>("blog", "my-post")!;
+        var rendered = query.Render(entry);
+
+        rendered.Html.ShouldContain("src=\"/docs/blog/images/diagram.svg\"");
+    }
+
+    [Fact]
+    public void RenderShouldPreferContentBasePathOverLinkResolutionBasePath()
+    {
+        var config = new CollectionConfig("content")
+            .AddCollection(ContentCollection.Define<BlogPost>("blog"));
+
+        var provider = new InMemoryFileProvider()
+            .AddFile(BlogDir, "my-post.md", """
+                ---
+                title: Post with Image
+                ---
+                ![diagram](images/diagram.svg)
+                """);
+
+        var loader = new CollectionLoader(config, provider);
+        // Both ContentBasePath and LinkResolution.BasePath set —
+        // ContentBasePath should take priority for asset resolution.
+        var markdownOptions = new MarkdownOptions
+        {
+            ContentBasePath = "/site",
+            LinkResolution = new LinkResolutionOptions { BasePath = "/docs" }
+        };
+        var query = new CollectionQuery(loader, markdownOptions);
+
+        var entry = query.GetEntry<BlogPost>("blog", "my-post")!;
+        var rendered = query.Render(entry);
+
+        rendered.Html.ShouldContain("src=\"/site/blog/images/diagram.svg\"");
     }
 }
