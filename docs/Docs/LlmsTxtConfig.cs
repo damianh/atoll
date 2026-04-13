@@ -20,7 +20,7 @@ public sealed class LlmsTxtConfig : ILlmsTxtConfiguration
         var docs = query.GetCollection<DocSchema>("docs");
         foreach (var entry in docs)
         {
-            yield return new LlmsTxtDocumentInput(entry.Data.Title, $"/docs/{entry.Slug}")
+            yield return new LlmsTxtDocumentInput(entry.Data.Title, $"/{entry.Slug}")
             {
                 Description = entry.Data.Description,
                 Section = entry.Data.Section.Length > 0 ? entry.Data.Section : null,

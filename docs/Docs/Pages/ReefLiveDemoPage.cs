@@ -12,10 +12,10 @@ namespace Docs.Pages;
 /// <summary>
 /// A live demo page that renders all Reef article listing components (List, Grid, Table, Timeline)
 /// with hardcoded sample data, plus interactive ViewToggle and ArticleFilter islands.
-/// Route: /docs/reef/live-demo
+/// Route: /reef/live-demo
 /// </summary>
 [Layout(typeof(SiteLayout))]
-[PageRoute("/docs/reef/live-demo")]
+[PageRoute("/reef/live-demo")]
 public sealed class ReefLiveDemoPage : AtollComponent, IAtollPage
 {
     internal static readonly IReadOnlyList<ArticleListItem> SampleArticles =
@@ -84,7 +84,7 @@ public sealed class ReefLiveDemoPage : AtollComponent, IAtollPage
             .OrderBy(a => a)
             .ToList();
 
-        const string basePath = "/docs/reef/live-demo";
+        const string basePath = "/reef/live-demo";
 
         // Inject scoped CSS: view-panel visibility, filter tag styling, demo link
         // neutralisation, and reef variable bridge
@@ -222,7 +222,7 @@ public sealed class ReefLiveDemoPage : AtollComponent, IAtollPage
     /// </summary>
     private async Task WriteFilterableArticles(RenderContext context, string viewKind)
     {
-        const string basePath = "/docs/reef/live-demo";
+        const string basePath = "/reef/live-demo";
 
         if (viewKind == "grid")
         {

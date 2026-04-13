@@ -9,10 +9,10 @@ namespace Docs.Pages;
 /// <summary>
 /// The individual documentation page. Renders a Markdown doc entry identified
 /// by the URL slug and wraps it in a prose layout with the sidebar.
-/// Route: /docs/[...slug]
+/// Route: /[...slug]
 /// </summary>
 [Layout(typeof(SiteLayout))]
-[PageRoute("/docs/[...slug]")]
+[PageRoute("/[...slug]")]
 public sealed class DocsPage : AtollComponent, IAtollPage, IStaticPathsProvider, IPageStatusCodeProvider
 {
     /// <summary>
@@ -93,7 +93,7 @@ public sealed class DocsPage : AtollComponent, IAtollPage, IStaticPathsProvider,
                       <h1>Page Not Found</h1>
                       <p>Sorry, we couldn&rsquo;t find the page you&rsquo;re looking for.
                          It may have been moved or removed.</p>
-                      <p><a href="/docs">Return to the documentation home</a></p>
+                      <p><a href="/">Return to the documentation home</a></p>
                     </div>
                     """);
             }

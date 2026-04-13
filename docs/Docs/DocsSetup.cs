@@ -39,17 +39,17 @@ public static class DocsSetup
             new SidebarItem
             {
                 Label = "Getting Started",
-                Link = "/docs/getting-started",
+                Link = "/getting-started",
             },
             new SidebarItem
             {
                 Label = "Basics",
                 Items =
                 [
-                    new SidebarItem { Label = "Components",              Link = "/docs/components" },
-                    new SidebarItem { Label = "Layouts",                 Link = "/docs/layouts" },
-                    new SidebarItem { Label = "Pages & Routing",         Link = "/docs/pages-and-routing" },
-                    new SidebarItem { Label = "Configuration",           Link = "/docs/configuration" },
+                    new SidebarItem { Label = "Components",              Link = "/components" },
+                    new SidebarItem { Label = "Layouts",                 Link = "/layouts" },
+                    new SidebarItem { Label = "Pages & Routing",         Link = "/pages-and-routing" },
+                    new SidebarItem { Label = "Configuration",           Link = "/configuration" },
                 ],
             },
             new SidebarItem
@@ -57,12 +57,12 @@ public static class DocsSetup
                 Label = "Features",
                 Items =
                 [
-                    new SidebarItem { Label = "MDA Format",              Link = "/docs/mda-format" },
-                    new SidebarItem { Label = "Content Collections",     Link = "/docs/content-collections" },
-                    new SidebarItem { Label = "CSS Scoping",             Link = "/docs/css-scoping" },
-                    new SidebarItem { Label = "Islands Architecture",    Link = "/docs/islands" },
-                    new SidebarItem { Label = "Static Site Generation",  Link = "/docs/static-site-generation" },
-                    new SidebarItem { Label = "HTTP Caching",            Link = "/docs/caching" },
+                    new SidebarItem { Label = "MDA Format",              Link = "/mda-format" },
+                    new SidebarItem { Label = "Content Collections",     Link = "/content-collections" },
+                    new SidebarItem { Label = "CSS Scoping",             Link = "/css-scoping" },
+                    new SidebarItem { Label = "Islands Architecture",    Link = "/islands" },
+                    new SidebarItem { Label = "Static Site Generation",  Link = "/static-site-generation" },
+                    new SidebarItem { Label = "HTTP Caching",            Link = "/caching" },
                 ],
             },
             new SidebarItem
@@ -70,7 +70,7 @@ public static class DocsSetup
                 Label = "Reference",
                 Items =
                 [
-                    new SidebarItem { Label = "API Endpoints",           Link = "/docs/api-endpoints" },
+                    new SidebarItem { Label = "API Endpoints",           Link = "/api-endpoints" },
                 ],
             },
             new SidebarItem
@@ -78,20 +78,20 @@ public static class DocsSetup
                 Label = "Lagoon Plugin",
                 Items =
                 [
-                    new SidebarItem { Label = "Overview",              Link = "/docs/lagoon/overview" },
-                    new SidebarItem { Label = "Configuration",         Link = "/docs/lagoon/configuration" },
-                    new SidebarItem { Label = "Sidebar Navigation",    Link = "/docs/lagoon/sidebar" },
-                    new SidebarItem { Label = "Theme & Styling",       Link = "/docs/lagoon/theming" },
-                    new SidebarItem { Label = "Components & Layout",   Link = "/docs/lagoon/components" },
-                    new SidebarItem { Label = "Site Search",           Link = "/docs/lagoon/search" },
-                    new SidebarItem { Label = "Global Banner",         Link = "/docs/lagoon/banner" },
-                    new SidebarItem { Label = "LLM Content Export",   Link = "/docs/lagoon/llms-txt" },
-                    new SidebarItem { Label = "Custom 404 Pages",      Link = "/docs/lagoon/custom-404" },
-                    new SidebarItem { Label = "Islands & Mermaid",     Link = "/docs/lagoon/islands-and-mermaid" },
-                    new SidebarItem { Label = "Content Components",   Link = "/docs/lagoon/content-components" },
-                    new SidebarItem { Label = "Internationalisation",  Link = "/docs/lagoon/i18n" },
-                    new SidebarItem { Label = "Versioning",            Link = "/docs/lagoon/versioning" },
-                    new SidebarItem { Label = "Starlight Comparison",  Link = "/docs/lagoon/starlight-comparison" },
+                    new SidebarItem { Label = "Overview",              Link = "/lagoon/overview" },
+                    new SidebarItem { Label = "Configuration",         Link = "/lagoon/configuration" },
+                    new SidebarItem { Label = "Sidebar Navigation",    Link = "/lagoon/sidebar" },
+                    new SidebarItem { Label = "Theme & Styling",       Link = "/lagoon/theming" },
+                    new SidebarItem { Label = "Components & Layout",   Link = "/lagoon/components" },
+                    new SidebarItem { Label = "Site Search",           Link = "/lagoon/search" },
+                    new SidebarItem { Label = "Global Banner",         Link = "/lagoon/banner" },
+                    new SidebarItem { Label = "LLM Content Export",   Link = "/lagoon/llms-txt" },
+                    new SidebarItem { Label = "Custom 404 Pages",      Link = "/lagoon/custom-404" },
+                    new SidebarItem { Label = "Islands & Mermaid",     Link = "/lagoon/islands-and-mermaid" },
+                    new SidebarItem { Label = "Content Components",   Link = "/lagoon/content-components" },
+                    new SidebarItem { Label = "Internationalisation",  Link = "/lagoon/i18n" },
+                    new SidebarItem { Label = "Versioning",            Link = "/lagoon/versioning" },
+                    new SidebarItem { Label = "Starlight Comparison",  Link = "/lagoon/starlight-comparison" },
                 ],
             },
             new SidebarItem
@@ -99,14 +99,14 @@ public static class DocsSetup
                 Label = "Reef Plugin",
                 Items =
                 [
-                    new SidebarItem { Label = "Overview",             Link = "/docs/reef/overview" },
-                    new SidebarItem { Label = "Configuration",        Link = "/docs/reef/configuration" },
-                    new SidebarItem { Label = "Components",           Link = "/docs/reef/components" },
-                    new SidebarItem { Label = "Islands",              Link = "/docs/reef/islands" },
-                    new SidebarItem { Label = "Views & Layouts",      Link = "/docs/reef/views-and-layouts" },
-                    new SidebarItem { Label = "Feeds & SEO",          Link = "/docs/reef/feeds-and-seo" },
-                    new SidebarItem { Label = "Series & Navigation",  Link = "/docs/reef/series-and-navigation" },
-                    new SidebarItem { Label = "Live Demo",             Link = "/docs/reef/live-demo" },
+                    new SidebarItem { Label = "Overview",             Link = "/reef/overview" },
+                    new SidebarItem { Label = "Configuration",        Link = "/reef/configuration" },
+                    new SidebarItem { Label = "Components",           Link = "/reef/components" },
+                    new SidebarItem { Label = "Islands",              Link = "/reef/islands" },
+                    new SidebarItem { Label = "Views & Layouts",      Link = "/reef/views-and-layouts" },
+                    new SidebarItem { Label = "Feeds & SEO",          Link = "/reef/feeds-and-seo" },
+                    new SidebarItem { Label = "Series & Navigation",  Link = "/reef/series-and-navigation" },
+                    new SidebarItem { Label = "Live Demo",             Link = "/reef/live-demo" },
                 ],
             },
             new SidebarItem
@@ -114,7 +114,7 @@ public static class DocsSetup
                 Label = "Charts Plugin",
                 Items =
                 [
-                    new SidebarItem { Label = "Overview",  Link = "/docs/charts/overview" },
+                    new SidebarItem { Label = "Overview",  Link = "/charts/overview" },
                 ],
             },
             new SidebarItem
@@ -122,7 +122,7 @@ public static class DocsSetup
                 Label = "Mermaid Plugin",
                 Items =
                 [
-                    new SidebarItem { Label = "Overview",  Link = "/docs/mermaid/overview" },
+                    new SidebarItem { Label = "Overview",  Link = "/mermaid/overview" },
                 ],
             },
             new SidebarItem
@@ -130,7 +130,7 @@ public static class DocsSetup
                 Label = "DrawIO Plugin",
                 Items =
                 [
-                    new SidebarItem { Label = "Overview",  Link = "/docs/drawio/overview" },
+                    new SidebarItem { Label = "Overview",  Link = "/drawio/overview" },
                 ],
             },
             new SidebarItem
@@ -138,7 +138,7 @@ public static class DocsSetup
                 Label = "Giscus Plugin",
                 Items =
                 [
-                    new SidebarItem { Label = "Overview",  Link = "/docs/giscus/overview" },
+                    new SidebarItem { Label = "Overview",  Link = "/giscus/overview" },
                 ],
             },
             new SidebarItem
@@ -146,7 +146,7 @@ public static class DocsSetup
                 Label = "Annotations Plugin",
                 Items =
                 [
-                    new SidebarItem { Label = "Overview",  Link = "/docs/annotations/overview" },
+                    new SidebarItem { Label = "Overview",  Link = "/annotations/overview" },
                 ],
             },
         ],

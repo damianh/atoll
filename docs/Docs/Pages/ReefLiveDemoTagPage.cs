@@ -10,13 +10,13 @@ namespace Docs.Pages;
 /// Stub tag page for the Reef live demo. Lists all sample articles that carry
 /// a given tag, so that tag pill links from the demo pages navigate to a real
 /// page instead of a 404.
-/// Route: /docs/reef/live-demo/tag/[tag]
+/// Route: /reef/live-demo/tag/[tag]
 /// </summary>
 [Layout(typeof(SiteLayout))]
-[PageRoute("/docs/reef/live-demo/tag/[tag]")]
+[PageRoute("/reef/live-demo/tag/[tag]")]
 public sealed class ReefLiveDemoTagPage : AtollComponent, IAtollPage, IStaticPathsProvider
 {
-    private const string BasePath = "/docs/reef/live-demo";
+    private const string BasePath = "/reef/live-demo";
 
     /// <summary>Gets or sets the tag slug from the route parameter.</summary>
     [Parameter(Required = true)]

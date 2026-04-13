@@ -22,7 +22,7 @@ public sealed class SearchConfig : ISearchIndexConfiguration
             }
 
             var rendered = query.Render(entry);
-            yield return new SearchDocumentInput(entry.Data.Title, $"/docs/{entry.Slug}")
+            yield return new SearchDocumentInput(entry.Data.Title, $"/{entry.Slug}")
             {
                 Description = entry.Data.Description,
                 Section = entry.Data.Section.Length > 0 ? entry.Data.Section : null,

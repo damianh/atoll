@@ -25,7 +25,7 @@ public sealed class IndexPage : AtollComponent, IAtollPage
     {
         var actions = new List<HeroAction>
         {
-            new("Get Started", "/docs/getting-started", HeroActionVariant.Primary),
+            new("Get Started", "/getting-started", HeroActionVariant.Primary),
             new("View on GitHub", "https://github.com/damianh/atoll", HeroActionVariant.Secondary),
         };
 

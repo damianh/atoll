@@ -10,13 +10,13 @@ namespace Docs.Pages;
 /// Stub article page for the Reef live demo. Renders a placeholder article detail
 /// view for each sample article slug, so that article links from the demo listing
 /// page navigate to a real page instead of a 404.
-/// Route: /docs/reef/live-demo/[slug]
+/// Route: /reef/live-demo/[slug]
 /// </summary>
 [Layout(typeof(SiteLayout))]
-[PageRoute("/docs/reef/live-demo/[slug]")]
+[PageRoute("/reef/live-demo/[slug]")]
 public sealed class ReefLiveDemoArticlePage : AtollComponent, IAtollPage, IStaticPathsProvider
 {
-    private const string BasePath = "/docs/reef/live-demo";
+    private const string BasePath = "/reef/live-demo";
 
     /// <summary>Gets or sets the article slug from the route parameter.</summary>
     [Parameter(Required = true)]

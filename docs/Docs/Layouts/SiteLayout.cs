@@ -37,7 +37,7 @@ public sealed class SiteLayout : AtollComponent
     protected override async Task RenderCoreAsync(RenderContext context)
     {
         var config = DocsSetup.Config;
-        var currentHref = string.IsNullOrEmpty(Slug) ? "/" : $"/docs/{Slug}";
+        var currentHref = string.IsNullOrEmpty(Slug) ? "/" : $"/{Slug}";
 
         // Load the current page entry for per-page metadata (head injection, etc.)
         var currentEntry = !string.IsNullOrEmpty(Slug)
@@ -54,7 +54,7 @@ public sealed class SiteLayout : AtollComponent
         // Build sidebar entries from the docs collection, excluding the reserved 404 page
         var entries = Query.GetCollection<DocSchema>("docs")
             .Where(e => e.Slug != DocsPage.NotFoundSlug)
-            .Select(e => new SidebarEntry(e.Data.Title, $"/docs/{e.Slug}", e.Slug, e.Data.Order, null))
+            .Select(e => new SidebarEntry(e.Data.Title, $"/{e.Slug}", e.Slug, e.Data.Order, null))
             .ToList();
 
         // Resolve sidebar tree for current page
