@@ -244,4 +244,160 @@ public sealed class LinkResolutionExtensionTests
         result.Html.ShouldContain("<em>italic</em>");
         result.Html.ShouldContain("href=\"https://atoll.dev\""); // absolute link untouched
     }
+
+    // --- Content asset URL rewriting tests ---
+
+    [Fact]
+    public void ShouldRewriteRelativeImageUrlWhenContentAssetBasePathIsSet()
+    {
+        var options = new MarkdownOptions
+        {
+            LinkResolution = new LinkResolutionOptions
+            {
+                BasePath = "/docs",
+                ContentAssetBasePath = "/docs/articles"
+            }
+        };
+
+        var result = MarkdownRenderer.Render("![diagram](images/diagram.svg)", options);
+
+        result.Html.ShouldContain("src=\"/docs/articles/images/diagram.svg\"");
+    }
+
+    [Fact]
+    public void ShouldRewriteRelativeImageUrlWithDotSlashPrefix()
+    {
+        var options = new MarkdownOptions
+        {
+            LinkResolution = new LinkResolutionOptions
+            {
+                BasePath = "/docs",
+                ContentAssetBasePath = "/docs/articles"
+            }
+        };
+
+        var result = MarkdownRenderer.Render("![diagram](./images/diagram.svg)", options);
+
+        result.Html.ShouldContain("src=\"/docs/articles/images/diagram.svg\"");
+    }
+
+    [Fact]
+    public void ShouldNotRewriteAbsoluteImageUrl()
+    {
+        var options = new MarkdownOptions
+        {
+            LinkResolution = new LinkResolutionOptions
+            {
+                BasePath = "/docs",
+                ContentAssetBasePath = "/docs/articles"
+            }
+        };
+
+        var result = MarkdownRenderer.Render("![diagram](https://example.com/diagram.svg)", options);
+
+        result.Html.ShouldContain("src=\"https://example.com/diagram.svg\"");
+    }
+
+    [Fact]
+    public void ShouldNotRewriteRootRelativeImageUrl()
+    {
+        var options = new MarkdownOptions
+        {
+            LinkResolution = new LinkResolutionOptions
+            {
+                BasePath = "/docs",
+                ContentAssetBasePath = "/docs/articles"
+            }
+        };
+
+        var result = MarkdownRenderer.Render("![diagram](/static/diagram.svg)", options);
+
+        result.Html.ShouldContain("src=\"/static/diagram.svg\"");
+    }
+
+    [Fact]
+    public void ShouldNotRewriteDataUriImage()
+    {
+        var options = new MarkdownOptions
+        {
+            LinkResolution = new LinkResolutionOptions
+            {
+                BasePath = "/docs",
+                ContentAssetBasePath = "/docs/articles"
+            }
+        };
+
+        var result = MarkdownRenderer.Render("![icon](data:image/svg+xml;base64,AAAA)", options);
+
+        result.Html.ShouldContain("src=\"data:image/svg+xml;base64,AAAA\"");
+    }
+
+    [Fact]
+    public void ShouldNotRewriteImageUrlWhenContentAssetBasePathIsNull()
+    {
+        var options = new MarkdownOptions
+        {
+            LinkResolution = new LinkResolutionOptions
+            {
+                BasePath = "/docs",
+                ContentAssetBasePath = null
+            }
+        };
+
+        var result = MarkdownRenderer.Render("![diagram](images/diagram.svg)", options);
+
+        result.Html.ShouldContain("src=\"images/diagram.svg\"");
+    }
+
+    [Fact]
+    public void ShouldRewriteRelativeNonMarkdownLinkWhenContentAssetBasePathIsSet()
+    {
+        var options = new MarkdownOptions
+        {
+            LinkResolution = new LinkResolutionOptions
+            {
+                BasePath = "/docs",
+                ContentAssetBasePath = "/docs/articles"
+            }
+        };
+
+        var result = MarkdownRenderer.Render("[download](files/report.pdf)", options);
+
+        result.Html.ShouldContain("href=\"/docs/articles/files/report.pdf\"");
+    }
+
+    [Fact]
+    public void ShouldRewriteRelativeImageUrlForNestedCollection()
+    {
+        var options = new MarkdownOptions
+        {
+            LinkResolution = new LinkResolutionOptions
+            {
+                BasePath = "/docs",
+                ContentAssetBasePath = "/docs/guides/advanced"
+            }
+        };
+
+        var result = MarkdownRenderer.Render("![screenshot](./screenshots/step1.png)", options);
+
+        result.Html.ShouldContain("src=\"/docs/guides/advanced/screenshots/step1.png\"");
+    }
+
+    [Fact]
+    public void ShouldStillRewriteMdLinksWhenContentAssetBasePathIsSet()
+    {
+        var options = new MarkdownOptions
+        {
+            LinkResolution = new LinkResolutionOptions
+            {
+                BasePath = "/docs",
+                ContentAssetBasePath = "/docs/articles"
+            }
+        };
+
+        var result = MarkdownRenderer.Render("[link](./page.md)", options);
+
+        // .md link resolution should still work — ContentAssetBasePath doesn't interfere.
+        result.Html.ShouldContain("href=\"/docs/page/\"");
+    }
 }
