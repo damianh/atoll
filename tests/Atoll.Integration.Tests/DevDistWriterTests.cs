@@ -30,6 +30,9 @@ public sealed class DevDistWriterTests : IDisposable
     private static DevDistWriter CreateWriter(string outputDir, ILoggerFactory loggerFactory)
         => new(outputDir, loggerFactory.CreateLogger<DevDistWriter>());
 
+    private static DevDistWriter CreateWriterWithPublicDir(string outputDir, string? publicDir, ILoggerFactory loggerFactory)
+        => new(outputDir, publicDir, loggerFactory.CreateLogger<DevDistWriter>());
+
     private static DevServerState CreateStateWithAssets(
         IReadOnlyDictionary<string, byte[]> islandAssets,
         byte[]? searchIndexJson = null,
@@ -37,7 +40,44 @@ public sealed class DevDistWriterTests : IDisposable
     {
         var matcher = new RouteMatcher([]);
         var options = new AtollOptions();
-        return new DevServerState(matcher, options, null, null, globalCss, islandAssets, searchIndexJson, null);
+        return new DevServerState(matcher, options, null, null, globalCss, islandAssets, searchIndexJson, null, null);
+    }
+
+    // ── Public directory assets ─────────────────────────────────────────────────
+
+    [Fact]
+    public async Task ShouldCopyPublicDirectoryAssetsToOutputDirectory()
+    {
+        var outputDir = CreateTempDir();
+        var publicDir = CreateTempDir();
+        using var loggerFactory = CreateLoggerFactory();
+
+        // Create public/ assets: favicon.ico and a nested file
+        await File.WriteAllBytesAsync(Path.Combine(publicDir, "favicon.ico"), new byte[] { 0x00, 0x00, 0x01, 0x00 });
+        var fontsDir = Path.Combine(publicDir, "fonts");
+        Directory.CreateDirectory(fontsDir);
+        await File.WriteAllTextAsync(Path.Combine(fontsDir, "font.woff2"), "font-data");
+
+        var writer = CreateWriterWithPublicDir(outputDir, publicDir, loggerFactory);
+        var state = CreateStateWithAssets(EmptyAssets);
+
+        await writer.WriteAsync(state, CancellationToken.None);
+
+        File.Exists(Path.Combine(outputDir, "favicon.ico")).ShouldBeTrue();
+        File.Exists(Path.Combine(outputDir, "fonts", "font.woff2")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task ShouldNotFailWhenPublicDirectoryIsNull()
+    {
+        var outputDir = CreateTempDir();
+        using var loggerFactory = CreateLoggerFactory();
+        var writer = CreateWriter(outputDir, loggerFactory);
+        var state = CreateStateWithAssets(EmptyAssets);
+
+        // Should complete without errors when no public directory is configured
+        var exception = await Record.ExceptionAsync(() => writer.WriteAsync(state, CancellationToken.None));
+        exception.ShouldBeNull();
     }
 
     public void Dispose()

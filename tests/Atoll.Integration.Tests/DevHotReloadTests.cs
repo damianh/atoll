@@ -43,7 +43,7 @@ public sealed class DevHotReloadTests : IDisposable
         var routeEntries = RouteDiscovery.DiscoverRoutesFromEntries(routes);
         var matcher = new RouteMatcher(routeEntries);
         var options = new AtollOptions();
-        return new DevServerState(matcher, options, null, null, "", EmptyAssets, null, null);
+        return new DevServerState(matcher, options, null, null, "", EmptyAssets, null, null, null);
     }
 
     /// <summary>
@@ -331,7 +331,7 @@ public sealed class DevHotReloadTests : IDisposable
 
         // Content-only new state reuses the same null ALC.
         var options = new AtollOptions();
-        var stateB = new DevServerState(new RouteMatcher([]), options, null, null, "", EmptyAssets, null, null);
+        var stateB = new DevServerState(new RouteMatcher([]), options, null, null, "", EmptyAssets, null, null, null);
 
         // Should not throw — must not try to unload null ALC.
         var exception = Record.Exception(() => handler.UpdateState(stateB));
@@ -339,6 +339,140 @@ public sealed class DevHotReloadTests : IDisposable
 
         // Handler should now use the new state.
         handler.CurrentState.ShouldBeSameAs(stateB);
+    }
+
+    // ── Content asset serving tests ───────────────────────────────────────────
+
+    private static DevServerState CreateStateWithContentDir(string? contentBaseDirectory)
+    {
+        var matcher = new RouteMatcher([]);
+        var options = new AtollOptions();
+        return new DevServerState(matcher, options, null, null, "", EmptyAssets, null, null, contentBaseDirectory);
+    }
+
+    [Fact]
+    public async Task DevAtollRequestHandlerShouldServeContentCollectionAsset()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "atoll-content-asset-test-" + Guid.NewGuid().ToString("N")[..8]);
+        try
+        {
+            // Create: {tempDir}/articles/images/test.svg
+            var imagesDir = Path.Combine(tempDir, "articles", "images");
+            Directory.CreateDirectory(imagesDir);
+            var svgContent = "<svg xmlns='http://www.w3.org/2000/svg'/>"u8.ToArray();
+            await File.WriteAllBytesAsync(Path.Combine(imagesDir, "test.svg"), svgContent);
+
+            using var loggerFactory = CreateLoggerFactory();
+            var state = CreateStateWithContentDir(tempDir);
+            var (client, _, host) = CreateDevTestHost(state, loggerFactory);
+            using var _ = host;
+            using var __ = client;
+
+            // Browser resolves "/docs/articles/images/test.svg" — handler finds it via suffix matching
+            var response = await client.GetAsync("/docs/articles/images/test.svg");
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            response.Content.Headers.ContentType!.MediaType.ShouldBe("image/svg+xml");
+            var bytes = await response.Content.ReadAsByteArrayAsync();
+            bytes.ShouldBe(svgContent);
+        }
+        finally
+        {
+            try { Directory.Delete(tempDir, recursive: true); }
+            catch { /* best-effort */ }
+        }
+    }
+
+    [Fact]
+    public async Task DevAtollRequestHandlerShouldReturnCorrectContentTypeForPng()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "atoll-content-asset-test-" + Guid.NewGuid().ToString("N")[..8]);
+        try
+        {
+            var imagesDir = Path.Combine(tempDir, "articles", "images");
+            Directory.CreateDirectory(imagesDir);
+            var pngContent = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }; // PNG magic bytes
+            await File.WriteAllBytesAsync(Path.Combine(imagesDir, "photo.png"), pngContent);
+
+            using var loggerFactory = CreateLoggerFactory();
+            var state = CreateStateWithContentDir(tempDir);
+            var (client, _, host) = CreateDevTestHost(state, loggerFactory);
+            using var _ = host;
+            using var __ = client;
+
+            var response = await client.GetAsync("/docs/articles/images/photo.png");
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            response.Content.Headers.ContentType!.MediaType.ShouldBe("image/png");
+        }
+        finally
+        {
+            try { Directory.Delete(tempDir, recursive: true); }
+            catch { /* best-effort */ }
+        }
+    }
+
+    [Fact]
+    public async Task DevAtollRequestHandlerShouldReturn404ForMissingContentAsset()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "atoll-content-asset-test-" + Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            using var loggerFactory = CreateLoggerFactory();
+            var state = CreateStateWithContentDir(tempDir);
+            var (client, _, host) = CreateDevTestHost(state, loggerFactory);
+            using var _ = host;
+            using var __ = client;
+
+            var response = await client.GetAsync("/docs/articles/images/nonexistent.svg");
+
+            response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        }
+        finally
+        {
+            try { Directory.Delete(tempDir, recursive: true); }
+            catch { /* best-effort */ }
+        }
+    }
+
+    [Fact]
+    public async Task DevAtollRequestHandlerShouldRejectPathTraversal()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "atoll-content-asset-test-" + Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            using var loggerFactory = CreateLoggerFactory();
+            var state = CreateStateWithContentDir(tempDir);
+            var (client, _, host) = CreateDevTestHost(state, loggerFactory);
+            using var _ = host;
+            using var __ = client;
+
+            // Path traversal attempt should be rejected
+            var response = await client.GetAsync("/docs/../../../etc/passwd");
+
+            response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        }
+        finally
+        {
+            try { Directory.Delete(tempDir, recursive: true); }
+            catch { /* best-effort */ }
+        }
+    }
+
+    [Fact]
+    public async Task DevAtollRequestHandlerShouldNotServeContentAssetsWhenNoBaseDirectory()
+    {
+        using var loggerFactory = CreateLoggerFactory();
+        var state = CreateStateWithContentDir(contentBaseDirectory: null);
+        var (client, _, host) = CreateDevTestHost(state, loggerFactory);
+        using var _ = host;
+        using var __ = client;
+
+        var response = await client.GetAsync("/docs/articles/images/test.svg");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     // ── Live-reload WebSocket tests ───────────────────────────────────────────

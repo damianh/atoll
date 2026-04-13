@@ -127,7 +127,7 @@ internal sealed class DevServerReloader
 
         // Phase 5: Content
         bar.Advance();
-        var collectionQuery = CreateCollectionQueryFromAssembly(assembly, _projectRoot);
+        var (collectionQuery, contentBaseDir) = CreateCollectionQueryFromAssembly(assembly, _projectRoot);
         var options = BuildOptions(collectionQuery);
 
         // Phase 6: CSS
@@ -153,7 +153,7 @@ internal sealed class DevServerReloader
             searchIndex is not null,
             sw.ElapsedMilliseconds));
 
-        return (new DevServerState(new RouteMatcher(routes), options, loadContext, assembly, globalCss, islandAssets, searchIndex, shadowDir), null);
+        return (new DevServerState(new RouteMatcher(routes), options, loadContext, assembly, globalCss, islandAssets, searchIndex, shadowDir, contentBaseDir), null);
     }
 
     // ── Private: content-only reload ───────────────────────────────────────────
@@ -166,9 +166,9 @@ internal sealed class DevServerReloader
 
         // Phase 1: Content — Reuse the existing assembly and ALC, rebuild CollectionQuery only.
         bar.Advance();
-        var collectionQuery = current.UserAssembly is not null
+        var (collectionQuery, contentBaseDir) = current.UserAssembly is not null
             ? CreateCollectionQueryFromAssembly(current.UserAssembly, _projectRoot)
-            : null;
+            : (null, null);
 
         // Phase 2: Options
         bar.Advance();
@@ -190,7 +190,7 @@ internal sealed class DevServerReloader
             sw.ElapsedMilliseconds));
 
         return Task.FromResult(
-            new DevServerState(current.RouteMatcher, options, current.LoadContext, current.UserAssembly, current.GlobalCss, current.IslandAssets, searchIndex, current.ShadowCopyDir));
+            new DevServerState(current.RouteMatcher, options, current.LoadContext, current.UserAssembly, current.GlobalCss, current.IslandAssets, searchIndex, current.ShadowCopyDir, contentBaseDir));
     }
 
     // ── Private: shared helpers ─────────────────────────────────────────────────
@@ -198,7 +198,7 @@ internal sealed class DevServerReloader
     private static DevServerState BuildEmptyState()
     {
         var options = new AtollOptions();
-        return new DevServerState(new RouteMatcher([]), options, null, null, "", new ReadOnlyDictionary<string, byte[]>(new Dictionary<string, byte[]>()), null, null);
+        return new DevServerState(new RouteMatcher([]), options, null, null, "", new ReadOnlyDictionary<string, byte[]>(new Dictionary<string, byte[]>()), null, null, null);
     }
 
     private static AtollOptions BuildOptions(CollectionQuery? collectionQuery)
@@ -554,7 +554,7 @@ internal sealed class DevServerReloader
         return new string(chars.ToArray());
     }
 
-    private static CollectionQuery? CreateCollectionQueryFromAssembly(
+    private static (CollectionQuery? Query, string? ResolvedBaseDirectory) CreateCollectionQueryFromAssembly(
         Assembly assembly,
         string projectRoot)
     {
@@ -578,7 +578,7 @@ internal sealed class DevServerReloader
 
         if (configType is null)
         {
-            return null;
+            return (null, null);
         }
 
         var configInstance = (IContentConfiguration)Activator.CreateInstance(configType)!;
@@ -596,9 +596,10 @@ internal sealed class DevServerReloader
 
         var fileProvider = new PhysicalFileProvider();
         var loader = new CollectionLoader(resolvedConfig, fileProvider);
-        return collectionConfig.Markdown is { } markdown
+        var query = collectionConfig.Markdown is { } markdown
             ? new CollectionQuery(loader, markdown)
             : new CollectionQuery(loader);
+        return (query, resolvedBaseDir);
     }
 
     private static async Task<BuildResult> BuildProjectAsync(string csprojPath)

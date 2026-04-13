@@ -40,6 +40,12 @@ namespace Atoll.Cli.Commands.Dev;
 /// no assembly is loaded. Deleted after the <see cref="LoadContext"/> is unloaded to
 /// reclaim disk space.
 /// </param>
+/// <param name="ContentBaseDirectory">
+/// Resolved absolute path to the content base directory (e.g., <c>D:\project\Content</c>),
+/// or <c>null</c> when no <c>IContentConfiguration</c> is found. Used by
+/// <see cref="DevAtollRequestHandler"/> to serve co-located content assets (images, SVGs,
+/// etc.) that are referenced from markdown pages.
+/// </param>
 internal sealed record DevServerState(
     RouteMatcher RouteMatcher,
     AtollOptions Options,
@@ -48,7 +54,8 @@ internal sealed record DevServerState(
     string GlobalCss,
     IReadOnlyDictionary<string, byte[]> IslandAssets,
     byte[]? SearchIndexJson,
-    string? ShadowCopyDir)
+    string? ShadowCopyDir,
+    string? ContentBaseDirectory)
 {
     private static readonly IReadOnlyDictionary<string, byte[]> EmptyAssets =
         new ReadOnlyDictionary<string, byte[]>(new Dictionary<string, byte[]>());
@@ -58,5 +65,5 @@ internal sealed record DevServerState(
     /// Used when no project file is present or the initial build fails.
     /// </summary>
     public static DevServerState Empty { get; } =
-        new DevServerState(new RouteMatcher([]), new AtollOptions(), null, null, "", EmptyAssets, null, null);
+        new DevServerState(new RouteMatcher([]), new AtollOptions(), null, null, "", EmptyAssets, null, null, null);
 }

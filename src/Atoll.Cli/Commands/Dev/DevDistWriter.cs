@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using Atoll.Build.Pipeline;
 using Atoll.Build.Ssg;
 using Atoll.Components;
 using Atoll.Css;
@@ -37,6 +38,7 @@ namespace Atoll.Cli.Commands.Dev;
 internal sealed class DevDistWriter
 {
     private readonly string _outputDirectory;
+    private readonly string? _publicDirectory;
     private readonly ILogger<DevDistWriter> _logger;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private HashSet<string> _previousWrittenFiles = new(StringComparer.OrdinalIgnoreCase);
@@ -47,10 +49,25 @@ internal sealed class DevDistWriter
     /// <param name="outputDirectory">The absolute path to the output directory (e.g., <c>dist/</c>).</param>
     /// <param name="logger">The logger instance.</param>
     public DevDistWriter(string outputDirectory, ILogger<DevDistWriter> logger)
+        : this(outputDirectory, publicDirectory: null, logger)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new <see cref="DevDistWriter"/>.
+    /// </summary>
+    /// <param name="outputDirectory">The absolute path to the output directory (e.g., <c>dist/</c>).</param>
+    /// <param name="publicDirectory">
+    /// The absolute path to the <c>public/</c> directory whose files are copied to the output
+    /// directory, or <c>null</c> if no public directory is configured.
+    /// </param>
+    /// <param name="logger">The logger instance.</param>
+    public DevDistWriter(string outputDirectory, string? publicDirectory, ILogger<DevDistWriter> logger)
     {
         ArgumentNullException.ThrowIfNull(outputDirectory);
         ArgumentNullException.ThrowIfNull(logger);
         _outputDirectory = outputDirectory;
+        _publicDirectory = publicDirectory;
         _logger = logger;
     }
 
@@ -211,7 +228,27 @@ internal sealed class DevDistWriter
             }
         }
 
-        // ── 6. Clean stale files ───────────────────────────────────────────────
+        // ── 6. Copy public/ directory assets ──────────────────────────────────
+
+        if (_publicDirectory is not null && Directory.Exists(_publicDirectory))
+        {
+            try
+            {
+                var copier = new StaticAssetCopier(_outputDirectory);
+                var copyResult = await copier.CopyAsync(_publicDirectory, cancellationToken);
+                foreach (var file in copyResult.Files)
+                {
+                    currentWrittenFiles.Add(file.DestinationPath);
+                    assetCount++;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "--write-dist: Failed to copy public/ directory assets");
+            }
+        }
+
+        // ── 7. Clean stale files ───────────────────────────────────────────────
 
         var staleCount = 0;
         foreach (var stalePath in _previousWrittenFiles)
