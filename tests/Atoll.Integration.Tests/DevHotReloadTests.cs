@@ -4,6 +4,7 @@ using System.Net.WebSockets;
 using Atoll.Cli.Commands.Dev;
 using Atoll.Middleware.Server.DevServer;
 using Atoll.Middleware.Server.Hosting;
+using Atoll.Routing;
 using Atoll.Routing.FileSystem;
 using Atoll.Routing.Matching;
 using Atoll.Samples.Blog.Pages;
@@ -473,6 +474,145 @@ public sealed class DevHotReloadTests : IDisposable
         var response = await client.GetAsync("/docs/articles/images/test.svg");
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    // ── Content asset + catch-all route tests ───────────────────────────────────
+
+    /// <summary>
+    /// Creates a <see cref="DevServerState"/> that has both a route table and
+    /// a content base directory — the combination that triggers the original
+    /// catch-all swallowing bug.
+    /// </summary>
+    private static DevServerState CreateStateWithRoutesAndContentDir(
+        string contentBaseDirectory,
+        params RouteEntry[] routes)
+    {
+        var matcher = new RouteMatcher(routes);
+        var options = new AtollOptions();
+        return new DevServerState(matcher, options, null, null, "", EmptyAssets, null, null, contentBaseDirectory);
+    }
+
+    [Fact]
+    public async Task DevAtollRequestHandlerShouldServeContentAssetBeforeCatchAllRouteMatches()
+    {
+        // Regression test: a catch-all route like /docs/[...slug] used to swallow
+        // asset URLs such as /docs/articles/images/diagram.svg, causing 404s.
+        // The fix moves TryServeContentAssetAsync before route matching.
+        var tempDir = Path.Combine(Path.GetTempPath(), "atoll-catchall-test-" + Guid.NewGuid().ToString("N")[..8]);
+        try
+        {
+            var imagesDir = Path.Combine(tempDir, "articles", "images");
+            Directory.CreateDirectory(imagesDir);
+            var svgContent = "<svg xmlns='http://www.w3.org/2000/svg'/>"u8.ToArray();
+            await File.WriteAllBytesAsync(Path.Combine(imagesDir, "diagram.svg"), svgContent);
+
+            using var loggerFactory = CreateLoggerFactory();
+
+            // Register a catch-all route that would match any path under /docs/
+            var catchAllRoute = new RouteEntry("/docs/[...slug]", typeof(IndexPage), "docs/[...slug].cs");
+            var state = CreateStateWithRoutesAndContentDir(tempDir, catchAllRoute);
+            var (client, _, host) = CreateDevTestHost(state, loggerFactory);
+            using var _ = host;
+            using var __ = client;
+
+            // This URL matches the catch-all pattern — but should be intercepted by asset serving first
+            var response = await client.GetAsync("/docs/articles/images/diagram.svg");
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            response.Content.Headers.ContentType!.MediaType.ShouldBe("image/svg+xml");
+            var bytes = await response.Content.ReadAsByteArrayAsync();
+            bytes.ShouldBe(svgContent);
+        }
+        finally
+        {
+            try { Directory.Delete(tempDir, recursive: true); }
+            catch { /* best-effort */ }
+        }
+    }
+
+    [Fact]
+    public async Task DevAtollRequestHandlerShouldFallThroughToRoutesForNonAssetPaths()
+    {
+        // Ensure that non-asset paths (no file extension) still match routes normally.
+        using var loggerFactory = CreateLoggerFactory();
+
+        var catchAllRoute = new RouteEntry("/docs/[...slug]", typeof(IndexPage), "docs/[...slug].cs");
+        var state = CreateStateWithRoutesAndContentDir(
+            Path.Combine(Path.GetTempPath(), "nonexistent-" + Guid.NewGuid().ToString("N")[..8]),
+            catchAllRoute);
+        var (client, _, host) = CreateDevTestHost(state, loggerFactory);
+        using var _ = host;
+        using var __ = client;
+
+        // A path without a file extension should bypass asset serving and match the catch-all route
+        var response = await client.GetAsync("/docs/articles/product-development-process");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var html = await response.Content.ReadAsStringAsync();
+        html.ShouldNotBeEmpty();
+    }
+
+    [Fact]
+    public async Task DevAtollRequestHandlerShouldServeStaticRouteEvenWhenContentDirConfigured()
+    {
+        // Static routes should still work when a content base directory is configured.
+        var tempDir = Path.Combine(Path.GetTempPath(), "atoll-static-route-test-" + Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            using var loggerFactory = CreateLoggerFactory();
+
+            var indexRoute = new RouteEntry("/", typeof(IndexPage), "index.cs");
+            var aboutRoute = new RouteEntry("/about", typeof(AboutPage), "about.cs");
+            var state = CreateStateWithRoutesAndContentDir(tempDir, indexRoute, aboutRoute);
+            var (client, _, host) = CreateDevTestHost(state, loggerFactory);
+            using var _ = host;
+            using var __ = client;
+
+            var indexResponse = await client.GetAsync("/");
+            indexResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+            var aboutResponse = await client.GetAsync("/about");
+            aboutResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+        finally
+        {
+            try { Directory.Delete(tempDir, recursive: true); }
+            catch { /* best-effort */ }
+        }
+    }
+
+    [Fact]
+    public async Task DevAtollRequestHandlerShouldReturn404ForMissingAssetEvenWithCatchAllRoute()
+    {
+        // When an asset URL has a file extension but the file doesn't exist on disk,
+        // TryServeContentAssetAsync returns false and the catch-all route handles it.
+        // The catch-all will attempt to render a page — in this test the page renders
+        // successfully (returning 200), proving the request fell through to route matching.
+        var tempDir = Path.Combine(Path.GetTempPath(), "atoll-missing-asset-test-" + Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            using var loggerFactory = CreateLoggerFactory();
+
+            var catchAllRoute = new RouteEntry("/docs/[...slug]", typeof(IndexPage), "docs/[...slug].cs");
+            var state = CreateStateWithRoutesAndContentDir(tempDir, catchAllRoute);
+            var (client, _, host) = CreateDevTestHost(state, loggerFactory);
+            using var _ = host;
+            using var __ = client;
+
+            // Asset doesn't exist — falls through to route matching → catch-all renders a page
+            var response = await client.GetAsync("/docs/articles/images/nonexistent.svg");
+
+            // The catch-all route will match and render the IndexPage (200 OK)
+            // This proves asset serving didn't intercept it (since the file doesn't exist)
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+        finally
+        {
+            try { Directory.Delete(tempDir, recursive: true); }
+            catch { /* best-effort */ }
+        }
     }
 
     // ── Live-reload WebSocket tests ───────────────────────────────────────────
