@@ -305,34 +305,8 @@ internal sealed class SyntaxHighlightCodeBlockRenderer : HtmlObjectRenderer<Code
 
             renderer.Write(">");
 
-            // Frame header.
-            renderer.Write("<figcaption class=\"ec-header\">");
-
-            if (frameType == CodeFrameType.Terminal)
-            {
-                renderer.Write("<span class=\"ec-terminal-dots\" aria-hidden=\"true\"></span>");
-                if (meta.Title is { Length: > 0 })
-                {
-                    renderer.Write("<span class=\"ec-title\">");
-                    renderer.WriteEscape(meta.Title);
-                    renderer.Write("</span>");
-                }
-            }
-            else
-            {
-                // Editor frame — file tab with optional title.
-                renderer.Write("<span class=\"ec-tab\">");
-                if (meta.Title is { Length: > 0 })
-                {
-                    renderer.Write("<span class=\"ec-title\">");
-                    renderer.WriteEscape(meta.Title);
-                    renderer.Write("</span>");
-                }
-                renderer.Write("</span>");
-            }
-
-            renderer.Write(CopyButtonHtml);
-            renderer.Write("</figcaption>");
+            // No header bar — copy button is placed after the <pre> block,
+            // positioned absolute and shown on hover over the frame.
         }
 
         renderer.Write("<pre class=\"highlight\"><code class=\"language-");
@@ -471,10 +445,10 @@ internal sealed class SyntaxHighlightCodeBlockRenderer : HtmlObjectRenderer<Code
         }
 
         renderer.Write("</code></pre>");
+        renderer.Write(CopyButtonHtml);
 
         if (frameType == CodeFrameType.None)
         {
-            renderer.Write(CopyButtonHtml);
             renderer.Write("</div>");
         }
         else

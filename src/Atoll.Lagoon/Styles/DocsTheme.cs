@@ -516,6 +516,7 @@ public sealed class DocsTheme : AtollComponent
 
         /* ---- Expressive Code: frames ---- */
         .ec-frame {
+            position: relative;
             margin-bottom: 1.25rem;
             border-radius: 0.5rem;
             overflow: hidden;
@@ -527,69 +528,18 @@ public sealed class DocsTheme : AtollComponent
             border-radius: 0;
             border: none;
         }
-        .ec-header {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.4rem 0.75rem;
-            background: var(--docs-bg-subtle);
-            border-bottom: 1px solid var(--docs-border);
-            min-height: 2.25rem;
-        }
-        /* Editor frame tab */
-        .ec-tab {
-            display: flex;
-            align-items: center;
-            padding: 0.1rem 0.75rem;
-            background: var(--docs-code-bg);
-            border-radius: 0.25rem 0.25rem 0 0;
-            border: 1px solid var(--docs-border);
-            border-bottom: none;
-            font-size: 0.8rem;
-            color: var(--docs-text-muted);
-            font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
-        }
-        .ec-title {
-            color: var(--docs-text);
-            font-size: 0.8rem;
-            font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 40ch;
-        }
-        /* Terminal dots (three circles using box-shadow trick) */
-        .ec-terminal-dots {
-            display: inline-block;
-            width: 0.75rem;
-            height: 0.75rem;
-            border-radius: 50%;
-            background: #ff5f57;
-            box-shadow: 1.375rem 0 0 #febc2e, 2.75rem 0 0 #28c840;
-            flex-shrink: 0;
-            margin-right: 2rem;
-        }
-        /* Copy button in frame header: static positioning inside flex row */
+        /* Copy button in frame: absolute positioning, shown on hover */
         .ec-frame .code-copy-btn {
-            position: static;
-            margin-left: auto;
-            opacity: 0;
-            flex-shrink: 0;
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
         }
-        .ec-header:hover .code-copy-btn,
+        .ec-frame:hover .code-copy-btn,
         .ec-frame .code-copy-btn:focus-visible {
             opacity: 1;
         }
         /* Dark theme overrides */
         [data-theme="dark"] .ec-frame {
-            border-color: var(--docs-border);
-        }
-        [data-theme="dark"] .ec-header {
-            background: var(--docs-bg-raised);
-            border-bottom-color: var(--docs-border);
-        }
-        [data-theme="dark"] .ec-tab {
-            background: var(--docs-code-bg);
             border-color: var(--docs-border);
         }
 
@@ -708,10 +658,6 @@ public sealed class DocsTheme : AtollComponent
         /* Horizontal scrolling inside framed pre blocks */
         .ec-frame pre.highlight {
             overflow-x: auto;
-        }
-        /* Long titles: allow truncation on narrow headers */
-        .ec-header {
-            overflow: hidden;
         }
         /* Print: expand all collapsed sections */
         @media print {

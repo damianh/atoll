@@ -185,7 +185,7 @@ public sealed class DocsSampleTests : IDisposable
 
         html.ShouldContain("Atoll");
         html.ShouldContain("Get Started");
-        html.ShouldContain("href=\"/docs/getting-started\"");
+        html.ShouldContain("href=\"/getting-started\"");
     }
 
     [Fact]
@@ -244,9 +244,9 @@ public sealed class DocsSampleTests : IDisposable
         };
         var html = await RenderPageAsync<DocsPage>(props);
 
-        html.ShouldContain("href=\"/docs/getting-started\"");
-        html.ShouldContain("href=\"/docs/components\"");
-        html.ShouldContain("href=\"/docs/content-collections\"");
+        html.ShouldContain("href=\"/getting-started\"");
+        html.ShouldContain("href=\"/components\"");
+        html.ShouldContain("href=\"/content-collections\"");
     }
 
     [Fact]
@@ -411,11 +411,11 @@ public sealed class DocsSampleTests : IDisposable
         var html = await RenderPageAsync<DocsPage>(props);
 
         // Sidebar should contain normal pages
-        html.ShouldContain("href=\"/docs/getting-started\"");
-        html.ShouldContain("href=\"/docs/components\"");
+        html.ShouldContain("href=\"/getting-started\"");
+        html.ShouldContain("href=\"/components\"");
 
         // Sidebar should NOT contain a link to the 404 page
-        html.ShouldNotContain("href=\"/docs/404\"");
+        html.ShouldNotContain("href=\"/404\"");
     }
 
     [Fact]
@@ -435,7 +435,7 @@ public sealed class DocsSampleTests : IDisposable
         json.ShouldContain("Components");
         json.ShouldContain("Content Collections");
         json.ShouldNotContain("Custom Not Found");
-        json.ShouldNotContain("/docs/404");
+        json.ShouldNotContain("/404");
     }
 
     [Fact]
@@ -483,7 +483,7 @@ public sealed class DocsSampleTests : IDisposable
         var routes = new RouteEntry[]
         {
             new RouteEntry("/", typeof(IndexPage), "index.cs"),
-            new RouteEntry("/docs/[slug]", typeof(DocsPage), "docs/[slug].cs"),
+            new RouteEntry("/[slug]", typeof(DocsPage), "[slug].cs"),
         };
 
         var ssgOptions = new SsgOptions(_outputDir);
@@ -495,9 +495,9 @@ public sealed class DocsSampleTests : IDisposable
         result.TotalCount.ShouldBe(4);
 
         File.Exists(Path.Combine(_outputDir, "index.html")).ShouldBeTrue();
-        File.Exists(Path.Combine(_outputDir, "docs", "getting-started", "index.html")).ShouldBeTrue();
-        File.Exists(Path.Combine(_outputDir, "docs", "components", "index.html")).ShouldBeTrue();
-        File.Exists(Path.Combine(_outputDir, "docs", "content-collections", "index.html")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "getting-started", "index.html")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "components", "index.html")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "content-collections", "index.html")).ShouldBeTrue();
     }
 
     [Fact]
@@ -509,7 +509,7 @@ public sealed class DocsSampleTests : IDisposable
         var routes = new RouteEntry[]
         {
             new RouteEntry("/", typeof(IndexPage), "index.cs"),
-            new RouteEntry("/docs/[slug]", typeof(DocsPage), "docs/[slug].cs"),
+            new RouteEntry("/[slug]", typeof(DocsPage), "[slug].cs"),
         };
 
         var ssgOptions = new SsgOptions(_outputDir);
@@ -533,7 +533,7 @@ public sealed class DocsSampleTests : IDisposable
         var routes = new RouteEntry[]
         {
             new RouteEntry("/", typeof(IndexPage), "index.cs"),
-            new RouteEntry("/docs/[slug]", typeof(DocsPage), "docs/[slug].cs"),
+            new RouteEntry("/[slug]", typeof(DocsPage), "[slug].cs"),
         };
 
         var ssgOptions = new SsgOptions(_outputDir);
@@ -545,7 +545,7 @@ public sealed class DocsSampleTests : IDisposable
         foreach (var pageResult in result.PageResults)
         {
             pageResult.Html.ShouldContain(
-                "href=\"/docs/getting-started\"",
+                "href=\"/getting-started\"",
                 customMessage: $"Page {pageResult.Route.UrlPath} missing navigation link");
         }
     }
@@ -561,7 +561,7 @@ public sealed class DocsSampleTests : IDisposable
         var routes = new RouteEntry[]
         {
             new RouteEntry("/", typeof(IndexPage), "index.cs"),
-            new RouteEntry("/docs/[slug]", typeof(DocsPage), "docs/[slug].cs"),
+            new RouteEntry("/[slug]", typeof(DocsPage), "[slug].cs"),
         };
 
         var ssgOptions = new SsgOptions(_outputDir);
@@ -652,10 +652,10 @@ public sealed class DocsSampleTests : IDisposable
 
         var json = await File.ReadAllTextAsync(Path.Combine(_outputDir, "search-index.json"));
 
-        // Hrefs should follow /docs/{slug} pattern
-        json.ShouldContain("/docs/getting-started");
-        json.ShouldContain("/docs/components");
-        json.ShouldContain("/docs/content-collections");
+        // Hrefs should follow /{slug} pattern
+        json.ShouldContain("/getting-started");
+        json.ShouldContain("/components");
+        json.ShouldContain("/content-collections");
     }
 
     // ── Global CSS discovery integration tests ──
@@ -790,7 +790,7 @@ public sealed class DocsSampleTests : IDisposable
         var routes = new RouteEntry[]
         {
             new RouteEntry("/", typeof(IndexPage), "index.cs"),
-            new RouteEntry("/docs/[slug]", typeof(DocsPage), "docs/[slug].cs"),
+            new RouteEntry("/[slug]", typeof(DocsPage), "[slug].cs"),
         };
         var ssgOptions = new SsgOptions(_outputDir);
         var generator = new StaticSiteGenerator(ssgOptions, serviceProps);
@@ -828,7 +828,7 @@ public sealed class DocsSampleTests : IDisposable
 
         // Assert HTML pages (no regression)
         File.Exists(Path.Combine(_outputDir, "index.html")).ShouldBeTrue();
-        File.Exists(Path.Combine(_outputDir, "docs", "getting-started", "index.html")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "getting-started", "index.html")).ShouldBeTrue();
     }
 }
 

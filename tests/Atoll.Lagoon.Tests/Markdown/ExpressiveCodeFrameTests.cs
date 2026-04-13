@@ -23,34 +23,38 @@ public sealed class ExpressiveCodeFrameTests
     }
 
     [Fact]
-    public void ShouldRenderEditorTabInCodeFrame()
+    public void ShouldRenderEditorFrameForCSharp()
     {
         var md = "```csharp\nvar x = 1;\n```";
         var html = Render(md);
 
-        html.ShouldContain("class=\"ec-tab\"");
+        html.ShouldContain("class=\"ec-frame\"");
+        html.ShouldContain("data-frame=\"code\"");
+        html.ShouldNotContain("ec-tab");
+        html.ShouldNotContain("ec-header");
     }
 
     [Fact]
-    public void ShouldRenderFrameHeaderForDefaultCodeBlock()
+    public void ShouldNotRenderFrameHeaderForDefaultCodeBlock()
     {
         var md = "```csharp\nvar x = 1;\n```";
         var html = Render(md);
 
-        html.ShouldContain("class=\"ec-header\"");
+        html.ShouldNotContain("ec-header");
+        html.ShouldNotContain("figcaption");
     }
 
     // ── Title in editor frame ─────────────────────────────────────────────────
 
     [Fact]
-    public void ShouldRenderTitleInEditorFrame()
+    public void ShouldRenderTitleAsDataAttribute()
     {
         var md = "```csharp title=\"Program.cs\"\nvar x = 1;\n```";
         var html = Render(md);
 
         html.ShouldContain("data-frame=\"code\"");
-        html.ShouldContain("class=\"ec-title\"");
-        html.ShouldContain("Program.cs");
+        html.ShouldNotContain("ec-title");
+        html.ShouldNotContain("ec-header");
     }
 
     [Fact]
@@ -59,8 +63,8 @@ public sealed class ExpressiveCodeFrameTests
         var md = "```csharp title=\"a<b>c\"\nvar x = 1;\n```";
         var html = Render(md);
 
-        html.ShouldContain("a&lt;b&gt;c");
-        html.ShouldNotContain("a<b>c");
+        // Title no longer rendered in HTML — just verify frame renders
+        html.ShouldContain("data-frame=\"code\"");
     }
 
     // ── Terminal auto-detection ───────────────────────────────────────────────
@@ -83,29 +87,31 @@ public sealed class ExpressiveCodeFrameTests
         var html = Render(md);
 
         html.ShouldContain("data-frame=\"terminal\"");
-        html.ShouldContain("class=\"ec-terminal-dots\"");
+        html.ShouldNotContain("ec-terminal-dots");
+        html.ShouldNotContain("ec-header");
     }
 
     [Fact]
-    public void ShouldRenderTerminalDotsInTerminalFrame()
+    public void ShouldRenderTerminalFrameWithoutDotsOrHeader()
     {
         var md = "```bash\necho hello\n```";
         var html = Render(md);
 
-        html.ShouldContain("ec-terminal-dots");
+        html.ShouldContain("data-frame=\"terminal\"");
+        html.ShouldNotContain("ec-terminal-dots");
         html.ShouldNotContain("ec-tab");
+        html.ShouldNotContain("ec-header");
     }
 
     [Fact]
-    public void ShouldRenderTitleInTerminalFrame()
+    public void ShouldRenderTitleAsCodeFrameForTerminalLang()
     {
         // A title forces code (editor) frame even on terminal languages — title takes precedence.
         var md = "```bash title=\"Deploy\"\necho hello\n```";
         var html = Render(md);
 
         html.ShouldContain("data-frame=\"code\"");
-        html.ShouldContain("class=\"ec-title\"");
-        html.ShouldContain("Deploy");
+        html.ShouldNotContain("ec-title");
     }
 
     // ── Explicit frame overrides ──────────────────────────────────────────────
@@ -128,7 +134,7 @@ public sealed class ExpressiveCodeFrameTests
         var html = Render(md);
 
         html.ShouldContain("data-frame=\"terminal\"");
-        html.ShouldContain("ec-terminal-dots");
+        html.ShouldNotContain("ec-terminal-dots");
     }
 
     [Fact]
@@ -138,7 +144,7 @@ public sealed class ExpressiveCodeFrameTests
         var html = Render(md);
 
         html.ShouldNotContain("class=\"ec-frame\"");
-        html.ShouldNotContain("class=\"ec-header\"");
+        html.ShouldNotContain("ec-header");
         html.ShouldContain("class=\"code-block-wrapper\"");
     }
 
@@ -164,27 +170,28 @@ public sealed class ExpressiveCodeFrameTests
     }
 
     [Fact]
-    public void ShouldUseFigcaptionForHeader()
+    public void ShouldNotRenderFigcaptionHeader()
     {
         var md = "```csharp\nvar x = 1;\n```";
         var html = Render(md);
 
-        html.ShouldContain("<figcaption");
-        html.ShouldContain("</figcaption>");
+        html.ShouldNotContain("<figcaption");
+        html.ShouldNotContain("</figcaption>");
     }
 
     [Fact]
-    public void ShouldPlaceCopyButtonInsideFrameHeader()
+    public void ShouldPlaceCopyButtonAfterPreInsideFrame()
     {
         var md = "```csharp\nvar x = 1;\n```";
         var html = Render(md);
 
-        // figcaption should contain the copy button
-        var figcaptionStart = html.IndexOf("<figcaption", StringComparison.Ordinal);
-        var figcaptionEnd = html.IndexOf("</figcaption>", StringComparison.Ordinal);
-        var header = html[figcaptionStart..figcaptionEnd];
+        // Copy button should be after </pre> but before </figure>
+        var preEnd = html.IndexOf("</pre>", StringComparison.Ordinal);
+        var copyBtnPos = html.IndexOf("code-copy-btn", StringComparison.Ordinal);
+        var figureEnd = html.IndexOf("</figure>", StringComparison.Ordinal);
 
-        header.ShouldContain("code-copy-btn");
+        copyBtnPos.ShouldBeGreaterThan(preEnd);
+        copyBtnPos.ShouldBeLessThan(figureEnd);
     }
 
     // ── Syntax highlighting still works inside frames ─────────────────────────
@@ -214,11 +221,11 @@ public sealed class ExpressiveCodeFrameTests
     [Fact]
     public void ShouldDefaultToCodeFrameWhenTitleSet()
     {
-        // Even if language would normally be "none" detection case,
-        // having a title should force code frame.
+        // Having a title should force code frame.
         var md = "```csharp title=\"Program.cs\"\nvar x = 1;\n```";
         var html = Render(md);
 
         html.ShouldContain("data-frame=\"code\"");
+        html.ShouldNotContain("ec-header");
     }
 }

@@ -54,7 +54,6 @@ public sealed class ExpressiveCodeIntegrationTests
         var html = Render(md);
 
         html.ShouldContain("ec-frame");
-        html.ShouldContain("app.cs");
         html.ShouldContain("ec-ins");
         html.ShouldContain("data-line-numbers");
     }
@@ -94,7 +93,6 @@ public sealed class ExpressiveCodeIntegrationTests
         var html = Render(md);
 
         html.ShouldContain("ec-frame");
-        html.ShouldContain("demo.cs");
         html.ShouldContain("ec-ins");
         html.ShouldContain("ec-del");
         html.ShouldContain("ec-collapse-group");
@@ -129,18 +127,18 @@ public sealed class ExpressiveCodeIntegrationTests
     }
 
     [Fact]
-    public void ShouldRenderCopyButtonInFrameHeader()
+    public void ShouldRenderCopyButtonAfterPreInFrame()
     {
         var md = "```csharp title=\"file.cs\"\nvar x = 1;\n```";
         var html = Render(md);
 
-        html.ShouldContain("ec-header");
+        html.ShouldNotContain("ec-header");
         html.ShouldContain("code-copy-btn");
 
-        // Copy button should be inside the header (before </figcaption>).
-        var headerEnd = html.IndexOf("</figcaption>", StringComparison.Ordinal);
+        // Copy button should be after </pre> (no header/figcaption).
+        var preEnd = html.IndexOf("</pre>", StringComparison.Ordinal);
         var copyBtnPos = html.IndexOf("code-copy-btn", StringComparison.Ordinal);
-        copyBtnPos.ShouldBeLessThan(headerEnd);
+        copyBtnPos.ShouldBeGreaterThan(preEnd);
     }
 
     [Fact]

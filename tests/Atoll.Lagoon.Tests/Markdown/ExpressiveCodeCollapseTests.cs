@@ -102,7 +102,6 @@ public sealed class ExpressiveCodeCollapseTests
         var html = Render(md);
 
         html.ShouldContain("ec-frame");
-        html.ShouldContain("example.cs");
         html.ShouldContain("ec-collapse-group");
         html.ShouldContain("2 collapsed lines");
     }

@@ -151,7 +151,6 @@ public sealed class ExpressiveCodeLineMarkerTests
         var html = Render(md);
 
         html.ShouldContain("ec-mark");
-        html.ShouldContain("Program.cs");
         html.ShouldContain("ec-frame");
     }
 

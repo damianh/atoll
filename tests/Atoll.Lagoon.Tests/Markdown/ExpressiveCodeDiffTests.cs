@@ -81,7 +81,6 @@ public sealed class ExpressiveCodeDiffTests
         var html = Render(md);
 
         html.ShouldContain("ec-ins");
-        html.ShouldContain("Changes.cs");
         html.ShouldContain("ec-frame");
     }
 
