@@ -690,7 +690,11 @@ internal sealed class DevServerReloader
             // Shadow-copy the entire TFM output directory (e.g. bin/Release/net10.0/)
             // to a temp folder so that the originals in bin/ are never locked by this
             // process. This prevents MSB3027 "file in use" errors during rebuilds.
-            var shadowDir = Path.Combine(Path.GetTempPath(), "atoll-dev-shadow", contextName);
+            var shadowDir = Path.Combine(
+                Path.GetTempPath(),
+                "atoll-dev-shadow",
+                $"pid-{Environment.ProcessId}",
+                contextName);
             Directory.CreateDirectory(shadowDir);
 
             foreach (var sourceFile in Directory.EnumerateFiles(sourceDir))
