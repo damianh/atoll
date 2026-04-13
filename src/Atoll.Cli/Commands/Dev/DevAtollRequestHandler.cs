@@ -6,6 +6,7 @@ using Atoll.Rendering;
 using Atoll.Routing;
 using Atoll.Routing.Matching;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Logging;
 
 namespace Atoll.Cli.Commands.Dev;
@@ -19,6 +20,7 @@ internal sealed class DevAtollRequestHandler
 {
     private volatile DevServerState _state;
     private readonly ILogger<DevAtollRequestHandler> _logger;
+    private static readonly FileExtensionContentTypeProvider ContentTypeProvider = new();
 
     /// <summary>
     /// Initializes a new <see cref="DevAtollRequestHandler"/> with the given initial state.
@@ -128,7 +130,7 @@ internal sealed class DevAtollRequestHandler
         if (match is null)
         {
             _logger.LogDebug("No route matched for path '{Path}'", requestPath);
-            return false;
+            return await TryServeContentAssetAsync(context, state, path);
         }
 
         _logger.LogDebug(
@@ -157,6 +159,78 @@ internal sealed class DevAtollRequestHandler
     }
 
     // ── Private helpers ─────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Attempts to serve a static file from the content base directory using a
+    /// suffix-matching strategy. For an unmatched URL like
+    /// <c>/docs/articles/images/diagram.svg</c>, progressively shorter suffixes of the
+    /// path are probed against the content base directory until a matching file is found.
+    /// </summary>
+    private static async Task<bool> TryServeContentAssetAsync(
+        HttpContext context, DevServerState state, string path)
+    {
+        if (state.ContentBaseDirectory is null)
+        {
+            return false;
+        }
+
+        // Only serve files with extensions (skip directory-like paths).
+        if (!Path.HasExtension(path))
+        {
+            return false;
+        }
+
+        // Security: reject path traversal attempts.
+        if (path.Contains("..", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var segments = path.TrimStart('/').Split('/');
+        var baseDir = state.ContentBaseDirectory;
+
+        // Ensure baseDir ends without a trailing separator for correct StartsWith check.
+        var normalizedBase = baseDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+        // Try progressively shorter suffixes of the URL path.
+        // For "/docs/articles/images/diagram.svg", try:
+        //   {baseDir}/docs/articles/images/diagram.svg
+        //   {baseDir}/articles/images/diagram.svg
+        //   {baseDir}/images/diagram.svg
+        //   {baseDir}/diagram.svg
+        for (var i = 0; i < segments.Length; i++)
+        {
+            var candidateRelative = string.Join(Path.DirectorySeparatorChar, segments[i..]);
+            var candidatePath = Path.GetFullPath(Path.Combine(normalizedBase, candidateRelative));
+
+            // Security: ensure the resolved path is within the content base directory.
+            if (!candidatePath.StartsWith(normalizedBase + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
+                && !candidatePath.Equals(normalizedBase, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (!File.Exists(candidatePath))
+            {
+                continue;
+            }
+
+            if (!ContentTypeProvider.TryGetContentType(candidatePath, out var contentType))
+            {
+                contentType = "application/octet-stream";
+            }
+
+            context.Response.StatusCode = 200;
+            context.Response.ContentType = contentType;
+            context.Response.Headers["Cache-Control"] = "no-cache";
+            await using var stream = new FileStream(
+                candidatePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true);
+            await stream.CopyToAsync(context.Response.Body, context.RequestAborted);
+            return true;
+        }
+
+        return false;
+    }
 
     /// <summary>
     /// Checks whether the request path matches an in-memory island JavaScript asset.

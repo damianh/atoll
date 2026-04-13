@@ -3,6 +3,7 @@ using Atoll.Middleware.Server.DevServer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -65,6 +66,10 @@ public sealed class DevCommandHandler
         var app = builder.Build();
         var loggerFactory = app.Services.GetRequiredService<ILoggerFactory>();
 
+        // Resolve the public/ directory early — needed for both the static files middleware
+        // and (when --write-dist is active) for copying assets to the output directory.
+        var publicDir = AtollConfigLoader.ResolvePublicDirectory(config, projectRoot);
+
         // When --write-dist is enabled, create the writer and clean the output directory
         // once before the initial build so the consumer starts with a clean slate.
         Dev.DevDistWriter? distWriter = null;
@@ -72,7 +77,7 @@ public sealed class DevCommandHandler
         {
             var outputDir = AtollConfigLoader.ResolveOutputDirectory(config, projectRoot);
             var distWriterLogger = loggerFactory.CreateLogger<Dev.DevDistWriter>();
-            distWriter = new Dev.DevDistWriter(outputDir, distWriterLogger);
+            distWriter = new Dev.DevDistWriter(outputDir, publicDir, distWriterLogger);
             distWriter.Clean();
             Console.WriteLine($"  --write-dist: output directory {outputDir}");
         }
@@ -86,6 +91,23 @@ public sealed class DevCommandHandler
         //   (b) HTML responses produced by the handler are wrapped and injected
         app.UseWebSockets();
         app.UseMiddleware<LiveReloadMiddleware>();
+
+        // ── Static files from public/ directory ──────────────────────────────
+        // Resolved from atoll.json (same as build mode) — registered only when
+        // the directory exists so we don't add middleware for missing dirs.
+        if (Directory.Exists(publicDir))
+        {
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(publicDir),
+                RequestPath = "",
+                OnPrepareResponse = ctx =>
+                {
+                    // Disable browser caching in dev so changes are always picked up.
+                    ctx.Context.Response.Headers["Cache-Control"] = "no-cache";
+                },
+            });
+        }
 
         // ── Build initial state ───────────────────────────────────────────────
 
