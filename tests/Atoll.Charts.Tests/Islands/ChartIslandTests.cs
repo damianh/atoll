@@ -228,6 +228,23 @@ public sealed class ChartIslandTests
         html.ShouldContain("</atoll-island>");
     }
 
+    // ─── Atoll extensions pass-through ───────────────────────────────────
+
+    [Fact]
+    public async Task RenderShouldPreserveAtollLinksConfig()
+    {
+        var configWithLinks = """{"type":"bar","data":{},"_atoll":{"links":[["/a","/b"]]}}""";
+        var html = await RenderAsync(new Dictionary<string, object?>
+        {
+            ["ConfigJson"] = configWithLinks,
+        });
+
+        var config = RequireConfig(html);
+        config.TryGetProperty("_atoll", out var atoll).ShouldBeTrue();
+        atoll.TryGetProperty("links", out var links).ShouldBeTrue();
+        links.GetArrayLength().ShouldBe(1);
+    }
+
     // ─── Helpers ──────────────────────────────────────────────────────────
 
     private static JsonElement? ExtractChartConfig(string html)

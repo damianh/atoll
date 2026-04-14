@@ -87,7 +87,7 @@ public static class DocsSetup
                     new SidebarItem { Label = "Global Banner",         Link = "/lagoon/banner" },
                     new SidebarItem { Label = "LLM Content Export",   Link = "/lagoon/llms-txt" },
                     new SidebarItem { Label = "Custom 404 Pages",      Link = "/lagoon/custom-404" },
-                    new SidebarItem { Label = "Islands & Mermaid",     Link = "/lagoon/islands-and-mermaid" },
+                    new SidebarItem { Label = "Islands, Mermaid & Charts", Link = "/lagoon/islands-and-mermaid" },
                     new SidebarItem { Label = "Content Components",   Link = "/lagoon/content-components" },
                     new SidebarItem { Label = "Internationalisation",  Link = "/lagoon/i18n" },
                     new SidebarItem { Label = "Versioning",            Link = "/lagoon/versioning" },

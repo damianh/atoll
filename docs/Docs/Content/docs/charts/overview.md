@@ -247,6 +247,164 @@ The charts below are live — rendered by Chart.js when they scroll into view. H
 }
 ```
 
+## Clickable chart elements
+
+Chart elements (bars, points, pie segments, etc.) can be made clickable by adding an `_atoll.links` key to the chart JSON config. Clicking a linked element navigates to the specified URL — no custom JavaScript required.
+
+### Schema
+
+`_atoll.links` is a 2D array indexed by `[datasetIndex][dataPointIndex]`. Each entry is a URL string or `null` (not clickable).
+
+```json
+{
+  "type": "bar",
+  "data": {
+    "labels": ["Jan", "Feb", "Mar"],
+    "datasets": [
+      { "label": "Bugs", "data": [5, 3, 8] },
+      { "label": "Features", "data": [12, 7, 15] }
+    ]
+  },
+  "_atoll": {
+    "links": [
+      ["/bugs?m=jan", "/bugs?m=feb", "/bugs?m=mar"],
+      ["/features?m=jan", null, "/features?m=mar"]
+    ]
+  }
+}
+```
+
+For single-dataset charts, `links` has one inner array. `null` entries or missing indices are simply not clickable.
+
+### Clickable bar chart
+
+Hover over bars to see the pointer cursor. Click any bar to navigate.
+
+```chart
+{
+  "type": "bar",
+  "data": {
+    "labels": ["January", "February", "March"],
+    "datasets": [{
+      "label": "Page Views",
+      "data": [1200, 1900, 3000],
+      "backgroundColor": ["#3b82f6", "#8b5cf6", "#ec4899"]
+    }]
+  },
+  "_atoll": {
+    "links": [
+      ["#january", "#february", "#march"]
+    ]
+  }
+}
+```
+
+### Clickable line chart
+
+```chart
+{
+  "type": "line",
+  "data": {
+    "labels": ["Week 1", "Week 2", "Week 3", "Week 4"],
+    "datasets": [{
+      "label": "Visitors",
+      "data": [500, 800, 750, 1200],
+      "borderColor": "#3b82f6",
+      "tension": 0.3,
+      "fill": false
+    }]
+  },
+  "_atoll": {
+    "links": [
+      ["#week-1", "#week-2", "#week-3", "#week-4"]
+    ]
+  }
+}
+```
+
+### Clickable pie chart
+
+For pie and doughnut charts, dataset index is always `0`. Data point index maps to each segment.
+
+```chart
+{
+  "type": "pie",
+  "data": {
+    "labels": ["Desktop", "Mobile", "Tablet"],
+    "datasets": [{
+      "data": [62, 28, 10],
+      "backgroundColor": ["#3b82f6", "#8b5cf6", "#f59e0b"]
+    }]
+  },
+  "_atoll": {
+    "links": [
+      ["#desktop", "#mobile", "#tablet"]
+    ]
+  }
+}
+```
+
+### Multi-dataset clickable chart
+
+```chart
+{
+  "type": "bar",
+  "data": {
+    "labels": ["Q1", "Q2", "Q3"],
+    "datasets": [
+      {
+        "label": "2024",
+        "data": [40, 55, 70],
+        "backgroundColor": "#3b82f6"
+      },
+      {
+        "label": "2025",
+        "data": [50, 65, 80],
+        "backgroundColor": "#10b981"
+      }
+    ]
+  },
+  "_atoll": {
+    "links": [
+      ["/report/2024/q1", "/report/2024/q2", "/report/2024/q3"],
+      ["/report/2025/q1", "/report/2025/q2", "/report/2025/q3"]
+    ]
+  }
+}
+```
+
+### Navigation behaviour
+
+| URL type | Example | Behaviour |
+|---|---|---|
+| Relative path | `/posts/jan` | Same tab (`window.location.href`) |
+| Relative path | `./detail` or `../up` | Same tab |
+| External URL | `https://example.com` | New tab (`window.open`, `noopener`) |
+| Not provided | `null` or missing index | No navigation; cursor stays default |
+
+### Security
+
+Only the following URL prefixes are permitted. All other schemes (including `javascript:`, `data:`, and `vbscript:`) are silently ignored — no navigation occurs.
+
+- `/` — absolute path
+- `./` or `../` — relative path
+- `http://` or `https://` — external URL
+
+### Accessibility
+
+Canvas-based charts cannot expose individual elements as focusable DOM nodes. To support all users:
+
+- Always set the `Alt` parameter (or markdown equivalent) to describe the chart and indicate it is interactive (e.g. `"Alt": "Monthly bug counts — click a bar to view details"`).
+- Consider providing a supplementary data table beneath the chart with the same links for keyboard and screen reader users.
+
+```csharp
+var props = new Dictionary<string, object?>
+{
+    ["ConfigJson"] = configJson,
+    ["Alt"] = "Monthly page views — click a bar to view that month's report",
+};
+```
+
 ## Supported chart types
 
 Any chart type supported by Chart.js works:

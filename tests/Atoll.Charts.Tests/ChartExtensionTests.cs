@@ -180,4 +180,21 @@ public sealed class ChartExtensionTests
         html.ShouldNotContain("data-chart-config=");
         html.ShouldContain("atoll-chart-error");
     }
+
+    // --- Atoll extensions pass-through ---
+
+    [Fact]
+    public void ShouldPreserveAtollLinksConfigInDataAttribute()
+    {
+        var json = """{"type":"bar","data":{"labels":["A","B"],"datasets":[{"data":[1,2]}]},"_atoll":{"links":[["/a","/b"]]}}""";
+        var md = $"```chart\n{json}\n```";
+        var html = RenderDirect(md);
+
+        var attrStart = html.IndexOf("data-chart-config=\"", StringComparison.Ordinal) + "data-chart-config=\"".Length;
+        var attrEnd = html.IndexOf('"', attrStart);
+        var decoded = System.Net.WebUtility.HtmlDecode(html[attrStart..attrEnd]);
+        decoded.ShouldContain("\"_atoll\"");
+        decoded.ShouldContain("\"links\"");
+        decoded.ShouldContain("\"/a\"");
+    }
 }
