@@ -200,6 +200,7 @@ public sealed class DevCommandHandler
             watcher.Start();
 
             await ((IHost)app).RunAsync(cancellationToken);
+            Console.WriteLine("Exiting...");
         }
         else
         {
@@ -228,6 +229,7 @@ public sealed class DevCommandHandler
             }
 
             await ((IHost)app).RunAsync(cancellationToken);
+            Console.WriteLine("Exiting...");
         }
     }
 
