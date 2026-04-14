@@ -57,6 +57,9 @@ Landing-page hero with title, tagline, image, and CTA buttons.
 :::card{title="Mermaid Diagrams"}
 Opt-in rendering of ` ```mermaid ` code blocks.
 :::
+:::card{title="Charts"}
+Interactive Chart.js charts from ` ```chart ` code blocks with optional clickable elements.
+:::
 :::card{title="Custom CSS"}
 Inject additional stylesheets alongside the built-in theme.
 :::
@@ -250,7 +253,7 @@ Convention-based 404 pages rendered through the full layout pipeline.
 :::
 :::link-card{title="Custom 404 Pages" href="./custom-404" description="Convention-based 404 page support."}
 :::
-:::link-card{title="Islands & Mermaid" href="./islands-and-mermaid" description="Built-in islands and diagram support."}
+:::link-card{title="Islands, Mermaid & Charts" href="./islands-and-mermaid" description="Built-in islands, diagrams, and chart support."}
 :::
 :::link-card{title="Starlight Comparison" href="./starlight-comparison" description="Feature parity and known gaps."}
 :::

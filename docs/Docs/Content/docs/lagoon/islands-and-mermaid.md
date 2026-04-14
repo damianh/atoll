@@ -1,13 +1,13 @@
 ---
-title: Islands & Mermaid
-description: Built-in interactive islands and Mermaid diagram support.
+title: Islands, Mermaid & Charts
+description: Built-in interactive islands, Mermaid diagram support, and Chart.js integration.
 order: 26
 section: Lagoon Plugin
 ---
 
-# Islands & Mermaid
+# Islands, Mermaid & Charts
 
-Lagoon ships three built-in islands that handle interactive UI, and optional Mermaid diagram rendering. All islands use Atoll's zero-JS-by-default model — JavaScript only loads when the chosen client directive condition is met.
+Lagoon ships three built-in islands that handle interactive UI, plus optional Mermaid diagram and Chart.js chart rendering. All islands use Atoll's zero-JS-by-default model — JavaScript only loads when the chosen client directive condition is met.
 
 ## Built-in islands
 
@@ -80,3 +80,11 @@ Renders a hamburger menu button for narrow viewports.
 Lagoon integrates the `Atoll.Mermaid` plugin to render [Mermaid](https://mermaid.js.org/) diagrams from fenced code blocks. Set `EnableMermaid = true` in `DocsConfig` and write `` ```mermaid `` blocks in your markdown — diagrams render as SVGs at page load with automatic dark/light theme support.
 
 See the [Mermaid Plugin](../mermaid/overview) documentation for installation, usage, supported diagram types, and technical details.
+
+## Charts
+
+Lagoon integrates the `Atoll.Charts` plugin to render interactive [Chart.js](https://www.chartjs.org/) charts from fenced code blocks. Register the `ChartExtension` in your markdown pipeline and write `` ```chart `` blocks containing Chart.js JSON configuration. Charts are lazy-loaded when they scroll into view.
+
+Chart elements (bars, points, pie segments) can be made clickable by adding an `_atoll.links` key to the chart JSON config — no custom JavaScript required per-site.
+
+See the [Charts Plugin](../charts/overview) documentation for installation, usage, supported chart types, clickable elements, and technical details.
