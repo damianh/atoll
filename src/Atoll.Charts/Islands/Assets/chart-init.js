@@ -22,6 +22,34 @@
 const VENDOR_SCRIPT_URL = new URL('./atoll-charts-vendor.min.js', import.meta.url).href;
 const VENDOR_SCRIPT_ID  = 'atoll-charts-vendor-script';
 
+// --- Atoll link helpers ---
+
+const ALLOWED_URL_PREFIXES = ['/', './', '../', 'http://', 'https://'];
+
+/**
+ * Returns true if the URL is allowed for navigation (blocks javascript:, data:, etc.).
+ *
+ * @param {string} url
+ * @returns {boolean}
+ */
+function isAllowedUrl(url) {
+  if (url.startsWith('//')) return false; // block protocol-relative URLs (e.g. //evil.com)
+  return ALLOWED_URL_PREFIXES.some(prefix => url.startsWith(prefix));
+}
+
+/**
+ * Navigates to the given URL. External URLs open in a new tab; relative URLs navigate in place.
+ *
+ * @param {string} url
+ */
+function navigateToUrl(url) {
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    window.open(url, '_blank', 'noopener');
+  } else {
+    window.location.href = url;
+  }
+}
+
 /** @type {Promise<void> | null} */
 let vendorLoadPromise = null;
 
@@ -100,6 +128,35 @@ export default function init(element) {
           canvas.height = h;
           canvas.style.width = w + 'px';
           canvas.style.height = h + 'px';
+        }
+
+        // --- Atoll links (clickable chart elements) ---
+        const links = config._atoll?.links;
+        if (links && Array.isArray(links)) {
+          // Wire onClick for navigation
+          if (!config.options.onClick) {
+            config.options.onClick = (_event, activeElements) => {
+              if (!activeElements || activeElements.length === 0) return;
+              const el = activeElements[0];
+              const url = links[el.datasetIndex]?.[el.index];
+              if (typeof url === 'string' && isAllowedUrl(url)) {
+                navigateToUrl(url);
+              }
+            };
+          }
+
+          // Wire onHover for cursor change
+          const existingOnHover = config.options.onHover;
+          config.options.onHover = (event, activeElements) => {
+            if (existingOnHover) existingOnHover(event, activeElements);
+            let hasLink = false;
+            if (activeElements && activeElements.length > 0) {
+              const el = activeElements[0];
+              const url = links[el.datasetIndex]?.[el.index];
+              hasLink = typeof url === 'string' && url.length > 0;
+            }
+            canvas.style.cursor = hasLink ? 'pointer' : 'default';
+          };
         }
 
         const chart = new Chart(canvas, config);
