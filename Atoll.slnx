@@ -10,6 +10,7 @@
     <Project Path="src/Atoll.Mermaid/Atoll.Mermaid.csproj" />
     <Project Path="src/Atoll.Middleware/Atoll.Middleware.csproj" />
     <Project Path="src/Atoll.Reef/Atoll.Reef.csproj" />
+    <Project Path="src/Atoll.Lsp/Atoll.Lsp.csproj" />
   </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/Atoll.Samples.Articles/Atoll.Samples.Articles.csproj" />
@@ -30,6 +31,7 @@
     <Project Path="tests/Atoll.Integration.Tests/Atoll.Integration.Tests.csproj" />
     <Project Path="tests/Atoll.Middleware.Tests/Atoll.Middleware.Tests.csproj" />
     <Project Path="tests/Atoll.Reef.Tests/Atoll.Reef.Tests.csproj" />
+    <Project Path="tests/Atoll.Lsp.Tests/Atoll.Lsp.Tests.csproj" />
   </Folder>
   <Folder Name="/templates/">
     <Project Path="templates/Atoll.Templates.csproj" />
