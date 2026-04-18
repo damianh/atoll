@@ -68,6 +68,7 @@ jobs:
         dotnet pack src/Atoll.Middleware/Atoll.Middleware.csproj -c Release --no-build --output ./packages
         dotnet pack src/Atoll.Charts/Atoll.Charts.csproj -c Release --no-build --output ./packages
         dotnet pack src/Atoll.Reef/Atoll.Reef.csproj -c Release --no-build --output ./packages
+        dotnet pack src/Atoll.Hosting.Aspire/Atoll.Hosting.Aspire.csproj -c Release --no-build --output ./packages
         dotnet pack templates/Atoll.Templates.csproj -c Release --output ./packages
 
     - name: Push to NuGet.org
