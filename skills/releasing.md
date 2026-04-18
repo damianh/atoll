@@ -12,7 +12,7 @@ Releases are triggered via the `release.yml` GitHub Actions workflow dispatch. T
 2. Creates and pushes a git tag (`v{version}`)
 3. Builds in Release mode
 4. Packs NuGet packages (9 src projects + 1 templates project)
-5. Pushes to GitHub Packages (always) and NuGet.org (when `push_to_nuget` is true)
+5. Pushes to NuGet.org always
 6. Creates a GitHub Release with placeholder auto-generated notes
 
 MinVer derives the assembly/package version from the git tag — no manual version edits needed.
