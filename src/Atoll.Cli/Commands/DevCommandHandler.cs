@@ -93,7 +93,29 @@ public sealed class DevCommandHandler
         app.UseWebSockets();
         app.UseMiddleware<LiveReloadMiddleware>();
 
+        // ── "Building…" gate ─────────────────────────────────────────────────
+        // The server starts listening immediately so orchestrators can connect,
+        // but all requests (including the health endpoint) receive a 503 with a
+        // friendly page until the initial build completes. Aspire sees the
+        // resource as "Starting" until the health check returns 200.
+        var buildingGate = new BuildingGate();
+        app.Use(async (context, next) =>
+        {
+            if (!buildingGate.IsReady)
+            {
+                context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                context.Response.ContentType = "text/html; charset=utf-8";
+                context.Response.Headers["Retry-After"] = "2";
+                await context.Response.WriteAsync(BuildingPage.Html, context.RequestAborted);
+                return;
+            }
+
+            await next(context);
+        });
+
         // ── Health endpoint for orchestrators (e.g. Aspire) ─────────────────
+        // Placed after the building gate so it only returns 200 once the site
+        // is ready to serve requests.
         app.MapGet("/__health", () => Results.Ok("healthy"));
 
         // ── Static files from public/ directory ──────────────────────────────
@@ -113,10 +135,34 @@ public sealed class DevCommandHandler
             });
         }
 
+        // ── Atoll request handler ────────────────────────────────────────────
+        // Created with an empty state initially. Once the build completes,
+        // the state is swapped in atomically.
+        var handlerLogger = loggerFactory.CreateLogger<Dev.DevAtollRequestHandler>();
+        var handler = new Dev.DevAtollRequestHandler(Dev.DevServerState.Empty, handlerLogger);
+
+        app.Use(async (context, next) =>
+        {
+            if (!await handler.TryHandleAsync(context))
+            {
+                await next(context);
+            }
+        });
+
+        // ── Start the server immediately ─────────────────────────────────────
+        // The listener is available for health checks right away. Content
+        // requests get a 503 "Building…" page until the initial build completes.
+        Console.WriteLine($"Atoll ({CliInfo.Version}) — dev server starting on http://{config.Server.Host}:{effectivePort}");
+        Console.WriteLine("  Press Ctrl+C to stop.");
+
+        await ((IHost)app).StartAsync(cancellationToken);
+
         // ── Build initial state ───────────────────────────────────────────────
 
         if (csprojPath is not null)
         {
+            Console.WriteLine("  Building site...");
+
             var reloaderLogger = loggerFactory.CreateLogger<Dev.DevServerReloader>();
             var reloader = new Dev.DevServerReloader(projectRoot, csprojPath, reloaderLogger);
             var (initialState, initialBuildError) = await reloader.BuildInitialStateAsync();
@@ -124,6 +170,11 @@ public sealed class DevCommandHandler
             {
                 Console.WriteLine($"  Initial build had errors:\n{initialBuildError}");
             }
+
+            handler.UpdateState(initialState);
+            buildingGate.MarkReady();
+
+            Console.WriteLine("  Site ready — watching for file changes (.cs, .md, atoll.json)");
 
             // Write initial state to dist/ if --write-dist is enabled and build succeeded.
             if (distWriter is not null && initialBuildError is null)
@@ -136,22 +187,6 @@ public sealed class DevCommandHandler
             }
 
             // ── Wire file-watching + hot-reload ───────────────────────────────
-
-            var handlerLogger = loggerFactory.CreateLogger<Dev.DevAtollRequestHandler>();
-            var handler = new Dev.DevAtollRequestHandler(initialState, handlerLogger);
-
-            // Register handler so the middleware lambda can capture it.
-            app.Use(async (context, next) =>
-            {
-                if (!await handler.TryHandleAsync(context))
-                {
-                    await next(context);
-                }
-            });
-
-            Console.WriteLine($"Atoll ({CliInfo.Version}) — dev server starting on http://{config.Server.Host}:{effectivePort}");
-            Console.WriteLine("  Press Ctrl+C to stop.");
-            Console.WriteLine("  Watching for file changes (.cs, .md, atoll.json)");
 
             var semaphore = new SemaphoreSlim(1, 1);
 
@@ -202,39 +237,112 @@ public sealed class DevCommandHandler
             };
 
             watcher.Start();
-
-            await ((IHost)app).RunAsync(cancellationToken);
-            Console.WriteLine("Exiting...");
         }
         else
         {
-            // No project file — serve an empty response (still starts the listener).
-            // Live-reload middleware is still active so the browser script connects
-            // and will be notified if the server is restarted with a project present.
-            var emptyState = Dev.DevServerState.Empty;
-            var handlerLogger = loggerFactory.CreateLogger<Dev.DevAtollRequestHandler>();
-            var handler = new Dev.DevAtollRequestHandler(emptyState, handlerLogger);
+            // No project file — open the gate immediately with empty state.
+            buildingGate.MarkReady();
 
-            app.Use(async (context, next) =>
-            {
-                if (!await handler.TryHandleAsync(context))
-                {
-                    await next(context);
-                }
-            });
-
-            Console.WriteLine($"Atoll ({CliInfo.Version}) — dev server starting on http://{config.Server.Host}:{effectivePort}");
             Console.WriteLine("  Warning: No .csproj found — starting with no routes.");
-            Console.WriteLine("  Press Ctrl+C to stop.");
 
             if (distWriter is not null)
             {
                 Console.WriteLine("  --write-dist: no project found — dist/ will be empty.");
             }
-
-            await ((IHost)app).RunAsync(cancellationToken);
-            Console.WriteLine("Exiting...");
         }
+
+        // ── Block until shutdown ─────────────────────────────────────────────
+        await ((IHost)app).WaitForShutdownAsync(cancellationToken);
+        Console.WriteLine("Exiting...");
+    }
+
+    /// <summary>
+    /// Thread-safe gate that tracks whether the initial site build has completed.
+    /// While the gate is closed, the middleware returns a 503 "Building…" page
+    /// for all non-health-check requests.
+    /// </summary>
+    private sealed class BuildingGate
+    {
+        private volatile bool _isReady;
+
+        /// <summary>
+        /// Gets a value indicating whether the initial build has completed.
+        /// </summary>
+        public bool IsReady => _isReady;
+
+        /// <summary>
+        /// Marks the gate as ready, allowing requests to pass through.
+        /// </summary>
+        public void MarkReady() => _isReady = true;
+    }
+
+    /// <summary>
+    /// Provides the static HTML page shown while the site is building.
+    /// </summary>
+    private static class BuildingPage
+    {
+        /// <summary>
+        /// A self-contained HTML page with a "Building site…" message and a
+        /// spinner animation. The page auto-refreshes every 2 seconds so the
+        /// browser transitions to the real site once the build completes.
+        /// </summary>
+        public const string Html =
+            """
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <meta http-equiv="refresh" content="2">
+              <title>Atoll — Building…</title>
+              <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body {
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                  background: #1a1a2e;
+                  color: #eee;
+                  min-height: 100vh;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                }
+                .container {
+                  text-align: center;
+                  padding: 2rem;
+                }
+                .spinner {
+                  width: 48px;
+                  height: 48px;
+                  border: 4px solid #233554;
+                  border-top-color: #53c0f5;
+                  border-radius: 50%;
+                  animation: spin 0.8s linear infinite;
+                  margin: 0 auto 1.5rem;
+                }
+                @keyframes spin {
+                  to { transform: rotate(360deg); }
+                }
+                h1 {
+                  font-size: 1.5rem;
+                  font-weight: 600;
+                  margin-bottom: 0.5rem;
+                  color: #53c0f5;
+                }
+                p {
+                  color: #a3b8d4;
+                  font-size: 0.95rem;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="spinner"></div>
+                <h1>Building site…</h1>
+                <p>The Atoll dev server is compiling your site. This page will refresh automatically.</p>
+              </div>
+            </body>
+            </html>
+            """;
     }
 
     /// <summary>
