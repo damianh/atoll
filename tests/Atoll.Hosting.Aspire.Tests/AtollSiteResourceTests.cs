@@ -39,7 +39,7 @@ public sealed class AtollSiteResourceTests
             .OfType<EndpointAnnotation>()
             .Single(e => e.Name == "http");
 
-        endpoint.Port.ShouldBe(4321);
+        endpoint.TargetPort.ShouldBe(4321);
         endpoint.UriScheme.ShouldBe("http");
     }
 
