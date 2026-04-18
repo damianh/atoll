@@ -172,19 +172,17 @@ public sealed class DevCommandHandler
             }
 
             handler.UpdateState(initialState);
-            buildingGate.MarkReady();
-
-            Console.WriteLine("  Site ready — watching for file changes (.cs, .md, atoll.json)");
 
             // Write initial state to dist/ if --write-dist is enabled and build succeeded.
+            // This must complete BEFORE we open the building gate so that orchestrators
+            // (e.g. Aspire WaitFor) don't start consumers until dist/ is fully populated.
             if (distWriter is not null && initialBuildError is null)
             {
-                _ = Task.Run(async () =>
-                {
-                    try { await distWriter.WriteAsync(initialState, CancellationToken.None); }
-                    catch (Exception ex) { Console.WriteLine($"  --write-dist: error — {ex.Message}"); }
-                });
+                try { await distWriter.WriteAsync(initialState, CancellationToken.None); }
+                catch (Exception ex) { Console.WriteLine($"  --write-dist: error — {ex.Message}"); }
             }
+
+            buildingGate.MarkReady();
 
             // ── Wire file-watching + hot-reload ───────────────────────────────
 
