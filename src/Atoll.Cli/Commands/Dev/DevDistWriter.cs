@@ -43,6 +43,11 @@ internal sealed class DevDistWriter
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private HashSet<string> _previousWrittenFiles = new(StringComparer.OrdinalIgnoreCase);
 
+    // Incremental cache state — updated atomically within the semaphore lock.
+    private string _previousAssemblyHash = "";
+    private string _previousContentHash = "";
+    private Dictionary<string, string> _previousRouteOutputPaths = new(StringComparer.OrdinalIgnoreCase);
+
     /// <summary>
     /// Initializes a new <see cref="DevDistWriter"/>.
     /// </summary>
@@ -110,9 +115,22 @@ internal sealed class DevDistWriter
         var sw = Stopwatch.StartNew();
         var writer = new OutputWriter(_outputDirectory);
         var currentWrittenFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var currentRouteOutputPaths = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         var pageCount = 0;
+        var skippedCount = 0;
         var assetCount = 0;
+
+        // Compute incremental cache hashes for this cycle.
+        var assemblyHash = state.UserAssembly?.Location is { Length: > 0 } loc
+            ? InputHasher.HashAssembly(loc)
+            : "";
+        var contentHash = state.ContentBaseDirectory is { Length: > 0 } dir
+            ? InputHasher.HashDirectory(dir)
+            : "";
+
+        var assemblyUnchanged = assemblyHash.Length > 0 && assemblyHash == _previousAssemblyHash;
+        var contentUnchanged = contentHash == _previousContentHash;
 
         // ── 1. Expand routes and render pages ─────────────────────────────────
 
@@ -133,6 +151,21 @@ internal sealed class DevDistWriter
         {
             cancellationToken.ThrowIfCancellationRequested();
 
+            // Check whether this page can be skipped.
+            if (assemblyUnchanged && _previousRouteOutputPaths.TryGetValue(route.UrlPath, out var prevOutputPath))
+            {
+                var isDynamic = InputHasher.IsDynamicRoute(route.ComponentType);
+                var pageContentUnchanged = !isDynamic || contentUnchanged;
+
+                if (pageContentUnchanged && File.Exists(prevOutputPath))
+                {
+                    currentWrittenFiles.Add(prevOutputPath);
+                    currentRouteOutputPaths[route.UrlPath] = prevOutputPath;
+                    skippedCount++;
+                    continue;
+                }
+            }
+
             var html = await RenderPageToHtmlAsync(route, state);
             if (html is null)
             {
@@ -143,6 +176,7 @@ internal sealed class DevDistWriter
             {
                 var outputPath = await writer.WritePageAsync(route.UrlPath, html, cancellationToken);
                 currentWrittenFiles.Add(outputPath);
+                currentRouteOutputPaths[route.UrlPath] = outputPath;
                 pageCount++;
             }
             catch (Exception ex)
@@ -269,9 +303,13 @@ internal sealed class DevDistWriter
         }
 
         _previousWrittenFiles = currentWrittenFiles;
+        _previousAssemblyHash = assemblyHash;
+        _previousContentHash = contentHash;
+        _previousRouteOutputPaths = currentRouteOutputPaths;
 
         sw.Stop();
-        Console.WriteLine($"  --write-dist: {pageCount} pages, {assetCount} assets written to {_outputDirectory} ({sw.ElapsedMilliseconds}ms){(staleCount > 0 ? $", {staleCount} stale file(s) removed" : "")}");
+        var skipSuffix = skippedCount > 0 ? $", {skippedCount} skipped" : "";
+        Console.WriteLine($"  --write-dist: {pageCount} pages{skipSuffix}, {assetCount} assets written to {_outputDirectory} ({sw.ElapsedMilliseconds}ms){(staleCount > 0 ? $", {staleCount} stale file(s) removed" : "")}");
     }
 
     /// <summary>

@@ -162,7 +162,14 @@ public sealed class BuildReporter
         sb.AppendLine("─────────────");
 
         // Pages
-        sb.AppendLine($"  Pages:    {ssgResult.SuccessCount} rendered ({ssgResult.TotalCount} total)");
+        if (ssgResult.SkippedCount > 0)
+        {
+            sb.AppendLine($"  Pages:    {ssgResult.RenderedCount} rendered, {ssgResult.SkippedCount} skipped ({ssgResult.TotalCount} total)");
+        }
+        else
+        {
+            sb.AppendLine($"  Pages:    {ssgResult.SuccessCount} rendered ({ssgResult.TotalCount} total)");
+        }
 
         if (ssgResult.FailureCount > 0)
         {

@@ -22,6 +22,7 @@ public sealed class SsgPageResult
         Html = html;
         Elapsed = elapsed;
         IsSuccess = true;
+        IsSkipped = false;
     }
 
     /// <summary>
@@ -40,6 +41,26 @@ public sealed class SsgPageResult
         Error = error;
         Elapsed = elapsed;
         IsSuccess = false;
+        IsSkipped = false;
+    }
+
+    /// <summary>
+    /// Initializes a new <see cref="SsgPageResult"/> for a skipped page (incremental build cache hit).
+    /// The output file already exists from a previous build and the inputs have not changed.
+    /// </summary>
+    /// <param name="route">The SSG route that was skipped.</param>
+    /// <param name="outputPath">The full file path of the existing HTML output.</param>
+    /// <param name="elapsed">The time taken to determine the page should be skipped.</param>
+    public SsgPageResult(SsgRoute route, string outputPath, TimeSpan elapsed)
+    {
+        ArgumentNullException.ThrowIfNull(route);
+        ArgumentNullException.ThrowIfNull(outputPath);
+        Route = route;
+        OutputPath = outputPath;
+        Html = "";
+        Elapsed = elapsed;
+        IsSuccess = true;
+        IsSkipped = true;
     }
 
     /// <summary>
@@ -54,7 +75,7 @@ public sealed class SsgPageResult
     public string OutputPath { get; }
 
     /// <summary>
-    /// Gets the rendered HTML content. Empty if the render failed.
+    /// Gets the rendered HTML content. Empty if the render failed or the page was skipped.
     /// </summary>
     public string Html { get; }
 
@@ -64,9 +85,15 @@ public sealed class SsgPageResult
     public TimeSpan Elapsed { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the page was rendered successfully.
+    /// Gets a value indicating whether the page was rendered successfully (or skipped due to caching).
     /// </summary>
     public bool IsSuccess { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether the page was skipped because the output file already exists
+    /// and all inputs are unchanged since the last build.
+    /// </summary>
+    public bool IsSkipped { get; }
 
     /// <summary>
     /// Gets the exception that occurred during rendering, or <c>null</c> if the render succeeded.

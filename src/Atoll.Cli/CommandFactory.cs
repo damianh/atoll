@@ -28,13 +28,21 @@ public static class CommandFactory
     /// </summary>
     public static Command CreateBuildCommand()
     {
+        var noCacheOption = new Option<bool>("--no-cache")
+        {
+            Description = "Skip the incremental build cache and force a full rebuild",
+            DefaultValueFactory = _ => false,
+        };
+
         var command = new Command("build", "Build the site for production (static site generation)");
+        command.Add(noCacheOption);
 
         command.SetAction(async (parseResult, cancellationToken) =>
         {
             var root = parseResult.GetValue<string>("--root")!;
+            var noCache = parseResult.GetValue(noCacheOption);
             var handler = new Commands.BuildCommandHandler();
-            await handler.ExecuteAsync(root, cancellationToken);
+            await handler.ExecuteAsync(root, noCache, cancellationToken);
         });
 
         return command;

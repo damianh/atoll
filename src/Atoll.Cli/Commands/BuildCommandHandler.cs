@@ -25,8 +25,9 @@ public sealed class BuildCommandHandler
     /// Executes the build command.
     /// </summary>
     /// <param name="projectRoot">The project root directory.</param>
+    /// <param name="noCache">When <c>true</c>, skips reading the incremental build cache and forces a full rebuild.</param>
     /// <param name="cancellationToken">A token to cancel the build operation.</param>
-    public async Task ExecuteAsync(string projectRoot, CancellationToken cancellationToken)
+    public async Task ExecuteAsync(string projectRoot, bool noCache, CancellationToken cancellationToken)
     {
         var startTime = DateTime.UtcNow;
         Console.WriteLine($"Atoll ({CliInfo.Version}) — building site...");
@@ -42,13 +43,24 @@ public sealed class BuildCommandHandler
         var basePath = AtollConfigLoader.NormalizeBasePath(config.Base);
         var basePathForAssets = basePath == "/" ? "" : basePath;
 
+        // Resolve incremental build cache path and load previous cache (if eligible)
+        var cachePath = BuildCacheReader.GetCachePath(projectRoot, outputDir);
+        BuildCache? previousCache = null;
+        if (!noCache && !config.Build.Clean)
+        {
+            previousCache = BuildCacheReader.TryLoad(cachePath, CliInfo.Version);
+        }
+
         // Phase 2: Compile — build the user project and discover routes
         bar.Advance();
-        var (routes, assembly) = await BuildAndDiscoverRoutesAsync(projectRoot, srcDir);
+        var (routes, assembly, assemblyPath) = await BuildAndDiscoverRoutesAsync(projectRoot, srcDir);
+        var assemblyHash = assemblyPath.Length > 0 ? InputHasher.HashAssembly(assemblyPath) : "";
 
         // Phase 3: Content — build service props (e.g. CollectionQuery)
         bar.Advance();
         var serviceProps = BuildServiceProps(assembly, projectRoot);
+        var contentBaseDir = GetContentBaseDirectory(assembly, projectRoot) ?? "";
+        var contentHash = contentBaseDir.Length > 0 ? InputHasher.HashDirectory(contentBaseDir) : "";
 
         // SSG options
         var ssgOptions = new SsgOptions(outputDir)
@@ -59,10 +71,10 @@ public sealed class BuildCommandHandler
             CleanOutputDirectory = config.Build.Clean,
         };
 
-        // Phase 4: SSG — generate static site
+        // Phase 4: SSG — generate static site (with incremental cache)
         bar.Advance();
         var generator = new StaticSiteGenerator(ssgOptions, serviceProps);
-        var ssgResult = await generator.GenerateAsync(routes, cancellationToken);
+        var ssgResult = await generator.GenerateAsync(routes, previousCache, assemblyHash, contentHash, cancellationToken);
 
         // Asset pipeline setup
         var pipelineOptions = new AssetPipelineOptions(outputDir)
@@ -117,6 +129,15 @@ public sealed class BuildCommandHandler
             };
             var postProcessor = new HtmlPostProcessor(postProcessorOptions);
 
+            // Determine whether CSS/JS fingerprinted filenames changed vs. the previous build.
+            // Skipped pages already have correct HTML on disk — only re-process them when
+            // the asset URLs have changed (so <link> and <script> tags need updating).
+            var cssFingerprintChanged = previousCache?.CssAsset?.FileName !=
+                (assetResult.Css.HasContent ? assetResult.Css.FileName : null);
+            var jsFingerprintChanged = previousCache?.JsAsset?.FileName !=
+                (assetResult.Js.HasContent ? assetResult.Js.FileName : null);
+            var assetsChanged = cssFingerprintChanged || jsFingerprintChanged;
+
             foreach (var pageResult in ssgResult.PageResults)
             {
                 if (!pageResult.IsSuccess || pageResult.OutputPath.Length == 0)
@@ -124,7 +145,24 @@ public sealed class BuildCommandHandler
                     continue;
                 }
 
-                var processedHtml = postProcessor.Process(pageResult.Html);
+                string htmlToProcess;
+                if (pageResult.IsSkipped)
+                {
+                    // Only re-process skipped pages when asset URLs changed; otherwise the
+                    // existing on-disk HTML already has the correct <link>/<script> tags.
+                    if (!assetsChanged)
+                    {
+                        continue;
+                    }
+
+                    htmlToProcess = await File.ReadAllTextAsync(pageResult.OutputPath, cancellationToken);
+                }
+                else
+                {
+                    htmlToProcess = pageResult.Html;
+                }
+
+                var processedHtml = postProcessor.Process(htmlToProcess);
                 await File.WriteAllTextAsync(pageResult.OutputPath, processedHtml, cancellationToken);
             }
         }
@@ -157,6 +195,30 @@ public sealed class BuildCommandHandler
             await GenerateOgImagesAsync(assembly, collectionQuery, outputDir, projectRoot, cancellationToken);
             await GenerateLlmsTxtAsync(assembly, collectionQuery, outputDir, cancellationToken);
         }
+
+        // Write updated build cache (persists hashes for the next incremental build)
+        var newCache = new BuildCache
+        {
+            AtollVersion = CliInfo.Version,
+            AssemblyHash = assemblyHash,
+            ContentHash = contentHash,
+            CssAsset = assetResult.Css.HasContent
+                ? new BuildCacheAsset { OutputPath = assetResult.Css.OutputPath, FileName = assetResult.Css.FileName, Hash = assetResult.Css.Hash }
+                : null,
+            JsAsset = assetResult.Js.HasContent
+                ? new BuildCacheAsset { OutputPath = assetResult.Js.OutputPath, FileName = assetResult.Js.FileName, Hash = assetResult.Js.Hash }
+                : null,
+            Pages = ssgResult.PageResults
+                .Where(r => r.IsSuccess && r.OutputPath.Length > 0)
+                .ToDictionary(
+                    r => r.Route.UrlPath,
+                    r => new BuildCachePage
+                    {
+                        OutputPath = r.OutputPath,
+                        IsDynamic = InputHasher.IsDynamicRoute(r.Route.ComponentType),
+                    }),
+        };
+        await BuildCacheWriter.WriteAsync(newCache, cachePath, cancellationToken);
 
         // Report results
         var elapsed = DateTime.UtcNow - startTime;
@@ -212,6 +274,47 @@ public sealed class BuildCommandHandler
     /// Scans the assembly for an <see cref="IContentConfiguration"/> implementation
     /// and creates a <see cref="CollectionQuery"/> from it.
     /// </summary>
+    /// <summary>
+    /// Returns the resolved absolute path to the content base directory for the given assembly,
+    /// or <c>null</c> if the assembly does not implement <see cref="IContentConfiguration"/>.
+    /// Used to compute a content hash for incremental build cache comparisons.
+    /// </summary>
+    private static string? GetContentBaseDirectory(Assembly? assembly, string projectRoot)
+    {
+        if (assembly is null)
+        {
+            return null;
+        }
+
+        foreach (var type in assembly.GetExportedTypes())
+        {
+            if (type.IsAbstract || type.IsInterface)
+            {
+                continue;
+            }
+
+            if (!typeof(IContentConfiguration).IsAssignableFrom(type))
+            {
+                continue;
+            }
+
+            try
+            {
+                var configInstance = (IContentConfiguration)Activator.CreateInstance(type)!;
+                var collectionConfig = configInstance.Configure();
+                return Path.IsPathRooted(collectionConfig.BaseDirectory)
+                    ? collectionConfig.BaseDirectory
+                    : Path.GetFullPath(Path.Combine(projectRoot, collectionConfig.BaseDirectory));
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
     private static CollectionQuery? CreateCollectionQueryFromAssembly(
         Assembly assembly,
         string projectRoot)
@@ -263,9 +366,9 @@ public sealed class BuildCommandHandler
 
     /// <summary>
     /// Builds the user project and discovers routable types from the compiled assembly.
-    /// Returns the discovered routes and the loaded assembly (for further scanning).
+    /// Returns the discovered routes, the loaded assembly, and the resolved assembly path.
     /// </summary>
-    private static async Task<(IReadOnlyList<RouteEntry> Routes, Assembly? Assembly)> BuildAndDiscoverRoutesAsync(
+    private static async Task<(IReadOnlyList<RouteEntry> Routes, Assembly? Assembly, string AssemblyPath)> BuildAndDiscoverRoutesAsync(
         string projectRoot,
         string pagesDirectory)
     {
@@ -273,7 +376,7 @@ public sealed class BuildCommandHandler
         if (csprojPath is null)
         {
             Console.WriteLine("  Warning: No .csproj found — no routes to discover.");
-            return ([], null);
+            return ([], null, "");
         }
 
         // Build the project
@@ -281,7 +384,7 @@ public sealed class BuildCommandHandler
         if (!buildSuccess)
         {
             Console.WriteLine("  Error: Project build failed. Cannot discover routes.");
-            return ([], null);
+            return ([], null, "");
         }
 
         // Find and load the assembly
@@ -289,14 +392,14 @@ public sealed class BuildCommandHandler
         if (assemblyPath is null)
         {
             Console.WriteLine("  Warning: Could not locate compiled assembly — no routes to discover.");
-            return ([], null);
+            return ([], null, "");
         }
 
         var assembly = LoadAssembly(assemblyPath);
         if (assembly is null)
         {
             Console.WriteLine("  Warning: Failed to load assembly — no routes to discover.");
-            return ([], null);
+            return ([], null, assemblyPath);
         }
 
         // Discover routes using assembly scanning
@@ -310,7 +413,7 @@ public sealed class BuildCommandHandler
             routes = DiscoverRoutesFromTypes(assembly);
         }
 
-        return (routes, assembly);
+        return (routes, assembly, assemblyPath);
     }
 
     /// <summary>
