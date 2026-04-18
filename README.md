@@ -7,6 +7,7 @@
 [![CI](https://github.com/damianh/atoll/actions/workflows/ci.yml/badge.svg)](https://github.com/damianh/atoll/actions/workflows/ci.yml)
 [![NuGet](https://img.shields.io/nuget/v/Atoll.svg)](https://www.nuget.org/packages/Atoll)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Atoll.svg)](https://www.nuget.org/packages/Atoll)
+[![NuGet](https://img.shields.io/nuget/v/Atoll.Hosting.Aspire.svg)](https://www.nuget.org/packages/Atoll.Hosting.Aspire)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 A .NET-native framework inspired by [Astro](https://astro.build). Atoll brings server-first HTML rendering, islands architecture, content collections, and static site generation to the .NET ecosystem.
@@ -38,6 +39,7 @@ Atoll is organized into focused NuGet packages:
 |---|---|
 | [`Atoll`](https://www.nuget.org/packages/Atoll) | Components, rendering, routing, islands, CSS scoping, slots, head management, content collections, Markdown, SSG, asset pipeline |
 | [`Atoll.Middleware`](https://www.nuget.org/packages/Atoll.Middleware) | ASP.NET Core hosting integration, request middleware, dev server, live reload |
+| [`Atoll.Hosting.Aspire`](https://www.nuget.org/packages/Atoll.Hosting.Aspire) | .NET Aspire hosting integration — `AddAtollSite()`, health checks, dev server orchestration |
 | [`Atoll.Cli`](https://www.nuget.org/packages/Atoll.Cli) | CLI tool — `dotnet tool install -g Atoll.Cli` |
 | [`Atoll.Lagoon`](https://www.nuget.org/packages/Atoll.Lagoon) | Documentation theme (inspired by Astro Starlight) |
 | [`Atoll.Reef`](https://www.nuget.org/packages/Atoll.Reef) | Articles and blog theme |
@@ -142,6 +144,25 @@ Or add package references directly to your `.csproj`:
   <PackageReference Include="Atoll.Lagoon" Version="0.1.*" />
 </ItemGroup>
 ```
+
+## Aspire Integration
+
+Use [`Atoll.Hosting.Aspire`](https://www.nuget.org/packages/Atoll.Hosting.Aspire) to add an Atoll dev server as a managed resource in a [.NET Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/) AppHost project. The resource runs `atoll dev` with live reload and registers a `/__health` endpoint so the Aspire dashboard can track readiness.
+
+```bash
+dotnet add package Atoll.Hosting.Aspire
+```
+
+```csharp
+// AppHost Program.cs
+var site = builder.AddAtollSite("my-site", "../MySite")
+    .WithWriteDist(); // write rendered output to dist/ after each rebuild
+
+var api = builder.AddProject<Projects.MyApi>("api")
+    .WithReference(site);
+```
+
+The resource appears in the Aspire dashboard and shows as **Running** once the dev server passes its health check.
 
 ## Building
 
