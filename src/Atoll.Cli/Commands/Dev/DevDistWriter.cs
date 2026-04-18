@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Atoll.Build.Pipeline;
@@ -132,7 +133,7 @@ internal sealed class DevDistWriter
         var assemblyUnchanged = assemblyHash.Length > 0 && assemblyHash == _previousAssemblyHash;
         var contentUnchanged = contentHash == _previousContentHash;
 
-        // ── 1. Expand routes and render pages ─────────────────────────────────
+        // ── 1. Expand routes, render pages in parallel, write to disk ─────────
 
         IReadOnlyList<SsgRoute> ssgRoutes;
         try
@@ -147,11 +148,10 @@ internal sealed class DevDistWriter
             return;
         }
 
+        // Separate skippable routes from routes that need rendering.
+        var routesToRender = new List<SsgRoute>();
         foreach (var route in ssgRoutes)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            // Check whether this page can be skipped.
             if (assemblyUnchanged && _previousRouteOutputPaths.TryGetValue(route.UrlPath, out var prevOutputPath))
             {
                 var isDynamic = InputHasher.IsDynamicRoute(route.ComponentType);
@@ -166,22 +166,42 @@ internal sealed class DevDistWriter
                 }
             }
 
-            var html = await RenderPageToHtmlAsync(route, state);
-            if (html is null)
-            {
-                continue;
-            }
+            routesToRender.Add(route);
+        }
 
+        // Render pages in parallel — each RenderPageToHtmlAsync creates its own
+        // PageRenderer instance so there is no shared mutable state.
+        var renderedPages = new ConcurrentBag<(string UrlPath, string Html)>();
+
+        await Parallel.ForEachAsync(
+            routesToRender,
+            new ParallelOptions
+            {
+                MaxDegreeOfParallelism = Environment.ProcessorCount,
+                CancellationToken = cancellationToken,
+            },
+            async (route, ct) =>
+            {
+                var html = await RenderPageToHtmlAsync(route, state);
+                if (html is not null)
+                {
+                    renderedPages.Add((route.UrlPath, html));
+                }
+            });
+
+        // Write rendered pages to disk sequentially (file I/O to same directory).
+        foreach (var (urlPath, html) in renderedPages)
+        {
             try
             {
-                var outputPath = await writer.WritePageAsync(route.UrlPath, html, cancellationToken);
+                var outputPath = await writer.WritePageAsync(urlPath, html, cancellationToken);
                 currentWrittenFiles.Add(outputPath);
-                currentRouteOutputPaths[route.UrlPath] = outputPath;
+                currentRouteOutputPaths[urlPath] = outputPath;
                 pageCount++;
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "--write-dist: Failed to write page {UrlPath}", route.UrlPath);
+                _logger.LogWarning(ex, "--write-dist: Failed to write page {UrlPath}", urlPath);
             }
         }
 
