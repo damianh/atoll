@@ -32,7 +32,7 @@ public static class AtollSiteResourceBuilderExtensions
         var resource = new AtollSiteResource(name, "atoll", absolutePath, absolutePath);
 
         return builder.AddResource(resource)
-            .WithHttpEndpoint(port: DefaultPort, name: "http")
+            .WithHttpEndpoint(targetPort: DefaultPort, name: "http")
             .WithHttpHealthCheck(endpointName: "http", path: HealthCheckPath)
             .WithArgs(context =>
             {
@@ -42,7 +42,7 @@ public static class AtollSiteResourceBuilderExtensions
 
                 var endpoint = resource.GetEndpoint("http");
                 context.Args.Add("--port");
-                context.Args.Add(endpoint.Port.ToString());
+                context.Args.Add(endpoint.TargetPort?.ToString() ?? DefaultPort.ToString());
 
                 if (resource.WriteDist)
                 {
