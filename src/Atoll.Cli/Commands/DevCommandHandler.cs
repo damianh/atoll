@@ -1,6 +1,7 @@
 using Atoll.Configuration;
 using Atoll.Middleware.Server.DevServer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -91,6 +92,9 @@ public sealed class DevCommandHandler
         //   (b) HTML responses produced by the handler are wrapped and injected
         app.UseWebSockets();
         app.UseMiddleware<LiveReloadMiddleware>();
+
+        // ── Health endpoint for orchestrators (e.g. Aspire) ─────────────────
+        app.MapGet("/__health", () => Results.Ok("healthy"));
 
         // ── Static files from public/ directory ──────────────────────────────
         // Resolved from atoll.json (same as build mode) — registered only when
