@@ -28,7 +28,7 @@ public sealed class SsgResult
     public TimeSpan TotalElapsed { get; }
 
     /// <summary>
-    /// Gets the number of pages that were successfully rendered.
+    /// Gets the number of pages that were successfully rendered (includes skipped pages).
     /// </summary>
     public int SuccessCount => PageResults.Count(r => r.IsSuccess);
 
@@ -43,7 +43,18 @@ public sealed class SsgResult
     public int TotalCount => PageResults.Count;
 
     /// <summary>
-    /// Gets a value indicating whether all pages were rendered successfully.
+    /// Gets the number of pages that were skipped because the incremental build cache
+    /// determined that their inputs have not changed since the last build.
+    /// </summary>
+    public int SkippedCount => PageResults.Count(r => r.IsSkipped);
+
+    /// <summary>
+    /// Gets the number of pages that were actually rendered (success minus skipped).
+    /// </summary>
+    public int RenderedCount => PageResults.Count(r => r.IsSuccess && !r.IsSkipped);
+
+    /// <summary>
+    /// Gets a value indicating whether all pages were rendered successfully (or skipped).
     /// </summary>
     public bool IsSuccess => PageResults.All(r => r.IsSuccess);
 

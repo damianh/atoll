@@ -61,16 +61,24 @@ public sealed class AssetPipeline
         // Process JS
         var jsResult = ProcessJs(jsSources);
 
-        // Write processed CSS to output
+        // Write processed CSS to output (skip if fingerprinted file already exists)
         if (cssResult.HasContent)
         {
-            await _outputWriter.WriteFileAsync(cssResult.OutputPath, cssResult.Css, cancellationToken);
+            var cssAbsPath = Path.Combine(_options.OutputDirectory, cssResult.OutputPath);
+            if (!File.Exists(cssAbsPath))
+            {
+                await _outputWriter.WriteFileAsync(cssResult.OutputPath, cssResult.Css, cancellationToken);
+            }
         }
 
-        // Write processed JS to output
+        // Write processed JS to output (skip if fingerprinted file already exists)
         if (jsResult.HasContent)
         {
-            await _outputWriter.WriteFileAsync(jsResult.OutputPath, jsResult.Js, cancellationToken);
+            var jsAbsPath = Path.Combine(_options.OutputDirectory, jsResult.OutputPath);
+            if (!File.Exists(jsAbsPath))
+            {
+                await _outputWriter.WriteFileAsync(jsResult.OutputPath, jsResult.Js, cancellationToken);
+            }
         }
 
         // Copy static assets
@@ -110,16 +118,24 @@ public sealed class AssetPipeline
         // Process JS
         var jsResult = ProcessJs(jsSources);
 
-        // Write processed CSS to output
+        // Write processed CSS to output (skip if fingerprinted file already exists)
         if (cssResult.HasContent)
         {
-            await _outputWriter.WriteFileAsync(cssResult.OutputPath, cssResult.Css, cancellationToken);
+            var cssAbsPath = Path.Combine(_options.OutputDirectory, cssResult.OutputPath);
+            if (!File.Exists(cssAbsPath))
+            {
+                await _outputWriter.WriteFileAsync(cssResult.OutputPath, cssResult.Css, cancellationToken);
+            }
         }
 
-        // Write processed JS to output
+        // Write processed JS to output (skip if fingerprinted file already exists)
         if (jsResult.HasContent)
         {
-            await _outputWriter.WriteFileAsync(jsResult.OutputPath, jsResult.Js, cancellationToken);
+            var jsAbsPath = Path.Combine(_options.OutputDirectory, jsResult.OutputPath);
+            if (!File.Exists(jsAbsPath))
+            {
+                await _outputWriter.WriteFileAsync(jsResult.OutputPath, jsResult.Js, cancellationToken);
+            }
         }
 
         // Copy static assets

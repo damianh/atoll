@@ -420,3 +420,6 @@ FodyWeavers.xsd
 # Atoll build output
 **/dist/
 .weave
+
+# Atoll incremental build cache
+.atoll/

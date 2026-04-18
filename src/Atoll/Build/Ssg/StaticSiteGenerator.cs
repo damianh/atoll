@@ -88,23 +88,65 @@ public sealed class StaticSiteGenerator
     /// <param name="routes">The route entries to generate pages from.</param>
     /// <param name="cancellationToken">A token to cancel the generation operation.</param>
     /// <returns>An <see cref="SsgResult"/> with per-page results and timing.</returns>
-    public async Task<SsgResult> GenerateAsync(IEnumerable<RouteEntry> routes, CancellationToken cancellationToken)
+    public Task<SsgResult> GenerateAsync(IEnumerable<RouteEntry> routes, CancellationToken cancellationToken)
+    {
+        return GenerateAsync(routes, previousCache: null, currentAssemblyHash: "", currentContentHash: "", cancellationToken);
+    }
+
+    /// <summary>
+    /// Generates a static site from the specified route entries, using the provided
+    /// incremental build cache to skip pages whose inputs have not changed.
+    /// </summary>
+    /// <param name="routes">The route entries to generate pages from.</param>
+    /// <param name="previousCache">
+    /// The cache from a previous build, or <c>null</c> to force a full rebuild.
+    /// </param>
+    /// <param name="currentAssemblyHash">
+    /// The hash of the current compiled assembly DLL.
+    /// If this differs from <paramref name="previousCache"/>.<see cref="BuildCache.AssemblyHash"/>,
+    /// all pages are invalidated and re-rendered.
+    /// </param>
+    /// <param name="currentContentHash">
+    /// The hash of the current content directory (e.g., markdown files).
+    /// Dynamic pages (<see cref="IStaticPathsProvider"/>) are invalidated when this changes.
+    /// </param>
+    /// <param name="cancellationToken">A token to cancel the generation operation.</param>
+    /// <returns>An <see cref="SsgResult"/> with per-page results and timing.</returns>
+    internal async Task<SsgResult> GenerateAsync(
+        IEnumerable<RouteEntry> routes,
+        BuildCache? previousCache,
+        string currentAssemblyHash,
+        string currentContentHash,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(routes);
+        ArgumentNullException.ThrowIfNull(currentAssemblyHash);
+        ArgumentNullException.ThrowIfNull(currentContentHash);
 
         var totalStopwatch = Stopwatch.StartNew();
 
         // Enumerate all concrete routes (expand dynamic routes via GetStaticPaths)
         var ssgRoutes = await _routeEnumerator.EnumerateAsync(routes);
 
-        // Clean output directory if configured
-        if (_options.CleanOutputDirectory)
+        // Determine whether the assembly is unchanged — the primary cache invalidation signal.
+        // When the assembly changes, all pages must be re-rendered regardless of content.
+        var assemblyUnchanged = previousCache is not null
+            && currentAssemblyHash.Length > 0
+            && currentAssemblyHash == previousCache.AssemblyHash;
+
+        // Clean output directory if configured, unless we are running incrementally
+        // (assembly unchanged → output files from the previous build are still valid).
+        if (_options.CleanOutputDirectory && !assemblyUnchanged)
         {
             _outputWriter.Clean();
         }
 
-        // Render all pages
-        var pageResults = await RenderAllPagesAsync(ssgRoutes, cancellationToken);
+        // Render all pages (with optional per-page cache checks)
+        var pageResults = await RenderAllPagesAsync(
+            ssgRoutes,
+            assemblyUnchanged ? previousCache : null,
+            currentContentHash,
+            cancellationToken);
 
         totalStopwatch.Stop();
         return new SsgResult(pageResults, totalStopwatch.Elapsed);
@@ -115,6 +157,8 @@ public sealed class StaticSiteGenerator
     /// </summary>
     private async Task<IReadOnlyList<SsgPageResult>> RenderAllPagesAsync(
         IReadOnlyList<SsgRoute> routes,
+        BuildCache? cache,
+        string currentContentHash,
         CancellationToken cancellationToken)
     {
         if (routes.Count == 0)
@@ -125,23 +169,23 @@ public sealed class StaticSiteGenerator
         var maxConcurrency = _options.MaxConcurrency;
         if (maxConcurrency == 1)
         {
-            // Sequential rendering
-            return await RenderSequentialAsync(routes, cancellationToken);
+            return await RenderSequentialAsync(routes, cache, currentContentHash, cancellationToken);
         }
 
-        // Parallel rendering
-        return await RenderParallelAsync(routes, maxConcurrency, cancellationToken);
+        return await RenderParallelAsync(routes, maxConcurrency, cache, currentContentHash, cancellationToken);
     }
 
     private async Task<IReadOnlyList<SsgPageResult>> RenderSequentialAsync(
         IReadOnlyList<SsgRoute> routes,
+        BuildCache? cache,
+        string currentContentHash,
         CancellationToken cancellationToken)
     {
         var results = new List<SsgPageResult>(routes.Count);
         foreach (var route in routes)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var result = await RenderSinglePageAsync(route, cancellationToken);
+            var result = await RenderSinglePageAsync(route, cache, currentContentHash, cancellationToken);
             results.Add(result);
         }
 
@@ -151,6 +195,8 @@ public sealed class StaticSiteGenerator
     private async Task<IReadOnlyList<SsgPageResult>> RenderParallelAsync(
         IReadOnlyList<SsgRoute> routes,
         int maxConcurrency,
+        BuildCache? cache,
+        string currentContentHash,
         CancellationToken cancellationToken)
     {
         var parallelOptions = new ParallelOptions
@@ -169,7 +215,7 @@ public sealed class StaticSiteGenerator
             parallelOptions,
             async (index, ct) =>
             {
-                results[index] = await RenderSinglePageAsync(routes[index], ct);
+                results[index] = await RenderSinglePageAsync(routes[index], cache, currentContentHash, ct);
             });
 
         return results;
@@ -177,10 +223,28 @@ public sealed class StaticSiteGenerator
 
     /// <summary>
     /// Renders a single page and writes it to the output directory.
+    /// If a valid cache entry exists and inputs are unchanged, the page is skipped.
     /// </summary>
-    private async Task<SsgPageResult> RenderSinglePageAsync(SsgRoute route, CancellationToken cancellationToken)
+    private async Task<SsgPageResult> RenderSinglePageAsync(
+        SsgRoute route,
+        BuildCache? cache,
+        string currentContentHash,
+        CancellationToken cancellationToken)
     {
         var stopwatch = Stopwatch.StartNew();
+
+        // Check whether this page can be skipped based on the incremental cache.
+        if (cache is not null && cache.Pages.TryGetValue(route.UrlPath, out var cachedPage))
+        {
+            var isDynamic = InputHasher.IsDynamicRoute(route.ComponentType);
+            var contentUnchanged = !isDynamic || currentContentHash == cache.ContentHash;
+
+            if (contentUnchanged && cachedPage.OutputPath.Length > 0 && File.Exists(cachedPage.OutputPath))
+            {
+                stopwatch.Stop();
+                return new SsgPageResult(route, cachedPage.OutputPath, stopwatch.Elapsed);
+            }
+        }
 
         try
         {
