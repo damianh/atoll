@@ -78,6 +78,11 @@ public sealed class StaticAssetCopier
         foreach (var filePath in Directory.GetFiles(sourceDir))
         {
             var fileName = Path.GetFileName(filePath);
+            if (fileName.Equals(".gitkeep", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
             var destPath = Path.Combine(destDir, fileName);
             File.Copy(filePath, destPath, overwrite: true);
 
@@ -108,6 +113,11 @@ public sealed class StaticAssetCopier
             cancellationToken.ThrowIfCancellationRequested();
 
             var fileName = Path.GetFileName(filePath);
+            if (fileName.Equals(".gitkeep", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
             var destPath = Path.Combine(destDir, fileName);
 
             await using var sourceStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 4096, useAsync: true);
