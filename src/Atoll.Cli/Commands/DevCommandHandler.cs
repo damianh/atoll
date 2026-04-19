@@ -178,6 +178,7 @@ public sealed class DevCommandHandler
             // (e.g. Internal.Web with WaitFor) need the files on disk.
             if (distWriter is not null && initialBuildError is null)
             {
+                Console.WriteLine("  Writing dist...");
                 try
                 {
                     await distWriter.WriteAsync(initialState, CancellationToken.None);
