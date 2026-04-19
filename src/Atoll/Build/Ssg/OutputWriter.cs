@@ -125,10 +125,29 @@ public sealed class OutputWriter
     {
         if (Directory.Exists(_outputDirectory))
         {
-            Directory.Delete(_outputDirectory, recursive: true);
-        }
+            // Delete contents but preserve .gitkeep files
+            foreach (var file in Directory.GetFiles(_outputDirectory, "*", SearchOption.AllDirectories))
+            {
+                if (!Path.GetFileName(file).Equals(".gitkeep", StringComparison.OrdinalIgnoreCase))
+                {
+                    File.Delete(file);
+                }
+            }
 
-        Directory.CreateDirectory(_outputDirectory);
+            // Delete empty subdirectories (bottom-up)
+            foreach (var dir in Directory.GetDirectories(_outputDirectory, "*", SearchOption.AllDirectories)
+                .OrderByDescending(d => d.Length))
+            {
+                if (Directory.Exists(dir) && !Directory.EnumerateFileSystemEntries(dir).Any())
+                {
+                    Directory.Delete(dir);
+                }
+            }
+        }
+        else
+        {
+            Directory.CreateDirectory(_outputDirectory);
+        }
     }
 
     /// <summary>
