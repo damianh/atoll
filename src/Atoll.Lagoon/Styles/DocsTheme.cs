@@ -743,6 +743,11 @@ public sealed class DocsTheme : AtollComponent
             gap: 0.35rem;
         }
         .docs-sidebar details > summary::-webkit-details-marker { display: none; }
+        .docs-sidebar details > summary .sidebar-label {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
         .docs-sidebar details > summary .sidebar-chevron {
             display: inline-flex;
             align-items: center;
