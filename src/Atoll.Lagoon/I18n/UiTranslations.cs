@@ -78,6 +78,9 @@ public sealed record UiTranslations
     /// <summary>Gets the display text for the edit-page link.</summary>
     public string EditPageLabel { get; init; } = "Edit page";
 
+    /// <summary>Gets the display text for the view-on-GitHub link.</summary>
+    public string ViewPageLabel { get; init; } = "View on GitHub";
+
     /// <summary>Gets the label shown before the last-updated date.</summary>
     public string LastUpdatedLabel { get; init; } = "Last updated";
 

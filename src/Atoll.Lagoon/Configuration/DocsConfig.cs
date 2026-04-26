@@ -129,6 +129,15 @@ public sealed class DocsConfig
     public string? EditUrl { get; set; }
 
     /// <summary>
+    /// Gets or sets the base URL for "View on GitHub" links.
+    /// When set, a link to view the current page on the source repository is rendered below the content.
+    /// Example: <c>"https://github.com/org/repo/blob/main/docs/"</c>.
+    /// The page slug is appended to this URL at render time.
+    /// Default: <c>null</c> (no view link).
+    /// </summary>
+    public string? ViewUrl { get; set; }
+
+    /// <summary>
     /// Gets or sets optional custom footer configuration.
     /// When <c>null</c>, the default "Built with Atoll" footer is rendered.
     /// </summary>

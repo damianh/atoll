@@ -153,6 +153,14 @@ public sealed class DocsConfigTests
     }
 
     [Fact]
+    public void ShouldAcceptViewUrl()
+    {
+        var config = new DocsConfig { ViewUrl = "https://github.com/org/repo/blob/main/docs" };
+
+        config.ViewUrl.ShouldBe("https://github.com/org/repo/blob/main/docs");
+    }
+
+    [Fact]
     public void ShouldAcceptFooterConfig()
     {
         var footer = new FooterConfig
