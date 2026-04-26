@@ -78,7 +78,8 @@ public sealed class DocsLayoutTests
         bool isUntranslatedContent,
         string? pageHeadContent = null,
         string? pageSlug = null,
-        DateTimeOffset? lastUpdated = null)
+        DateTimeOffset? lastUpdated = null,
+        bool showSourceLinks = true)
     {
         var destination = new StringRenderDestination();
         var props = new Dictionary<string, object?>
@@ -96,6 +97,7 @@ public sealed class DocsLayoutTests
             ["IsUntranslatedContent"] = isUntranslatedContent,
             ["PageSlug"] = pageSlug,
             ["LastUpdated"] = lastUpdated,
+            ["ShowSourceLinks"] = showSourceLinks,
         };
 
         SlotCollection slots;
@@ -775,6 +777,75 @@ public sealed class DocsLayoutTests
         var html = await RenderLayoutAsync(MakeConfig());
 
         html.ShouldNotContain("docs-last-updated");
+    }
+
+    // --- Content footer: view link ---
+
+    [Fact]
+    public async Task ShouldRenderViewLinkWhenViewUrlAndPageSlugAreSet()
+    {
+        var config = new DocsConfig { Title = "Docs", ViewUrl = "https://github.com/org/repo/blob/main/docs" };
+
+        var html = await RenderLayoutCoreAsync(
+            config, "", null, null, null, null, null, null, null, "/",
+            isUntranslatedContent: false, pageSlug: "guides/getting-started");
+
+        html.ShouldContain("class=\"docs-view-link\"");
+        html.ShouldContain("https://github.com/org/repo/blob/main/docs/guides/getting-started");
+        html.ShouldContain("View on GitHub");
+    }
+
+    [Fact]
+    public async Task ShouldNotRenderViewLinkWhenViewUrlIsNull()
+    {
+        var config = MakeConfig();
+
+        var html = await RenderLayoutCoreAsync(
+            config, "", null, null, null, null, null, null, null, "/",
+            isUntranslatedContent: false, pageSlug: "guides/getting-started");
+
+        html.ShouldNotContain("docs-view-link");
+    }
+
+    [Fact]
+    public async Task ShouldNotRenderViewLinkWhenPageSlugIsNull()
+    {
+        var config = new DocsConfig { Title = "Docs", ViewUrl = "https://github.com/org/repo/blob/main/docs" };
+
+        var html = await RenderLayoutAsync(config);
+
+        html.ShouldNotContain("docs-view-link");
+    }
+
+    [Fact]
+    public async Task ShouldHideBothLinksWhenShowSourceLinksIsFalse()
+    {
+        var config = new DocsConfig
+        {
+            Title = "Docs",
+            EditUrl = "https://github.com/org/repo/edit/main/docs",
+            ViewUrl = "https://github.com/org/repo/blob/main/docs",
+        };
+
+        var html = await RenderLayoutCoreAsync(
+            config, "", null, null, null, null, null, null, null, "/",
+            isUntranslatedContent: false, pageSlug: "guides/getting-started",
+            showSourceLinks: false);
+
+        html.ShouldNotContain("docs-edit-link");
+        html.ShouldNotContain("docs-view-link");
+    }
+
+    [Fact]
+    public async Task ShouldRenderViewPageLabelText()
+    {
+        var config = new DocsConfig { Title = "Docs", ViewUrl = "https://github.com/org/repo/blob/main/docs" };
+
+        var html = await RenderLayoutCoreAsync(
+            config, "", null, null, null, null, null, null, null, "/",
+            isUntranslatedContent: false, pageSlug: "intro");
+
+        html.ShouldContain("View on GitHub");
     }
 
     // --- Content footer: combined / absent ---

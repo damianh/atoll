@@ -74,9 +74,13 @@ public sealed class DocsLayout : AtollComponent
     [Parameter]
     public bool IsUntranslatedContent { get; set; }
 
-    /// <summary>Gets or sets the page slug appended to <see cref="DocsConfig.EditUrl"/> to form the edit link. Defaults to <c>null</c> (no edit link).</summary>
+    /// <summary>Gets or sets the page slug appended to <see cref="DocsConfig.EditUrl"/> and <see cref="DocsConfig.ViewUrl"/> to form the edit/view links. Defaults to <c>null</c> (no links).</summary>
     [Parameter]
     public string? PageSlug { get; set; }
+
+    /// <summary>Gets or sets whether to render source links (edit and view) for this page. Set to <c>false</c> for generated pages that do not exist in the repository. Defaults to <c>true</c>.</summary>
+    [Parameter]
+    public bool ShowSourceLinks { get; set; } = true;
 
     /// <summary>Gets or sets the last-modified timestamp for the page. When set, a "Last updated" date is rendered below the article. Defaults to <c>null</c>.</summary>
     [Parameter]
@@ -116,6 +120,20 @@ public sealed class DocsLayout : AtollComponent
             editHref = Config.EditUrl.TrimEnd('/') + "/" + PageSlug.TrimStart('/');
         }
 
+        // Compute view link URL.
+        string? viewHref = null;
+        if (Config.ViewUrl is not null && PageSlug is not null)
+        {
+            viewHref = Config.ViewUrl.TrimEnd('/') + "/" + PageSlug.TrimStart('/');
+        }
+
+        // Suppress source links on generated pages.
+        if (!ShowSourceLinks)
+        {
+            editHref = null;
+            viewHref = null;
+        }
+
         // Compute path to current version for deprecated version notices.
         string? currentVersionPath = null;
         if (version?.Config.IsDeprecated == true)
@@ -144,6 +162,7 @@ public sealed class DocsLayout : AtollComponent
             IsUntranslatedContent,
             currentVersionPath,
             editHref,
+            viewHref,
             LastUpdated,
             Config.EnableMermaid,
             CurrentPath,

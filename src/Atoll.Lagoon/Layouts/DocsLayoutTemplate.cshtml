@@ -146,12 +146,16 @@
             <article class="docs-article prose">
                 @{ await RenderBodyAsync(); }
             </article>
-            @if (Model.EditHref is not null || Model.LastUpdated is not null)
+            @if (Model.EditHref is not null || Model.ViewHref is not null || Model.LastUpdated is not null)
             {
                 <div class="docs-content-footer">
                     @if (Model.EditHref is not null)
                     {
                         <a href="@Model.EditHref" class="docs-edit-link" target="_blank" rel="noopener noreferrer">@Model.Translations.EditPageLabel</a>
+                    }
+                    @if (Model.ViewHref is not null)
+                    {
+                        <a href="@Model.ViewHref" class="docs-view-link" target="_blank" rel="noopener noreferrer">@Model.Translations.ViewPageLabel</a>
                     }
                     @if (Model.LastUpdated is not null)
                     {

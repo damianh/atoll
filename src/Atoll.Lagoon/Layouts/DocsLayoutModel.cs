@@ -30,6 +30,7 @@ namespace Atoll.Lagoon.Layouts;
 /// <param name="IsUntranslatedContent">Whether the page is showing untranslated fallback content.</param>
 /// <param name="CurrentVersionPath">The path to the current version of the page for deprecated version notices.</param>
 /// <param name="EditHref">The composed edit URL for the page, or <c>null</c> if not applicable.</param>
+/// <param name="ViewHref">The composed view URL for the page, or <c>null</c> if not applicable.</param>
 /// <param name="LastUpdated">The last-modified timestamp, or <c>null</c>.</param>
 /// <param name="EnableMermaid">Whether to inject the Mermaid initialization script.</param>
 /// <param name="CurrentPath">The current page URL path (e.g. <c>/identityserver/overview/big-picture</c>).</param>
@@ -55,6 +56,7 @@ public sealed record DocsLayoutModel(
     bool IsUntranslatedContent,
     string? CurrentVersionPath,
     string? EditHref,
+    string? ViewHref,
     DateTimeOffset? LastUpdated,
     bool EnableMermaid,
     string CurrentPath,
