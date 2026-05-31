@@ -25,8 +25,8 @@ public sealed class ContentCollection
     }
 
     /// <summary>
-    /// Gets the name of this collection. This corresponds to the directory name
-    /// under the content base directory (e.g., <c>"blog"</c>).
+    /// Gets the name of this collection. This is the logical identifier for the collection
+    /// and does not necessarily correspond to a directory name when <see cref="Directory"/> is set.
     /// </summary>
     public string Name { get; }
 
@@ -36,6 +36,42 @@ public sealed class ContentCollection
     public Type SchemaType { get; }
 
     /// <summary>
+    /// Gets the optional directory path override for this collection.
+    /// When set, this path is used instead of <c>BaseDirectory/Name</c>.
+    /// The path is resolved relative to the project root.
+    /// </summary>
+    /// <remarks>
+    /// This is intended for monorepo scenarios where content lives outside the default
+    /// content base directory — for example, co-located with a component library.
+    /// No path escaping restrictions are applied; any path reachable from the project root
+    /// is permitted by design.
+    /// </remarks>
+    public string? Directory { get; private set; }
+
+    /// <summary>
+    /// Overrides the directory for this collection to the specified path,
+    /// resolved relative to the project root.
+    /// </summary>
+    /// <param name="directory">
+    /// The directory path, relative to the project root (e.g.,
+    /// <c>"../../libs/identity-server/docs/content"</c>).
+    /// </param>
+    /// <returns>This <see cref="ContentCollection"/> instance for fluent chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="directory"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="directory"/> is empty or whitespace.</exception>
+    public ContentCollection FromDirectory(string directory)
+    {
+        ArgumentNullException.ThrowIfNull(directory);
+        if (string.IsNullOrWhiteSpace(directory))
+        {
+            throw new ArgumentException("Directory cannot be empty or whitespace.", nameof(directory));
+        }
+
+        Directory = directory;
+        return this;
+    }
+
+    /// <summary>
     /// Defines a new content collection with the specified name and schema type.
     /// </summary>
     /// <typeparam name="TData">
@@ -43,7 +79,8 @@ public sealed class ContentCollection
     /// Properties should use DataAnnotation attributes for validation.
     /// </typeparam>
     /// <param name="name">
-    /// The collection name, which corresponds to the directory name under the content base directory.
+    /// The logical name of the collection. When no <see cref="FromDirectory"/> override is set,
+    /// this also corresponds to the subdirectory name under <see cref="CollectionConfig.BaseDirectory"/>.
     /// </param>
     /// <returns>A new <see cref="ContentCollection"/> definition.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="name"/> is <c>null</c>.</exception>

@@ -71,6 +71,21 @@ public sealed class CollectionConfig
         new ReadOnlyDictionary<string, ContentCollection>(_collections);
 
     /// <summary>
+    /// Gets the set of custom directory overrides across all registered collections.
+    /// Only collections with a <see cref="ContentCollection.Directory"/> override set via
+    /// <see cref="ContentCollection.FromDirectory"/> are included.
+    /// </summary>
+    /// <returns>
+    /// A read-only list of directory paths, one per collection that has a custom directory.
+    /// </returns>
+    public IReadOnlyList<string> GetCustomDirectories() =>
+        _collections.Values
+            .Select(c => c.Directory)
+            .Where(d => d is not null)
+            .Select(d => d!)
+            .ToList();
+
+    /// <summary>
     /// Adds a content collection to this configuration.
     /// </summary>
     /// <param name="collection">The collection definition to add.</param>
@@ -92,6 +107,9 @@ public sealed class CollectionConfig
 
     /// <summary>
     /// Gets the full directory path for a named collection.
+    /// When the collection has a <see cref="ContentCollection.Directory"/> override set via
+    /// <see cref="ContentCollection.FromDirectory"/>, that path is returned as-is.
+    /// Otherwise, the path is computed as <c>BaseDirectory/collectionName</c>.
     /// </summary>
     /// <param name="collectionName">The collection name.</param>
     /// <returns>The full directory path for the collection.</returns>
@@ -99,6 +117,12 @@ public sealed class CollectionConfig
     public string GetCollectionDirectory(string collectionName)
     {
         ArgumentNullException.ThrowIfNull(collectionName);
+
+        if (_collections.TryGetValue(collectionName, out var collection) && collection.Directory is not null)
+        {
+            return collection.Directory;
+        }
+
         return Path.Combine(BaseDirectory, collectionName);
     }
 

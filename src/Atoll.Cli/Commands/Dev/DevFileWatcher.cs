@@ -23,11 +23,18 @@ internal enum FileChangeKind
 /// changes. Debounces rapid-fire filesystem events and classifies each batch into
 /// a <see cref="FileChangeKind"/> before raising <see cref="OnChange"/>.
 /// </summary>
+/// <remarks>
+/// Additional directories outside the project root can be passed via
+/// <see cref="DevFileWatcher(string, IReadOnlyList{string}, int)"/>. Each extra directory
+/// that exists on disk is watched for <c>*.md</c> changes, raising <see cref="FileChangeKind.ContentOnly"/>.
+/// This supports monorepo scenarios where content collections live outside the project root.
+/// </remarks>
 internal sealed class DevFileWatcher : IDisposable
 {
     private readonly FileSystemWatcher _csWatcher;
     private readonly FileSystemWatcher _mdWatcher;
     private readonly FileSystemWatcher _configWatcher;
+    private readonly IReadOnlyList<FileSystemWatcher> _extraMdWatchers;
     private readonly System.Threading.Timer _debounceTimer;
     private readonly int _debounceMs;
     private readonly object _lock = new();
@@ -47,7 +54,22 @@ internal sealed class DevFileWatcher : IDisposable
     /// </summary>
     /// <param name="projectRoot">The root directory to watch.</param>
     public DevFileWatcher(string projectRoot)
-        : this(projectRoot, 300)
+        : this(projectRoot, [], 300)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new <see cref="DevFileWatcher"/> for the given project root
+    /// with the default debounce window of 300 ms.
+    /// </summary>
+    /// <param name="projectRoot">The root directory to watch.</param>
+    /// <param name="extraContentDirectories">
+    /// Additional directories to watch for <c>*.md</c> changes. Each entry is resolved
+    /// relative to <paramref name="projectRoot"/>. Directories that do not exist on disk
+    /// are silently skipped.
+    /// </param>
+    public DevFileWatcher(string projectRoot, IReadOnlyList<string> extraContentDirectories)
+        : this(projectRoot, extraContentDirectories, 300)
     {
     }
 
@@ -55,12 +77,18 @@ internal sealed class DevFileWatcher : IDisposable
     /// Initializes a new <see cref="DevFileWatcher"/> for the given project root.
     /// </summary>
     /// <param name="projectRoot">The root directory to watch.</param>
+    /// <param name="extraContentDirectories">
+    /// Additional directories to watch for <c>*.md</c> changes. Each entry is resolved
+    /// relative to <paramref name="projectRoot"/>. Directories that do not exist on disk
+    /// are silently skipped.
+    /// </param>
     /// <param name="debounceMs">
     /// Milliseconds to wait after the last change event before raising <see cref="OnChange"/>.
     /// </param>
-    public DevFileWatcher(string projectRoot, int debounceMs)
+    public DevFileWatcher(string projectRoot, IReadOnlyList<string> extraContentDirectories, int debounceMs)
     {
         ArgumentNullException.ThrowIfNull(projectRoot);
+        ArgumentNullException.ThrowIfNull(extraContentDirectories);
 
         _debounceMs = debounceMs;
         _debounceTimer = new System.Threading.Timer(OnDebounceElapsed, null,
@@ -69,6 +97,7 @@ internal sealed class DevFileWatcher : IDisposable
         _csWatcher = CreateWatcher(projectRoot, "*.cs");
         _mdWatcher = CreateWatcher(projectRoot, "*.md");
         _configWatcher = CreateWatcher(projectRoot, "atoll.json");
+        _extraMdWatchers = CreateExtraMdWatchers(projectRoot, extraContentDirectories);
     }
 
     /// <summary>
@@ -79,6 +108,10 @@ internal sealed class DevFileWatcher : IDisposable
         _csWatcher.EnableRaisingEvents = true;
         _mdWatcher.EnableRaisingEvents = true;
         _configWatcher.EnableRaisingEvents = true;
+        foreach (var w in _extraMdWatchers)
+        {
+            w.EnableRaisingEvents = true;
+        }
         Console.WriteLine("  Watching for changes...");
     }
 
@@ -90,6 +123,10 @@ internal sealed class DevFileWatcher : IDisposable
         _csWatcher.EnableRaisingEvents = false;
         _mdWatcher.EnableRaisingEvents = false;
         _configWatcher.EnableRaisingEvents = false;
+        foreach (var w in _extraMdWatchers)
+        {
+            w.EnableRaisingEvents = false;
+        }
     }
 
     /// <inheritdoc />
@@ -99,6 +136,10 @@ internal sealed class DevFileWatcher : IDisposable
         _csWatcher.Dispose();
         _mdWatcher.Dispose();
         _configWatcher.Dispose();
+        foreach (var w in _extraMdWatchers)
+        {
+            w.Dispose();
+        }
     }
 
     // ── Private helpers ────────────────────────────────────────────────────────
@@ -122,6 +163,26 @@ internal sealed class DevFileWatcher : IDisposable
         watcher.Renamed += (_, e) => HandleEvent(e.FullPath, kind);
 
         return watcher;
+    }
+
+    private IReadOnlyList<FileSystemWatcher> CreateExtraMdWatchers(
+        string projectRoot, IReadOnlyList<string> extraDirectories)
+    {
+        var watchers = new List<FileSystemWatcher>();
+        foreach (var dir in extraDirectories)
+        {
+            var resolved = Path.IsPathRooted(dir)
+                ? dir
+                : Path.GetFullPath(Path.Combine(projectRoot, dir));
+
+            if (!System.IO.Directory.Exists(resolved))
+            {
+                continue;
+            }
+
+            watchers.Add(CreateWatcher(resolved, "*.md"));
+        }
+        return watchers;
     }
 
     private void HandleEvent(string fullPath, FileChangeKind kind)
