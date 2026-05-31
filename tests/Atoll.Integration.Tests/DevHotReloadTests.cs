@@ -44,8 +44,7 @@ public sealed class DevHotReloadTests : IDisposable
         var routeEntries = RouteDiscovery.DiscoverRoutesFromEntries(routes);
         var matcher = new RouteMatcher(routeEntries);
         var options = new AtollOptions();
-        return new DevServerState(matcher, options, null, null, "", EmptyAssets, null, null, null);
-    }
+        return new DevServerState(matcher, options, null, null, "", EmptyAssets, null, null, null, []);    }
 
     /// <summary>
     /// Builds a <see cref="HttpClient"/> backed by a test host that wires
@@ -203,7 +202,7 @@ public sealed class DevHotReloadTests : IDisposable
         FileChangeKind? observed = null;
         var tcs = new TaskCompletionSource<FileChangeKind>();
 
-        using var watcher = new DevFileWatcher(dir, debounceMs: 50);
+        using var watcher = new DevFileWatcher(dir, [], 50);
         watcher.OnChange += kind =>
         {
             observed = kind;
@@ -225,7 +224,7 @@ public sealed class DevHotReloadTests : IDisposable
         var dir = CreateTempDir();
         var tcs = new TaskCompletionSource<FileChangeKind>();
 
-        using var watcher = new DevFileWatcher(dir, debounceMs: 50);
+        using var watcher = new DevFileWatcher(dir, [], 50);
         watcher.OnChange += kind => { tcs.TrySetResult(kind); return Task.CompletedTask; };
         watcher.Start();
 
@@ -246,7 +245,7 @@ public sealed class DevHotReloadTests : IDisposable
 
         // Use a generous debounce window (500ms) so that filesystem notification
         // delays on slow CI runners don't cause the timer to fire prematurely.
-        using var watcher = new DevFileWatcher(dir, debounceMs: 500);
+        using var watcher = new DevFileWatcher(dir, [], 500);
         watcher.OnChange += _ =>
         {
             Interlocked.Increment(ref fireCount);
@@ -282,7 +281,7 @@ public sealed class DevHotReloadTests : IDisposable
         // Use a generous debounce window (500ms) so that both filesystem
         // notifications are aggregated into a single debounce window, even
         // on slow CI runners where FSW delivery can be delayed.
-        using var watcher = new DevFileWatcher(dir, debounceMs: 500);
+        using var watcher = new DevFileWatcher(dir, [], 500);
         watcher.OnChange += kind =>
         {
             lastObservedKind = kind;
@@ -332,7 +331,7 @@ public sealed class DevHotReloadTests : IDisposable
 
         // Content-only new state reuses the same null ALC.
         var options = new AtollOptions();
-        var stateB = new DevServerState(new RouteMatcher([]), options, null, null, "", EmptyAssets, null, null, null);
+        var stateB = new DevServerState(new RouteMatcher([]), options, null, null, "", EmptyAssets, null, null, null, []);
 
         // Should not throw — must not try to unload null ALC.
         var exception = Record.Exception(() => handler.UpdateState(stateB));
@@ -348,7 +347,7 @@ public sealed class DevHotReloadTests : IDisposable
     {
         var matcher = new RouteMatcher([]);
         var options = new AtollOptions();
-        return new DevServerState(matcher, options, null, null, "", EmptyAssets, null, null, contentBaseDirectory);
+        return new DevServerState(matcher, options, null, null, "", EmptyAssets, null, null, contentBaseDirectory, []);
     }
 
     [Fact]
@@ -489,7 +488,7 @@ public sealed class DevHotReloadTests : IDisposable
     {
         var matcher = new RouteMatcher(routes);
         var options = new AtollOptions();
-        return new DevServerState(matcher, options, null, null, "", EmptyAssets, null, null, contentBaseDirectory);
+        return new DevServerState(matcher, options, null, null, "", EmptyAssets, null, null, contentBaseDirectory, []);
     }
 
     [Fact]

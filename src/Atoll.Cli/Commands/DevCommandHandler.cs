@@ -197,7 +197,7 @@ public sealed class DevCommandHandler
 
             var semaphore = new SemaphoreSlim(1, 1);
 
-            using var watcher = new Dev.DevFileWatcher(projectRoot);
+            using var watcher = new Dev.DevFileWatcher(projectRoot, initialState.ContentExtraDirectories);
             watcher.OnChange += async kind =>
             {
                 // Serialize reload operations — prevent concurrent rebuilds from racing.

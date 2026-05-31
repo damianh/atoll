@@ -197,6 +197,130 @@ public sealed class ContentCollectionDefinitionTests
         Should.Throw<ArgumentNullException>(() => config.GetCollectionDirectory(null!));
     }
 
+    // --- FromDirectory override tests ---
+
+    [Fact]
+    public void FromDirectoryShouldSetDirectoryProperty()
+    {
+        var collection = ContentCollection.Define<BlogPost>("blog")
+            .FromDirectory("../../libs/identity-server/docs");
+
+        collection.Directory.ShouldBe("../../libs/identity-server/docs");
+    }
+
+    [Fact]
+    public void FromDirectoryIsNullByDefault()
+    {
+        var collection = ContentCollection.Define<BlogPost>("blog");
+
+        collection.Directory.ShouldBeNull();
+    }
+
+    [Fact]
+    public void FromDirectoryShouldThrowOnNull()
+    {
+        Should.Throw<ArgumentNullException>(() =>
+            ContentCollection.Define<BlogPost>("blog").FromDirectory(null!));
+    }
+
+    [Fact]
+    public void FromDirectoryShouldThrowOnEmpty()
+    {
+        Should.Throw<ArgumentException>(() =>
+            ContentCollection.Define<BlogPost>("blog").FromDirectory(""));
+    }
+
+    [Fact]
+    public void FromDirectoryShouldThrowOnWhitespace()
+    {
+        Should.Throw<ArgumentException>(() =>
+            ContentCollection.Define<BlogPost>("blog").FromDirectory("   "));
+    }
+
+    [Fact]
+    public void FromDirectoryShouldReturnSameCollectionForFluentChaining()
+    {
+        var collection = ContentCollection.Define<BlogPost>("blog");
+        var returned = collection.FromDirectory("some/path");
+
+        returned.ShouldBeSameAs(collection);
+    }
+
+    [Fact]
+    public void GetCollectionDirectoryShouldUseOverrideWhenSet()
+    {
+        var collection = ContentCollection.Define<BlogPost>("blog")
+            .FromDirectory("../../libs/identity-server/docs");
+        var config = new CollectionConfig("content")
+            .AddCollection(collection);
+
+        var dir = config.GetCollectionDirectory("blog");
+
+        dir.ShouldBe("../../libs/identity-server/docs");
+    }
+
+    [Fact]
+    public void GetCollectionDirectoryShouldFallBackToBaseWhenNoOverride()
+    {
+        var config = new CollectionConfig("content")
+            .AddCollection(ContentCollection.Define<BlogPost>("blog"));
+
+        var dir = config.GetCollectionDirectory("blog");
+
+        dir.ShouldBe(Path.Combine("content", "blog"));
+    }
+
+    [Fact]
+    public void GetCollectionDirectoryShouldFallBackForUnregisteredCollection()
+    {
+        var config = new CollectionConfig("content");
+
+        // An unregistered collection name falls back to BaseDirectory + name
+        var dir = config.GetCollectionDirectory("unknown");
+
+        dir.ShouldBe(Path.Combine("content", "unknown"));
+    }
+
+    [Fact]
+    public void GetCustomDirectoriesShouldReturnEmptyWhenNoOverrides()
+    {
+        var config = new CollectionConfig("content")
+            .AddCollection(ContentCollection.Define<BlogPost>("blog"))
+            .AddCollection(ContentCollection.Define<Author>("authors"));
+
+        config.GetCustomDirectories().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetCustomDirectoriesShouldReturnOnlyOverriddenCollections()
+    {
+        var config = new CollectionConfig("content")
+            .AddCollection(ContentCollection.Define<BlogPost>("blog"))
+            .AddCollection(ContentCollection.Define<Author>("docs")
+                .FromDirectory("../../libs/identity-server/docs"));
+
+        var dirs = config.GetCustomDirectories();
+
+        dirs.Count.ShouldBe(1);
+        dirs[0].ShouldBe("../../libs/identity-server/docs");
+    }
+
+    [Fact]
+    public void GetCustomDirectoriesShouldReturnAllOverriddenCollections()
+    {
+        var config = new CollectionConfig("content")
+            .AddCollection(ContentCollection.Define<BlogPost>("blog")
+                .FromDirectory("libs/blog/content"))
+            .AddCollection(ContentCollection.Define<Author>("docs")
+                .FromDirectory("libs/docs/content"));
+
+        var dirs = config.GetCustomDirectories();
+
+        dirs.Count.ShouldBe(2);
+        dirs.ShouldContain("libs/blog/content");
+        dirs.ShouldContain("libs/docs/content");
+    }
+
     // --- ContentEntry tests ---
 
     [Fact]
@@ -573,6 +697,65 @@ public sealed class CollectionLoaderTests
         entries[0].Slug.ShouldBe("alpha");
         entries[1].Slug.ShouldBe("bravo");
         entries[2].Slug.ShouldBe("charlie");
+    }
+
+    [Fact]
+    public void LoadCollectionShouldLoadFromCustomDirectoryWhenOverrideSet()
+    {
+        var customDir = "../../libs/identity-server/docs";
+        var collection = ContentCollection.Define<SimpleSchema>("is-docs")
+            .FromDirectory(customDir);
+        var config = new CollectionConfig("content")
+            .AddCollection(collection);
+        var provider = new InMemoryFileProvider()
+            .AddFile(customDir, "overview.md", "---\ntitle: Overview\n---\nContent here");
+        var loader = new CollectionLoader(config, provider);
+
+        var entries = loader.LoadCollection<SimpleSchema>("is-docs");
+
+        entries.Count.ShouldBe(1);
+        entries[0].Slug.ShouldBe("overview");
+        entries[0].Data.Title.ShouldBe("Overview");
+    }
+
+    [Fact]
+    public void LoadEntryShouldLoadFromCustomDirectoryWhenOverrideSet()
+    {
+        var customDir = "../../libs/identity-server/docs";
+        var collection = ContentCollection.Define<SimpleSchema>("is-docs")
+            .FromDirectory(customDir);
+        var config = new CollectionConfig("content")
+            .AddCollection(collection);
+        var provider = new InMemoryFileProvider()
+            .AddFile(customDir, "overview.md", "---\ntitle: Overview\n---\nContent here");
+        var loader = new CollectionLoader(config, provider);
+
+        var entry = loader.LoadEntry<SimpleSchema>("is-docs", "overview");
+
+        entry.ShouldNotBeNull();
+        entry.Slug.ShouldBe("overview");
+        entry.Data.Title.ShouldBe("Overview");
+    }
+
+    [Fact]
+    public void LoadCollectionShouldNotLoadFromDefaultDirWhenOverrideSet()
+    {
+        // Files under the default dir (content/is-docs) should NOT be picked up
+        // when a custom directory override is configured.
+        var customDir = "../../libs/identity-server/docs";
+        var collection = ContentCollection.Define<SimpleSchema>("is-docs")
+            .FromDirectory(customDir);
+        var config = new CollectionConfig("content")
+            .AddCollection(collection);
+
+        var defaultDir = Path.Combine("content", "is-docs");
+        var provider = new InMemoryFileProvider()
+            .AddFile(defaultDir, "stale.md", "---\ntitle: Stale\n---\nShould not appear");
+        var loader = new CollectionLoader(config, provider);
+
+        var entries = loader.LoadCollection<SimpleSchema>("is-docs");
+
+        entries.ShouldBeEmpty();
     }
 }
 

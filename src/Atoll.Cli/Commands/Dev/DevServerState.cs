@@ -46,6 +46,13 @@ namespace Atoll.Cli.Commands.Dev;
 /// <see cref="DevAtollRequestHandler"/> to serve co-located content assets (images, SVGs,
 /// etc.) that are referenced from markdown pages.
 /// </param>
+/// <param name="ContentExtraDirectories">
+/// Resolved absolute paths to any additional content collection directories declared via
+/// <see cref="Atoll.Build.Content.Collections.ContentCollection.FromDirectory"/>. Empty
+/// when no collections have a custom directory override. Passed to
+/// <see cref="DevFileWatcher"/> so that changes in external directories also trigger
+/// content-only reloads.
+/// </param>
 internal sealed record DevServerState(
     RouteMatcher RouteMatcher,
     AtollOptions Options,
@@ -55,7 +62,8 @@ internal sealed record DevServerState(
     IReadOnlyDictionary<string, byte[]> IslandAssets,
     byte[]? SearchIndexJson,
     string? ShadowCopyDir,
-    string? ContentBaseDirectory)
+    string? ContentBaseDirectory,
+    IReadOnlyList<string> ContentExtraDirectories)
 {
     private static readonly IReadOnlyDictionary<string, byte[]> EmptyAssets =
         new ReadOnlyDictionary<string, byte[]>(new Dictionary<string, byte[]>());
@@ -65,5 +73,5 @@ internal sealed record DevServerState(
     /// Used when no project file is present or the initial build fails.
     /// </summary>
     public static DevServerState Empty { get; } =
-        new DevServerState(new RouteMatcher([]), new AtollOptions(), null, null, "", EmptyAssets, null, null, null);
+        new DevServerState(new RouteMatcher([]), new AtollOptions(), null, null, "", EmptyAssets, null, null, null, []);
 }

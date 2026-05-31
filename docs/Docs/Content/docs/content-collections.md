@@ -121,3 +121,45 @@ var fileProvider = new PhysicalFileProvider(Directory.GetCurrentDirectory());
 var fileProvider = new InMemoryFileProvider();
 fileProvider.AddFile("Content/blog", "my-post.md", "---\ntitle: Test\n---\n# Test");
 ```
+
+## Custom collection directories
+
+By default, each collection maps to a subdirectory under the base directory — `ContentCollection.Define<T>("blog")` reads from `Content/blog/`. You can override this with `.FromDirectory()` to point a collection at any path relative to the project root:
+
+```csharp
+public sealed class ContentConfig : IContentConfiguration
+{
+    public CollectionConfig Configure()
+    {
+        return new CollectionConfig("Content")
+            // Standard collection — reads from Content/blog/
+            .AddCollection(ContentCollection.Define<BlogPostSchema>("blog"))
+            // Custom directory — reads from a sibling package
+            .AddCollection(ContentCollection.Define<DocSchema>("weather-api-docs")
+                .FromDirectory("../../libs/weather-api/docs/content"));
+    }
+}
+```
+
+This is useful in monorepo scenarios where documentation lives alongside the component it describes, rather than in a centralised docs directory:
+
+```
+repo/
+├── docs/
+│   └── site/                    ← Atoll project root
+│       ├── Content/
+│       │   └── blog/            ← standard collection
+│       └── ContentConfig.cs
+└── libs/
+    └── weather-api/
+        └── docs/
+            └── content/         ← custom collection directory
+                ├── overview.md
+                └── configuration.md
+```
+
+The collection name (`"weather-api-docs"`) is the logical identifier used in `query.GetCollection<T>()` and `query.GetEntry<T>()` calls — it does not need to match the directory name.
+
+### Dev server
+
+When using `atoll dev`, custom collection directories are automatically watched for `.md` changes. Edits to content files in external directories trigger the same content-only hot-reload as changes in the standard content directory.

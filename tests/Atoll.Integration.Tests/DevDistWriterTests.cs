@@ -40,7 +40,7 @@ public sealed class DevDistWriterTests : IDisposable
     {
         var matcher = new RouteMatcher([]);
         var options = new AtollOptions();
-        return new DevServerState(matcher, options, null, null, globalCss, islandAssets, searchIndexJson, null, null);
+        return new DevServerState(matcher, options, null, null, globalCss, islandAssets, searchIndexJson, null, null, []);
     }
 
     // ── Public directory assets ─────────────────────────────────────────────────
