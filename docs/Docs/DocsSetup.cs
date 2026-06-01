@@ -143,6 +143,14 @@ public static class DocsSetup
             },
             new SidebarItem
             {
+                Label = "Swell Plugin",
+                Items =
+                [
+                    new SidebarItem { Label = "Overview",  Link = "/swell/overview" },
+                ],
+            },
+            new SidebarItem
+            {
                 Label = "Annotations Plugin",
                 Items =
                 [
