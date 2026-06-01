@@ -13,12 +13,19 @@ namespace Atoll.Swell.Styles;
 /// letterboxing), slide layouts (default/cover/center/two-cols/image-right/image-left/section/end),
 /// typography, code blocks, slide numbering, transitions, overview grid mode, print styles.
 /// </remarks>
-[GlobalStyle]
 [Styles(SkipLink + Reset + Tokens + DeckContainer + SlideBase + LayoutDefault + LayoutCover + LayoutCenter +
         LayoutTwoCols + LayoutImageRight + LayoutImageLeft + LayoutSection + LayoutEnd +
         SlideNumber + Transitions + OverviewGrid + ClickReveal + CodeBlocks + Typography + PrintStyles)]
 public sealed class SwellTheme : AtollComponent
 {
+    /// <summary>
+    /// Gets the complete CSS text for the Swell theme. Use this to emit styles inline
+    /// in a <c>&lt;style&gt;</c> tag within the deck layout template's <c>&lt;head&gt;</c>.
+    /// </summary>
+    public const string AllCss = SkipLink + Reset + Tokens + DeckContainer + SlideBase + LayoutDefault + LayoutCover + LayoutCenter +
+        LayoutTwoCols + LayoutImageRight + LayoutImageLeft + LayoutSection + LayoutEnd +
+        SlideNumber + Transitions + OverviewGrid + ClickReveal + CodeBlocks + Typography + PrintStyles;
+
     private const string SkipLink = """
         .swell-skip-link {
             position: absolute;
