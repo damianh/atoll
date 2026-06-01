@@ -9,6 +9,12 @@ section: Swell Plugin
 
 Swell is a presentation slide deck plugin for Atoll. Write your slides in Markdown, get a full-featured presentation with keyboard navigation, presenter mode, live drawing, click-reveal animations, and export to PDF, PPTX, and ODP --- all without Node.js or JavaScript frameworks.
 
+## Live example
+
+The deck below is rendered from Markdown using Swell. Use arrow keys or click to navigate. Press **o** for slide overview, **p** for presenter mode, or **d** to draw.
+
+<SwellDeck src="/swell/example-slides" title="Swell Example Deck" AspectRatio="16/9" />
+
 | Feature | Description |
 |---|---|
 | **Markdown authoring** | Write slides in standard Markdown with YAML frontmatter |
