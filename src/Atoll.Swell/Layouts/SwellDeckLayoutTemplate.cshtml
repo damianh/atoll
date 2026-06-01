@@ -1,5 +1,6 @@
 @inherits Atoll.Components.AtollLayoutSlice<Atoll.Swell.Layouts.SwellDeckLayoutModel>
 @using Atoll.Swell.Layouts
+@using Atoll.Swell.Styles
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,6 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>@Model.Config.Title</title>
 <meta name="generator" content="Atoll.Swell" />
+<style>@{ WriteLiteral(SwellTheme.AllCss); }</style>
 </head>
 <body>
 <a href="#swell-deck" class="swell-skip-link">Skip to slide content</a>

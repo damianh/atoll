@@ -11,101 +11,110 @@ namespace Docs.Pages;
 [PageRoute("/swell/example-slides")]
 public sealed class SwellExamplePage : AtollComponent, IAtollPage
 {
-    private const string ExampleMarkdown = """
-        ---
-        title: Swell Example Deck
-        aspectRatio: 16/9
-        transition: fade
-        slideNumbers: true
-        ---
+    private const string ExampleMarkdown =
+"""
+---
+title: Swell Example Deck
+aspectRatio: 16/9
+transition: fade
+slideNumbers: true
+---
 
-        ---
-        layout: cover
-        ---
+---
+layout: cover
+---
 
-        # Swell Presentations
+# Swell Presentations
 
-        Write slides in Markdown, present anywhere.
+Write slides in Markdown, present anywhere.
 
-        <!-- This is an example deck showcasing Swell's built-in layouts. -->
+<!-- This is an example deck showcasing Swell's built-in layouts. -->
 
-        ---
+---
 
-        ## What is Swell?
+## What is Swell?
 
-        A presentation plugin for **Atoll** that turns Markdown into slide decks.
+A presentation plugin for **Atoll** that turns Markdown into slide decks.
 
-        - No JavaScript frameworks needed
-        - Keyboard navigation & presenter mode
-        - Export to PDF, PPTX, and ODP
+- No JavaScript frameworks needed
+- Keyboard navigation & presenter mode
+- Export to PDF, PPTX, and ODP
 
-        ---
-        layout: center
-        ---
+---
 
-        ## Centred Layout
+---
+layout: center
+---
 
-        Content is centred both vertically and horizontally.
+## Centred Layout
 
-        Perfect for impactful statements.
+Content is centred both vertically and horizontally.
 
-        ---
-        layout: two-cols
-        ---
+Perfect for impactful statements.
 
-        ## Two Columns
+---
 
-        The left column contains explanatory text.
+---
+layout: two-cols
+---
 
-        Use `::right::` to split content between columns.
+## Two Columns
 
-        ::right::
+The left column contains explanatory text.
 
-        ## Code Example
+Use `::right::` to split content between columns.
 
-        ```csharp
-        [PageRoute("/slides")]
-        public class SlidesPage
-            : AtollComponent, IAtollPage
-        {
-            // Render your deck here
-        }
-        ```
+::right::
 
-        ---
-        layout: section
-        ---
+## Code Example
 
-        ## Section Divider
+```csharp
+[PageRoute("/slides")]
+public class SlidesPage
+    : AtollComponent, IAtollPage
+{
+    // Render your deck here
+}
+```
 
-        Group slides into logical sections.
+---
 
-        ---
+---
+layout: section
+---
 
-        ## Click Reveal
+## Section Divider
 
-        Content appears progressively:
+Group slides into logical sections.
 
-        :::Click
-        - First point appears on click
-        :::
+---
 
-        :::Click
-        - Second point appears on next click
-        :::
+## Click Reveal
 
-        :::Click
-        - Third point appears last
-        :::
+Content appears progressively:
 
-        ---
-        layout: end
-        ---
+:::Click
+- First point appears on click
+:::
 
-        # Thank You!
+:::Click
+- Second point appears on next click
+:::
 
-        Press **o** for overview · **p** for presenter mode · **d** to draw
-        """;
+:::Click
+- Third point appears last
+:::
+
+---
+
+---
+layout: end
+---
+
+# Thank You!
+
+Press **o** for overview · **p** for presenter mode · **d** to draw
+""";
 
     /// <inheritdoc />
     protected override async Task RenderCoreAsync(RenderContext context)
