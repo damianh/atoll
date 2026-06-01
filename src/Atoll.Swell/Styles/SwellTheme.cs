@@ -167,6 +167,12 @@ public sealed class SwellTheme : AtollComponent
             grid-template-columns: 1fr 1fr;
             gap: 2rem;
             align-items: start;
+            height: 100%;
+        }
+        .swell-layout-two-cols .swell-col-left,
+        .swell-layout-two-cols .swell-col-right {
+            overflow: auto;
+            height: 100%;
         }
         """;
 

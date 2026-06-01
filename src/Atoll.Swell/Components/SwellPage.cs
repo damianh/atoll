@@ -42,11 +42,29 @@ public sealed class SwellPage : AtollComponent
 
         foreach (var slide in deck.Slides)
         {
-            var result = MarkdownRenderer.Render(slide.Body, markdownOptions);
-            var content = result.Fragments is not null
-                ? ContentComponent.FromRenderedContent(
-                    new RenderedContent(result.Html, result.Headings, result.Fragments, result.AllReferences))
-                : ContentComponent.FromHtml(result.Html, result.Headings);
+            ContentComponent content;
+
+            // For two-cols layout, split content at ::right:: separator
+            if (string.Equals(slide.Config.Layout, "two-cols", StringComparison.OrdinalIgnoreCase)
+                && slide.Body.Contains("::right::"))
+            {
+                var parts = slide.Body.Split("::right::", 2, StringSplitOptions.None);
+                var leftResult = MarkdownRenderer.Render(parts[0].Trim(), markdownOptions);
+                var rightResult = MarkdownRenderer.Render(parts[1].Trim(), markdownOptions);
+
+                content = ContentComponent.FromHtml(
+                    $"<div class=\"swell-col-left\">{leftResult.Html}</div><div class=\"swell-col-right\">{rightResult.Html}</div>",
+                    leftResult.Headings);
+            }
+            else
+            {
+                var result = MarkdownRenderer.Render(slide.Body, markdownOptions);
+                content = result.Fragments is not null
+                    ? ContentComponent.FromRenderedContent(
+                        new RenderedContent(result.Html, result.Headings, result.Fragments, result.AllReferences))
+                    : ContentComponent.FromHtml(result.Html, result.Headings);
+            }
+
             slideContents.Add((slide, content));
             entries.Add(new RenderedSlideEntry(slide.Index, slide.Config, slide.Notes));
         }
