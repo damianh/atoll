@@ -259,7 +259,15 @@ public sealed class DevCommandHandler
         }
 
         // ── Block until shutdown ─────────────────────────────────────────────
-        await ((IHost)app).WaitForShutdownAsync(cancellationToken);
+        try
+        {
+            await ((IHost)app).WaitForShutdownAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected when Ctrl+C is pressed.
+        }
+
         Console.WriteLine("Exiting...");
     }
 

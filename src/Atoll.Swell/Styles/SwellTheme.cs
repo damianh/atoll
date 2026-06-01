@@ -15,7 +15,7 @@ namespace Atoll.Swell.Styles;
 /// </remarks>
 [Styles(SkipLink + Reset + Tokens + DeckContainer + SlideBase + LayoutDefault + LayoutCover + LayoutCenter +
         LayoutTwoCols + LayoutImageRight + LayoutImageLeft + LayoutSection + LayoutEnd +
-        SlideNumber + Transitions + OverviewGrid + ClickReveal + CodeBlocks + Typography + PrintStyles)]
+        SlideNumber + Transitions + OverviewGrid + ClickReveal + CodeBlocks + Typography + Navbar + PrintStyles)]
 public sealed class SwellTheme : AtollComponent
 {
     /// <summary>
@@ -24,7 +24,7 @@ public sealed class SwellTheme : AtollComponent
     /// </summary>
     public const string AllCss = SkipLink + Reset + Tokens + DeckContainer + SlideBase + LayoutDefault + LayoutCover + LayoutCenter +
         LayoutTwoCols + LayoutImageRight + LayoutImageLeft + LayoutSection + LayoutEnd +
-        SlideNumber + Transitions + OverviewGrid + ClickReveal + CodeBlocks + Typography + PrintStyles;
+        SlideNumber + Transitions + OverviewGrid + ClickReveal + CodeBlocks + Typography + Navbar + PrintStyles;
 
     private const string SkipLink = """
         .swell-skip-link {
@@ -370,6 +370,73 @@ public sealed class SwellTheme : AtollComponent
         .swell-slide th { background: var(--swell-code-bg); font-weight: 600; }
         """;
 
+    private const string Navbar = """
+        .swell-navbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.125rem;
+            padding: 0.375rem 0.75rem;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 9000;
+            opacity: 0;
+            transform: translateY(100%);
+            transition: opacity 0.25s, transform 0.25s;
+            pointer-events: none;
+        }
+        body:hover .swell-navbar,
+        .swell-navbar:focus-within,
+        .swell-navbar.swell-navbar-visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        .swell-navbar button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border: none;
+            border-radius: 0.375rem;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            padding: 0;
+        }
+        .swell-navbar button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+        .swell-navbar button:active {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .swell-navbar button.swell-navbar-active {
+            color: var(--swell-accent);
+        }
+        .swell-navbar-counter {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.8rem;
+            font-variant-numeric: tabular-nums;
+            min-width: 3.5rem;
+            text-align: center;
+            user-select: none;
+        }
+        .swell-navbar-sep {
+            width: 1px;
+            height: 1.25rem;
+            background: rgba(255, 255, 255, 0.2);
+            margin: 0 0.25rem;
+        }
+        .swell-overview .swell-navbar { display: none; }
+        """;
+
     private const string PrintStyles = """
         @media print {
             html, body { overflow: visible; height: auto; }
@@ -384,6 +451,7 @@ public sealed class SwellTheme : AtollComponent
                 break-after: page;
             }
             .swell-slide-number { display: none; }
+            .swell-navbar { display: none; }
         }
         """;
 

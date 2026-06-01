@@ -71,6 +71,7 @@
 
     current = idx;
     updateSlideNumbers();
+    updateNavbarCounter();
     updateHash();
     announceSlide();
 
@@ -185,28 +186,30 @@
   // --------------------------------------------------------------------------
   // Overview mode
   // --------------------------------------------------------------------------
+  var savedAspectRatio = '';
+
   function toggleOverview() {
     overviewActive = !overviewActive;
     if (overviewActive) {
       deck.classList.add('swell-overview');
+      // Clear inline aspect-ratio so the grid can expand vertically
+      savedAspectRatio = deck.style.aspectRatio || '';
+      deck.style.aspectRatio = 'auto';
       deck.style.overflow = 'auto';
       deck.style.maxHeight = '100vh';
       slides.forEach(function (s) {
-        s.style.display = 'block';
+        s.setAttribute('aria-hidden', 'false');
         s.tabIndex = 0;
         s.setAttribute('role', 'button');
       });
     } else {
       deck.classList.remove('swell-overview');
+      deck.style.aspectRatio = savedAspectRatio;
       deck.style.overflow = '';
       deck.style.maxHeight = '';
-      slides.forEach(function (s) {
-        s.style.display = '';
+      slides.forEach(function (s, idx) {
         s.removeAttribute('tabIndex');
         s.removeAttribute('role');
-      });
-      // Restore correct active slide
-      slides.forEach(function (s, idx) {
         if (idx === current) {
           s.setAttribute('aria-hidden', 'false');
           s.classList.add('swell-active');
@@ -227,6 +230,13 @@
     } else {
       document.exitFullscreen && document.exitFullscreen();
     }
+  }
+
+  // --------------------------------------------------------------------------
+  // Download PDF (via browser print)
+  // --------------------------------------------------------------------------
+  function downloadPdf() {
+    window.print();
   }
 
   // --------------------------------------------------------------------------
@@ -350,9 +360,51 @@
   });
 
   // --------------------------------------------------------------------------
+  // Navigation bar
+  // --------------------------------------------------------------------------
+  var navbarCounter = null;
+  var drawingBtn = null;
+
+  function initNavbar() {
+    var navbar = document.getElementById('swell-navbar');
+    if (!navbar) return;
+
+    navbarCounter = navbar.querySelector('[data-swell-counter]');
+    drawingBtn = navbar.querySelector('[data-swell-action="drawing"]');
+
+    navbar.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-swell-action]');
+      if (!btn) return;
+      var action = btn.dataset.swellAction;
+      switch (action) {
+        case 'prev': goPrev(); break;
+        case 'next': goNext(); break;
+        case 'overview': toggleOverview(); break;
+        case 'fullscreen': toggleFullscreen(); break;
+        case 'presenter': openPresenter(); break;
+        case 'drawing':
+          // Dispatch a synthetic 'd' keydown to toggle drawing via swell-drawing.js
+          document.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', bubbles: true }));
+          btn.classList.toggle('swell-navbar-active');
+          break;
+        case 'download':
+          downloadPdf();
+          break;
+      }
+    });
+  }
+
+  function updateNavbarCounter() {
+    if (navbarCounter) {
+      navbarCounter.textContent = (current + 1) + ' / ' + total;
+    }
+  }
+
+  // --------------------------------------------------------------------------
   // Initialise
   // --------------------------------------------------------------------------
   initBroadcastChannel();
+  initNavbar();
 
   var startIndex = indexFromHash();
   slides.forEach(function (s, idx) {
@@ -361,6 +413,7 @@
   });
   current = startIndex;
   updateSlideNumbers();
+  updateNavbarCounter();
   updateHash();
   announceSlide();
 
