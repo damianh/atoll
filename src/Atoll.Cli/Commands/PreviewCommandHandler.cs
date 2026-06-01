@@ -68,7 +68,15 @@ public sealed class PreviewCommandHandler
         Console.WriteLine($"  Serving: {outputDir}");
         Console.WriteLine("  Press Ctrl+C to stop.");
 
-        await ((IHost)app).RunAsync(cancellationToken);
+        try
+        {
+            await ((IHost)app).RunAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected when Ctrl+C is pressed.
+        }
+
         Console.WriteLine("Exiting...");
     }
 
