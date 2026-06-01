@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+  </PropertyGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Atoll.Swell.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Atoll\Atoll.csproj" />
+    <ProjectReference Include="..\Atoll.Mermaid\Atoll.Mermaid.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="RazorSlices" />
+    <PackageReference Include="YamlDotNet" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Islands\Assets\swell-nav.js"
+      LogicalName="Atoll.Swell.Islands.Assets.swell-nav.js" />
+    <EmbeddedResource Include="Islands\Assets\swell-presenter.js"
+      LogicalName="Atoll.Swell.Islands.Assets.swell-presenter.js" />
+    <EmbeddedResource Include="Islands\Assets\swell-drawing.js"
+      LogicalName="Atoll.Swell.Islands.Assets.swell-drawing.js" />
+  </ItemGroup>
+</Project>

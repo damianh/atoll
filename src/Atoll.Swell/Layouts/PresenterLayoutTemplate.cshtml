@@ -1,0 +1,119 @@
+@inherits Atoll.Components.AtollSlice<Atoll.Swell.Layouts.PresenterLayoutModel>
+@using Atoll.Swell.Layouts
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Presenter — @Model.Title</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: #1a1a2e; color: #fff; font-family: system-ui, sans-serif; }
+.swell-presenter {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: auto 1fr auto;
+    gap: 1rem;
+    height: 100vh;
+    padding: 1rem;
+}
+.swell-presenter-header {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.swell-presenter-header h1 { font-size: 1rem; font-weight: 500; opacity: 0.7; }
+.swell-presenter-timers { display: flex; gap: 2rem; font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.swell-presenter-timers span { opacity: 0.9; }
+.swell-presenter-main { display: flex; flex-direction: column; gap: 0.75rem; }
+.swell-presenter-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.5; margin-bottom: 0.25rem; }
+.swell-presenter-slide-frame {
+    width: 100%;
+    aspect-ratio: 16/9;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 4px;
+    background: #000;
+}
+.swell-presenter-slide-frame.current { border-color: #e94560; }
+.swell-presenter-sidebar { display: flex; flex-direction: column; gap: 1rem; }
+.swell-presenter-notes {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border-radius: 6px;
+    padding: 1rem;
+    overflow-y: auto;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.9);
+}
+.swell-presenter-counter {
+    font-size: 1.5rem;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.8;
+    text-align: center;
+    padding: 0.5rem;
+}
+</style>
+</head>
+<body>
+<div class="swell-presenter">
+    <header class="swell-presenter-header">
+        <h1>@(string.IsNullOrEmpty(Model.Title) ? "Presenter Mode" : Model.Title)</h1>
+        <div class="swell-presenter-timers">
+            <span title="Elapsed time">⏱ <span id="swell-presenter-elapsed">00:00</span></span>
+            <span title="Wall clock">🕐 <span id="swell-presenter-clock">--:--:--</span></span>
+        </div>
+    </header>
+
+    <main class="swell-presenter-main">
+        <div class="swell-presenter-label">Current Slide</div>
+        <iframe id="swell-presenter-current"
+                class="swell-presenter-slide-frame current"
+                src="about:blank"
+                title="Current slide"
+                sandbox="allow-scripts allow-same-origin">
+        </iframe>
+    </main>
+
+    <aside class="swell-presenter-sidebar">
+        <div>
+            <div class="swell-presenter-label">Next Slide</div>
+            <iframe id="swell-presenter-next"
+                    class="swell-presenter-slide-frame"
+                    src="about:blank"
+                    title="Next slide preview"
+                    sandbox="allow-scripts allow-same-origin">
+            </iframe>
+        </div>
+        <div class="swell-presenter-counter" id="swell-presenter-counter">— / @Model.Slides.Count</div>
+        <div class="swell-presenter-label">Notes</div>
+        <div class="swell-presenter-notes" id="swell-presenter-notes">
+            <em>No notes for this slide.</em>
+        </div>
+    </aside>
+</div>
+
+<script>
+window.swellSlides = @{ WriteLiteral(BuildSlidesJson(Model.Slides)); };
+</script>
+<script src="/scripts/atoll-swell-presenter.js" defer></script>
+</body>
+</html>
+@functions {
+    private static string BuildSlidesJson(IReadOnlyList<Atoll.Swell.Layouts.RenderedSlideEntry> slides)
+    {
+        var sb = new System.Text.StringBuilder("[");
+        for (var i = 0; i < slides.Count; i++)
+        {
+            if (i > 0) sb.Append(',');
+            sb.Append("{\"notes\":");
+            sb.Append(System.Text.Json.JsonSerializer.Serialize(slides[i].Notes));
+            sb.Append('}');
+        }
+        sb.Append(']');
+        return sb.ToString();
+    }
+}

@@ -1,0 +1,12 @@
+@inherits Atoll.Components.AtollLayoutSlice<Atoll.Swell.Layouts.SlideLayoutModel>
+@using Atoll.Swell.Layouts
+<div class="swell-slide-content swell-layout-center @Model.Config.Class"
+     @(Model.Config.Background != null ? $"style=\"background:{System.Net.WebUtility.HtmlEncode(Model.Config.Background)}\"" : "")>
+    <div class="swell-slide-body swell-center-body">
+        @{ await RenderBodyAsync(); }
+    </div>
+    @if (Model.ShowSlideNumber)
+    {
+        <span class="swell-slide-number" aria-hidden="true">@Model.SlideIndex / @Model.TotalSlides</span>
+    }
+</div>

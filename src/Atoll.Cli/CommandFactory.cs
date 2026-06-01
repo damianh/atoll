@@ -152,6 +152,7 @@ public static class CommandFactory
         rootCommand.Add(CreateDevCommand());
         rootCommand.Add(CreatePreviewCommand());
         rootCommand.Add(CreateNewCommand());
+        rootCommand.Add(CreateExportCommand());
 
         return rootCommand;
     }
@@ -163,5 +164,73 @@ public static class CommandFactory
             Description = "The port to listen on (0 = use config or default 4321)",
             DefaultValueFactory = _ => 0,
         };
+    }
+
+    /// <summary>
+    /// Creates the <c>export</c> subcommand for exporting a Swell slide deck.
+    /// </summary>
+    public static Command CreateExportCommand()
+    {
+        var formatOption = new Option<string>("--format")
+        {
+            Description = "The export format: pdf, pptx, or odp",
+            DefaultValueFactory = _ => "pdf",
+        };
+        formatOption.Aliases.Add("-f");
+        formatOption.AcceptOnlyFromAmong("pdf", "pptx", "odp");
+
+        var outputOption = new Option<string>("--output")
+        {
+            Description = "The output file path (without extension)",
+            DefaultValueFactory = _ => "dist/slides",
+        };
+        outputOption.Aliases.Add("-o");
+
+        var baseUrlOption = new Option<string>("--base-url")
+        {
+            Description = "The base URL of the running Atoll server (e.g. http://localhost:4321)",
+            DefaultValueFactory = _ => "http://localhost:4321",
+        };
+
+        var slidePathOption = new Option<string>("--slide-path")
+        {
+            Description = "The URL path of the slide deck route",
+            DefaultValueFactory = _ => "/",
+        };
+
+        var slideCountOption = new Option<int>("--slide-count")
+        {
+            Description = "Total number of slides in the deck",
+            DefaultValueFactory = _ => 0,
+        };
+
+        var aspectRatioOption = new Option<string>("--aspect-ratio")
+        {
+            Description = "CSS aspect-ratio (e.g. 16/9, 4/3)",
+            DefaultValueFactory = _ => "16/9",
+        };
+
+        var command = new Command("export", "Export a Swell slide deck to PDF, PPTX, or ODP");
+        command.Add(formatOption);
+        command.Add(outputOption);
+        command.Add(baseUrlOption);
+        command.Add(slidePathOption);
+        command.Add(slideCountOption);
+        command.Add(aspectRatioOption);
+
+        command.SetAction(async (parseResult, cancellationToken) =>
+        {
+            var format = parseResult.GetValue(formatOption)!;
+            var output = parseResult.GetValue(outputOption)!;
+            var baseUrl = parseResult.GetValue(baseUrlOption)!;
+            var slidePath = parseResult.GetValue(slidePathOption)!;
+            var slideCount = parseResult.GetValue(slideCountOption);
+            var aspectRatio = parseResult.GetValue(aspectRatioOption)!;
+
+            var handler = new Commands.ExportCommandHandler();
+            await handler.ExecuteAsync(format, output, baseUrl, slidePath, slideCount, aspectRatio, cancellationToken);
+        });
+
+        return command;
     }
 }

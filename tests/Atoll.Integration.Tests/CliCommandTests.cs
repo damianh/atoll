@@ -15,10 +15,10 @@ public sealed class CliCommandTests
     }
 
     [Fact]
-    public void ShouldHaveFourSubcommands()
+    public void ShouldHaveFiveSubcommands()
     {
         var rootCommand = CommandFactory.CreateRootCommand();
-        rootCommand.Subcommands.Count.ShouldBe(4);
+        rootCommand.Subcommands.Count.ShouldBe(5);
     }
 
     [Fact]
@@ -322,6 +322,124 @@ public sealed class CliCommandTests
     {
         var command = CommandFactory.CreateBuildCommand();
         command.Options.ShouldNotContain(o => o.Name == "--port");
+    }
+
+    // ── Export command ──
+
+    [Fact]
+    public void ShouldCreateExportCommandWithDescription()
+    {
+        var command = CommandFactory.CreateExportCommand();
+        command.Name.ShouldBe("export");
+        command.Description.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void ShouldHaveExportSubcommand()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        rootCommand.Subcommands.ShouldContain(c => c.Name == "export");
+    }
+
+    [Fact]
+    public void ShouldCreateExportCommandWithFormatOption()
+    {
+        var command = CommandFactory.CreateExportCommand();
+        command.Options.ShouldContain(o => o.Name == "--format");
+    }
+
+    [Fact]
+    public void ShouldCreateExportCommandWithFormatShortAlias()
+    {
+        var command = CommandFactory.CreateExportCommand();
+        var formatOption = command.Options.FirstOrDefault(o => o.Name == "--format");
+        formatOption.ShouldNotBeNull();
+        formatOption!.Aliases.ShouldContain("-f");
+    }
+
+    [Fact]
+    public void ShouldCreateExportCommandWithOutputOption()
+    {
+        var command = CommandFactory.CreateExportCommand();
+        command.Options.ShouldContain(o => o.Name == "--output");
+    }
+
+    [Fact]
+    public void ShouldCreateExportCommandWithSlideCountOption()
+    {
+        var command = CommandFactory.CreateExportCommand();
+        command.Options.ShouldContain(o => o.Name == "--slide-count");
+    }
+
+    [Fact]
+    public void ShouldCreateExportCommandWithBaseUrlOption()
+    {
+        var command = CommandFactory.CreateExportCommand();
+        command.Options.ShouldContain(o => o.Name == "--base-url");
+    }
+
+    [Fact]
+    public void ShouldCreateExportCommandWithAspectRatioOption()
+    {
+        var command = CommandFactory.CreateExportCommand();
+        command.Options.ShouldContain(o => o.Name == "--aspect-ratio");
+    }
+
+    [Fact]
+    public void ShouldParseExportCommand()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        var result = rootCommand.Parse("export --format pdf --slide-count 5");
+
+        result.Errors.Count.ShouldBe(0);
+        result.CommandResult.Command.Name.ShouldBe("export");
+    }
+
+    [Fact]
+    public void ShouldDefaultExportFormatToPdf()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        var result = rootCommand.Parse("export");
+
+        result.GetValue<string>("--format").ShouldBe("pdf");
+    }
+
+    [Fact]
+    public void ShouldDefaultExportAspectRatioTo16x9()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        var result = rootCommand.Parse("export");
+
+        result.GetValue<string>("--aspect-ratio").ShouldBe("16/9");
+    }
+
+    [Fact]
+    public void ShouldRejectInvalidExportFormat()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        var result = rootCommand.Parse("export --format docx");
+
+        result.Errors.Count.ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
+    public void ShouldParseExportPptxFormat()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        var result = rootCommand.Parse("export --format pptx");
+
+        result.Errors.Count.ShouldBe(0);
+        result.GetValue<string>("--format").ShouldBe("pptx");
+    }
+
+    [Fact]
+    public void ShouldParseExportOdpFormat()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        var result = rootCommand.Parse("export --format odp");
+
+        result.Errors.Count.ShouldBe(0);
+        result.GetValue<string>("--format").ShouldBe("odp");
     }
 
     // ── Description content ──

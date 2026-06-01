@@ -3,9 +3,12 @@
     <OutputType>Exe</OutputType>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>atoll</ToolCommandName>
+    <!-- Suppress NU5111: Playwright ships .ps1 scripts in tools/ that NuGet warns about -->
+    <NoWarn>$(NoWarn);NU5111</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Atoll.Middleware\Atoll.Middleware.csproj" />
+    <ProjectReference Include="..\Atoll.Swell.Export\Atoll.Swell.Export.csproj" />
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
   <ItemGroup>
