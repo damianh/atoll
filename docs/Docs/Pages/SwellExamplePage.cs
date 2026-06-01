@@ -14,7 +14,7 @@ public sealed class SwellExamplePage : AtollComponent, IAtollPage
     private const string ExampleMarkdown =
 """
 ---
-title: Swell Example Deck
+title: Building with Swell
 aspectRatio: 16/9
 transition: fade
 slideNumbers: true
@@ -24,21 +24,37 @@ slideNumbers: true
 layout: cover
 ---
 
-# Swell Presentations
+# Building with Swell
 
-Write slides in Markdown, present anywhere.
+Presentation slides from Markdown — no JavaScript frameworks required.
 
-<!-- This is an example deck showcasing Swell's built-in layouts. -->
+<!-- Welcome! This example deck demonstrates every major Swell feature: layouts, click reveal, transitions, rich Markdown, code blocks, tables, and presenter notes. -->
 
 ---
 
-## What is Swell?
+## Why Swell?
 
-A presentation plugin for **Atoll** that turns Markdown into slide decks.
+Traditional slide tools force you into a **GUI** or a **JavaScript toolchain**.
+Swell takes a different approach:
 
-- No JavaScript frameworks needed
-- Keyboard navigation & presenter mode
-- Export to PDF, PPTX, and ODP
+- Write slides in **plain Markdown** with YAML frontmatter
+- Renders to semantic HTML with **zero client-side frameworks**
+- Full **keyboard navigation**, presenter mode, and drawing overlay
+- Export to **PDF**, **PPTX**, and **ODP** at build time
+
+> *"The best presentation tool is the one that stays out of your way."*
+
+<!-- Presenter notes: emphasise that Swell is server-rendered. No React, no Vue, no Svelte. Just Markdown in, HTML out. -->
+
+---
+
+---
+layout: section
+---
+
+## Layouts & Styling
+
+Swell ships with 8 built-in layouts.
 
 ---
 
@@ -46,11 +62,12 @@ A presentation plugin for **Atoll** that turns Markdown into slide decks.
 layout: center
 ---
 
-## Centred Layout
+### The `center` Layout
 
-Content is centred both vertically and horizontally.
+Content is centred **both vertically and horizontally**.
 
-Perfect for impactful statements.
+Use it for impactful single statements,
+key takeaways, or dramatic pauses.
 
 ---
 
@@ -58,23 +75,99 @@ Perfect for impactful statements.
 layout: two-cols
 ---
 
-## Two Columns
+## Two-Column Layout
 
-The left column contains explanatory text.
+Split content with the `::right::` delimiter.
 
-Use `::right::` to split content between columns.
+**Left column** is great for explanations,
+context, or bullet points.
+
+- Explain the *what*
+- Describe the *why*
+- Show the *how* →
 
 ::right::
 
-## Code Example
+## Code on the Right
 
 ```csharp
 [PageRoute("/slides")]
-public class SlidesPage
+public sealed class SlidesPage
     : AtollComponent, IAtollPage
 {
-    // Render your deck here
+    protected override async Task
+        RenderCoreAsync(RenderContext ctx)
+    {
+        var md = await File
+            .ReadAllTextAsync("slides.md");
+
+        await ComponentRenderer
+            .RenderComponentAsync<SwellPage>(
+                ctx.Destination,
+                new Dictionary<string, object?>
+                {
+                    ["MarkdownContent"] = md,
+                });
+    }
 }
+```
+
+<!-- The two-cols layout is ideal for code walkthroughs. Put the narrative on the left and the code on the right. -->
+
+---
+
+---
+layout: section
+---
+
+## Rich Markdown
+
+Tables, task lists, code blocks, and more.
+
+---
+
+## Tables & Formatted Text
+
+Swell supports the **full Atoll Markdown pipeline**:
+
+| Feature | Syntax | Rendered |
+|---|---|---|
+| **Bold** | `**bold**` | **bold** |
+| *Italic* | `*italic*` | *italic* |
+| ~~Strikethrough~~ | `~~strike~~` | ~~strike~~ |
+| `Inline code` | `` `code` `` | `code` |
+| [Links](https://github.com/damianh/atoll) | `[text](url)` | clickable |
+
+### Task Lists
+
+- [x] Markdown authoring
+- [x] Keyboard navigation
+- [x] Presenter mode
+- [ ] World domination
+
+<!-- Tables render with full styling. Task lists use standard GitHub-flavoured Markdown checkbox syntax. -->
+
+---
+
+## Syntax Highlighting
+
+Fenced code blocks with language-aware highlighting:
+
+```yaml
+# Deck configuration (YAML frontmatter)
+title: My Presentation
+aspectRatio: 16/9
+transition: slide-left
+slideNumbers: true
+export: [pdf, pptx]
+```
+
+```html
+<!-- Embed a deck in any Atoll page -->
+<SwellDeck
+  src="/slides/"
+  title="My Talk"
+  AspectRatio="16/9" />
 ```
 
 ---
@@ -83,27 +176,123 @@ public class SlidesPage
 layout: section
 ---
 
-## Section Divider
+## Interactive Features
 
-Group slides into logical sections.
+Click reveal, transitions, drawing, and presenter mode.
 
 ---
 
 ## Click Reveal
 
-Content appears progressively:
+Build up your argument one step at a time:
 
 :::Click
-- First point appears on click
+**Step 1** — Define your slide content in Markdown
 :::
 
 :::Click
-- Second point appears on next click
+**Step 2** — Add `:::Click` directives around each block
 :::
 
 :::Click
-- Third point appears last
+**Step 3** — Each block appears on successive key presses
 :::
+
+:::Click
+**Step 4** — Navigate back to hide blocks in reverse order
+:::
+
+<!-- Click reveal is great for keeping the audience focused on one point at a time. State resets when you navigate away from the slide. -->
+
+---
+
+---
+transition: slide-left
+---
+
+## Per-Slide Transitions
+
+This slide uses `transition: slide-left` — overriding the deck default of `fade`.
+
+Available transitions:
+
+| Transition | Effect |
+|---|---|
+| `fade` | Cross-fade between slides |
+| `slide-left` | Slide in from the right |
+| `slide-right` | Slide in from the left |
+| `slide-up` | Slide in from below |
+| `none` | Instant switch |
+
+---
+
+---
+transition: slide-up
+---
+
+## And This One Slides Up
+
+Set `transition` in per-slide frontmatter to override the deck default for any individual slide.
+
+```markdown
+---
+transition: slide-up
+---
+
+## My Slide Content
+```
+
+---
+
+---
+layout: two-cols
+---
+
+## Keyboard Shortcuts
+
+| Key | Action |
+|---|---|
+| `→` `Space` `↓` | Next slide / reveal |
+| `←` `↑` | Previous slide |
+| `o` | Overview grid |
+| `f` | Fullscreen |
+| `p` | Presenter mode |
+| `d` | Drawing overlay |
+| `Esc` | Exit mode |
+
+::right::
+
+## Export Formats
+
+Add to your deck frontmatter:
+
+```yaml
+export: [pdf, pptx, odp]
+```
+
+| Format | Method |
+|---|---|
+| **PDF** | Print-to-PDF |
+| **PPTX** | Screenshots + OpenXml |
+| **ODP** | Screenshots + ODP ZIP |
+
+Speaker notes are preserved in PPTX and ODP exports.
+
+---
+
+---
+layout: center
+background: "linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%)"
+class: dark-slide
+---
+
+### Custom Backgrounds
+
+Set `background` in slide frontmatter to any CSS value — colours, gradients, or images.
+
+```yaml
+background: "linear-gradient(135deg, #0f3460, #1a1a2e)"
+```
 
 ---
 
@@ -111,9 +300,17 @@ Content appears progressively:
 layout: end
 ---
 
-# Thank You!
+# Get Started
+
+```bash
+dotnet new atoll-swell -n MyPresentation
+cd MyPresentation
+dotnet run
+```
 
 Press **o** for overview · **p** for presenter mode · **d** to draw
+
+<!-- Thanks for exploring the example deck! Visit the Swell docs for the full reference. -->
 """;
 
     /// <inheritdoc />

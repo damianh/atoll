@@ -1,3 +1,4 @@
+using Atoll.Build.Content.Collections;
 using Atoll.Build.Content.Markdown;
 using Atoll.Components;
 using Atoll.Mermaid;
@@ -37,12 +38,16 @@ public sealed class SwellPage : AtollComponent
         var markdownOptions = BuildMarkdownOptions();
 
         var entries = new List<RenderedSlideEntry>(deck.Slides.Count);
-        var slideFragments = new List<(SlideData Slide, string Html)>(deck.Slides.Count);
+        var slideContents = new List<(SlideData Slide, ContentComponent Content)>(deck.Slides.Count);
 
         foreach (var slide in deck.Slides)
         {
             var result = MarkdownRenderer.Render(slide.Body, markdownOptions);
-            slideFragments.Add((slide, result.Html));
+            var content = result.Fragments is not null
+                ? ContentComponent.FromRenderedContent(
+                    new RenderedContent(result.Html, result.Headings, result.Fragments, result.AllReferences))
+                : ContentComponent.FromHtml(result.Html, result.Headings);
+            slideContents.Add((slide, content));
             entries.Add(new RenderedSlideEntry(slide.Index, slide.Config, slide.Notes));
         }
 
@@ -52,7 +57,7 @@ public sealed class SwellPage : AtollComponent
         // Build a render fragment that emits all <section> slide elements.
         var allSlidesFragment = RenderFragment.FromAsync(async dest =>
         {
-            foreach (var (slide, html) in slideFragments)
+            foreach (var (slide, content) in slideContents)
             {
                 var showSlideNumber = ResolveShowSlideNumber(
                     slide.Config.SlideNumber, deckConfig.SlideNumbers);
@@ -65,9 +70,13 @@ public sealed class SwellPage : AtollComponent
                     [nameof(SlideLayoutBase.ShowSlideNumber)] = showSlideNumber,
                 };
 
-                // Build a slot from the rendered Markdown HTML.
-                var slideHtmlFragment = RenderFragment.FromHtml(html);
-                var slideSlots = SlotCollection.FromDefault(slideHtmlFragment);
+                // Build a slot that renders the slide content (resolving component directives).
+                var slideContentFragment = RenderFragment.FromAsync(async slotDest =>
+                {
+                    var slotContext = new RenderContext(slotDest);
+                    await content.RenderAsync(slotContext);
+                });
+                var slideSlots = SlotCollection.FromDefault(slideContentFragment);
 
                 // Resolve layout type and create instance.
                 var layoutType = SlideLayoutResolver.Resolve(slide.Config.Layout);
