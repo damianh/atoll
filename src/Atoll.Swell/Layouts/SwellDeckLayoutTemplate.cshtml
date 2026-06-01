@@ -1,0 +1,31 @@
+@inherits Atoll.Components.AtollLayoutSlice<Atoll.Swell.Layouts.SwellDeckLayoutModel>
+@using Atoll.Swell.Layouts
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>@Model.Config.Title</title>
+<meta name="generator" content="Atoll.Swell" />
+</head>
+<body>
+<a href="#swell-deck" class="swell-skip-link">Skip to slide content</a>
+<div id="swell-deck"
+     class="swell-deck"
+     style="aspect-ratio:@Model.AspectRatioCss"
+     data-total-slides="@Model.Slides.Count"
+     data-default-transition="@Model.Config.Transition.ToString().ToLowerInvariant()"
+     role="region"
+     aria-label="@(string.IsNullOrEmpty(Model.Config.Title) ? "Slide deck" : Model.Config.Title)">
+    @{ await RenderBodyAsync(); }
+</div>
+<div id="swell-presenter-notes" hidden>
+    @foreach (var slide in Model.Slides)
+    {
+        <div data-slide-index="@slide.Index">@{ WriteLiteral(slide.Notes); }</div>
+    }
+</div>
+<script src="/scripts/atoll-swell-nav.js" defer></script>
+<script src="/scripts/atoll-swell-drawing.js" defer></script>
+</body>
+</html>

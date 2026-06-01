@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Atoll.Middleware\Atoll.Middleware.csproj" />
+    <ProjectReference Include="..\Atoll.Swell.Export\Atoll.Swell.Export.csproj" />
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
   <ItemGroup>

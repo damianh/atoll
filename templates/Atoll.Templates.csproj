@@ -32,6 +32,8 @@
              Exclude="atoll-blog\bin\**;atoll-blog\obj\**" />
     <Content Include="atoll-portfolio\**\*"
              Exclude="atoll-portfolio\bin\**;atoll-portfolio\obj\**" />
+    <Content Include="atoll-swell\**\*"
+             Exclude="atoll-swell\bin\**;atoll-swell\obj\**" />
   </ItemGroup>
 
   <ItemGroup>
