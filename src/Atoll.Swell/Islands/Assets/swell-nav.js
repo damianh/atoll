@@ -186,28 +186,30 @@
   // --------------------------------------------------------------------------
   // Overview mode
   // --------------------------------------------------------------------------
+  var savedAspectRatio = '';
+
   function toggleOverview() {
     overviewActive = !overviewActive;
     if (overviewActive) {
       deck.classList.add('swell-overview');
+      // Clear inline aspect-ratio so the grid can expand vertically
+      savedAspectRatio = deck.style.aspectRatio || '';
+      deck.style.aspectRatio = 'auto';
       deck.style.overflow = 'auto';
       deck.style.maxHeight = '100vh';
       slides.forEach(function (s) {
-        s.style.display = 'block';
+        s.setAttribute('aria-hidden', 'false');
         s.tabIndex = 0;
         s.setAttribute('role', 'button');
       });
     } else {
       deck.classList.remove('swell-overview');
+      deck.style.aspectRatio = savedAspectRatio;
       deck.style.overflow = '';
       deck.style.maxHeight = '';
-      slides.forEach(function (s) {
-        s.style.display = '';
+      slides.forEach(function (s, idx) {
         s.removeAttribute('tabIndex');
         s.removeAttribute('role');
-      });
-      // Restore correct active slide
-      slides.forEach(function (s, idx) {
         if (idx === current) {
           s.setAttribute('aria-hidden', 'false');
           s.classList.add('swell-active');
@@ -228,6 +230,13 @@
     } else {
       document.exitFullscreen && document.exitFullscreen();
     }
+  }
+
+  // --------------------------------------------------------------------------
+  // Download PDF (via browser print)
+  // --------------------------------------------------------------------------
+  function downloadPdf() {
+    window.print();
   }
 
   // --------------------------------------------------------------------------
@@ -378,6 +387,9 @@
           document.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', bubbles: true }));
           btn.classList.toggle('swell-navbar-active');
           break;
+        case 'download':
+          downloadPdf();
+          break;
       }
     });
   }
@@ -392,7 +404,6 @@
   // Initialise
   // --------------------------------------------------------------------------
   initBroadcastChannel();
-  initNavbar();
   initNavbar();
 
   var startIndex = indexFromHash();

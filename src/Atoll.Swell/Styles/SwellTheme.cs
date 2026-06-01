@@ -451,6 +451,7 @@ public sealed class SwellTheme : AtollComponent
                 break-after: page;
             }
             .swell-slide-number { display: none; }
+            .swell-navbar { display: none; }
         }
         """;
 
