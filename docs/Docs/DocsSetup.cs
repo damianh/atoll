@@ -147,6 +147,7 @@ public static class DocsSetup
                 Items =
                 [
                     new SidebarItem { Label = "Overview",  Link = "/swell/overview" },
+                    new SidebarItem { Label = "Example Slides", Link = "/swell/example-slides" },
                 ],
             },
             new SidebarItem

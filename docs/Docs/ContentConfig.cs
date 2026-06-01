@@ -5,6 +5,7 @@ using Atoll.DrawIo.Islands;
 using Atoll.Lagoon.Components;
 using Atoll.Lagoon.Islands;
 using Atoll.Lagoon.Markdown;
+using Atoll.Swell.Components;
 
 namespace Docs;
 
@@ -36,7 +37,8 @@ public sealed class ContentConfig : IContentConfiguration
             .Add<Icon>("icon")
             .Add<DrawioDiagram>("drawio-diagram")
             .Add<Tabs>("tabs")
-            .Add<TabItem>("tab-item");
+            .Add<TabItem>("tab-item")
+            .Add<SwellDeck>("swell-deck");
 
         // Append ChartExtension so ```chart fenced code blocks render as Chart.js canvases.
         var extensions = markdownOptions.Extensions?.ToList() ?? [];

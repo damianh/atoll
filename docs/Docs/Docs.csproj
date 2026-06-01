@@ -12,5 +12,6 @@
     <ProjectReference Include="..\..\src\Atoll.DrawIo\Atoll.DrawIo.csproj" />
     <ProjectReference Include="..\..\src\Atoll.Reef\Atoll.Reef.csproj" />
     <ProjectReference Include="..\..\src\Atoll.Annotations\Atoll.Annotations.csproj" />
+    <ProjectReference Include="..\..\src\Atoll.Swell\Atoll.Swell.csproj" />
   </ItemGroup>
 </Project>
