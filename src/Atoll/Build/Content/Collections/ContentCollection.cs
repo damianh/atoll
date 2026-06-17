@@ -49,6 +49,14 @@ public sealed class ContentCollection
     public string? Directory { get; private set; }
 
     /// <summary>
+    /// Gets the optional URL path prefix for this collection.
+    /// When set, pages in this collection are expected to live under this prefix
+    /// (e.g., <c>"/docs"</c> means entries are accessible at <c>/docs/{slug}</c>).
+    /// When <c>null</c>, the collection name is used as the default prefix.
+    /// </summary>
+    public string? Prefix { get; private set; }
+
+    /// <summary>
     /// Overrides the directory for this collection to the specified path,
     /// resolved relative to the project root.
     /// </summary>
@@ -68,6 +76,42 @@ public sealed class ContentCollection
         }
 
         Directory = directory;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the URL path prefix for this collection. Pages belonging to this collection
+    /// will have their hrefs built as <c>{prefix}/{slug}</c>.
+    /// </summary>
+    /// <param name="prefix">
+    /// The URL path prefix (e.g., <c>"/docs"</c> or <c>"/guides"</c>).
+    /// Must start with <c>/</c> and must not end with <c>/</c>.
+    /// </param>
+    /// <returns>This <see cref="ContentCollection"/> instance for fluent chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="prefix"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="prefix"/> is empty, whitespace, does not start with <c>/</c>,
+    /// or ends with <c>/</c>.
+    /// </exception>
+    public ContentCollection WithPrefix(string prefix)
+    {
+        ArgumentNullException.ThrowIfNull(prefix);
+        if (string.IsNullOrWhiteSpace(prefix))
+        {
+            throw new ArgumentException("Prefix cannot be empty or whitespace.", nameof(prefix));
+        }
+
+        if (!prefix.StartsWith('/'))
+        {
+            throw new ArgumentException("Prefix must start with '/'.", nameof(prefix));
+        }
+
+        if (prefix.Length > 1 && prefix.EndsWith('/'))
+        {
+            throw new ArgumentException("Prefix must not end with '/'.", nameof(prefix));
+        }
+
+        Prefix = prefix;
         return this;
     }
 

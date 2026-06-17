@@ -321,6 +321,125 @@ public sealed class ContentCollectionDefinitionTests
         dirs.ShouldContain("libs/docs/content");
     }
 
+    // --- WithPrefix tests ---
+
+    [Fact]
+    public void WithPrefixShouldSetPrefixProperty()
+    {
+        var collection = ContentCollection.Define<BlogPost>("blog")
+            .WithPrefix("/articles");
+
+        collection.Prefix.ShouldBe("/articles");
+    }
+
+    [Fact]
+    public void WithPrefixShouldAllowRootSlash()
+    {
+        var collection = ContentCollection.Define<BlogPost>("docs")
+            .WithPrefix("/");
+
+        collection.Prefix.ShouldBe("/");
+    }
+
+    [Fact]
+    public void PrefixIsNullByDefault()
+    {
+        var collection = ContentCollection.Define<BlogPost>("blog");
+
+        collection.Prefix.ShouldBeNull();
+    }
+
+    [Fact]
+    public void WithPrefixShouldThrowOnNull()
+    {
+        Should.Throw<ArgumentNullException>(() =>
+            ContentCollection.Define<BlogPost>("blog").WithPrefix(null!));
+    }
+
+    [Fact]
+    public void WithPrefixShouldThrowOnEmpty()
+    {
+        Should.Throw<ArgumentException>(() =>
+            ContentCollection.Define<BlogPost>("blog").WithPrefix(""));
+    }
+
+    [Fact]
+    public void WithPrefixShouldThrowOnWhitespace()
+    {
+        Should.Throw<ArgumentException>(() =>
+            ContentCollection.Define<BlogPost>("blog").WithPrefix("   "));
+    }
+
+    [Fact]
+    public void WithPrefixShouldThrowWhenNotStartingWithSlash()
+    {
+        Should.Throw<ArgumentException>(() =>
+            ContentCollection.Define<BlogPost>("blog").WithPrefix("docs"));
+    }
+
+    [Fact]
+    public void WithPrefixShouldThrowWhenEndingWithSlash()
+    {
+        Should.Throw<ArgumentException>(() =>
+            ContentCollection.Define<BlogPost>("blog").WithPrefix("/docs/"));
+    }
+
+    [Fact]
+    public void WithPrefixShouldReturnSameCollectionForFluentChaining()
+    {
+        var collection = ContentCollection.Define<BlogPost>("blog");
+        var returned = collection.WithPrefix("/articles");
+
+        returned.ShouldBeSameAs(collection);
+    }
+
+    [Fact]
+    public void WithPrefixShouldChainWithFromDirectory()
+    {
+        var collection = ContentCollection.Define<BlogPost>("blog")
+            .FromDirectory("../../libs/blog/docs")
+            .WithPrefix("/blog-docs");
+
+        collection.Directory.ShouldBe("../../libs/blog/docs");
+        collection.Prefix.ShouldBe("/blog-docs");
+    }
+
+    [Fact]
+    public void GetCollectionPrefixShouldReturnExplicitPrefix()
+    {
+        var config = new CollectionConfig("content")
+            .AddCollection(ContentCollection.Define<BlogPost>("blog").WithPrefix("/articles"));
+
+        config.GetCollectionPrefix("blog").ShouldBe("/articles");
+    }
+
+    [Fact]
+    public void GetCollectionPrefixShouldFallBackToCollectionName()
+    {
+        var config = new CollectionConfig("content")
+            .AddCollection(ContentCollection.Define<BlogPost>("blog"));
+
+        config.GetCollectionPrefix("blog").ShouldBe("/blog");
+    }
+
+    [Fact]
+    public void GetCollectionPrefixShouldReturnRootSlash()
+    {
+        var config = new CollectionConfig("content")
+            .AddCollection(ContentCollection.Define<BlogPost>("docs").WithPrefix("/"));
+
+        config.GetCollectionPrefix("docs").ShouldBe("/");
+    }
+
+    [Fact]
+    public void GetCollectionPrefixShouldThrowOnUnknownCollection()
+    {
+        var config = new CollectionConfig("content")
+            .AddCollection(ContentCollection.Define<BlogPost>("blog"));
+
+        Should.Throw<KeyNotFoundException>(() => config.GetCollectionPrefix("unknown"));
+    }
+
     // --- ContentEntry tests ---
 
     [Fact]
