@@ -19,7 +19,7 @@ public sealed class ContentConfig : IContentConfiguration
     public CollectionConfig Configure()
     {
         var config = new CollectionConfig("Content")
-            .AddCollection(ContentCollection.Define<DocSchema>("docs"));
+            .AddCollection(ContentCollection.Define<DocSchema>("docs").WithPrefix("/"));
 
         // Apply Lagoon markdown extensions (syntax highlighting, Mermaid)
         // so that CollectionQuery.Render() uses them.

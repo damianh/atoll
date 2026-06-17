@@ -160,6 +160,31 @@ repo/
 
 The collection name (`"weather-api-docs"`) is the logical identifier used in `query.GetCollection<T>()` and `query.GetEntry<T>()` calls — it does not need to match the directory name.
 
+## URL prefix
+
+By default, a collection's URL prefix is `/{collectionName}` — entries in a collection named `"blog"` are expected at `/blog/{slug}`. You can override this with `.WithPrefix()`:
+
+```csharp
+return new CollectionConfig("Content")
+    // Entries accessible at /guides/{slug}
+    .AddCollection(ContentCollection.Define<DocSchema>("guides")
+        .WithPrefix("/guides"))
+    // Entries accessible at the root: /{slug}
+    .AddCollection(ContentCollection.Define<DocSchema>("docs")
+        .WithPrefix("/"));
+```
+
+Use `query.GetCollectionPrefix("collectionName")` in layouts and pages to build hrefs without hardcoding paths:
+
+```csharp
+var prefix = Query.GetCollectionPrefix("docs").TrimEnd('/');
+var entries = Query.GetCollection<DocSchema>("docs")
+    .Select(e => new SidebarEntry(e.Data.Title, $"{prefix}/{e.Slug}", ...))
+    .ToList();
+```
+
+This is particularly useful when a site has multiple collections that each need their own URL namespace, or when using `.FromDirectory()` to pull content from external paths that should be served under a specific URL prefix.
+
 ### Dev server
 
 When using `atoll dev`, custom collection directories are automatically watched for `.md` changes. Edits to content files in external directories trigger the same content-only hot-reload as changes in the standard content directory.

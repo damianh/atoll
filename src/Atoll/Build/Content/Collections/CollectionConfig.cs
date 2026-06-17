@@ -145,4 +145,22 @@ public sealed class CollectionConfig
 
         return collection;
     }
+
+    /// <summary>
+    /// Gets the URL path prefix for the specified collection.
+    /// Returns the explicit <see cref="ContentCollection.Prefix"/> if set,
+    /// otherwise falls back to <c>"/{collectionName}"</c>.
+    /// </summary>
+    /// <param name="collectionName">The collection name.</param>
+    /// <returns>
+    /// The URL prefix (e.g., <c>"/docs"</c>) that should be prepended to entry slugs
+    /// when building page hrefs.
+    /// </returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collectionName"/> is <c>null</c>.</exception>
+    /// <exception cref="KeyNotFoundException">No collection with the specified name is registered.</exception>
+    public string GetCollectionPrefix(string collectionName)
+    {
+        var collection = GetCollection(collectionName);
+        return collection.Prefix ?? $"/{collectionName}";
+    }
 }

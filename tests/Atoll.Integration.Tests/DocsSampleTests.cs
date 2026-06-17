@@ -97,7 +97,7 @@ public sealed class DocsSampleTests : IDisposable
     private static CollectionQuery CreateCollectionQuery(InMemoryFileProvider fileProvider)
     {
         var config = new CollectionConfig("content")
-            .AddCollection(ContentCollection.Define<DocSchema>("docs"));
+            .AddCollection(ContentCollection.Define<DocSchema>("docs").WithPrefix("/"));
         var loader = new CollectionLoader(config, fileProvider);
         return new CollectionQuery(loader);
     }

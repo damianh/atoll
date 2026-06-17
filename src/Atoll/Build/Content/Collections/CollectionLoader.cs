@@ -130,6 +130,20 @@ public sealed class CollectionLoader
         return LoadEntry<TData>(collectionName, file);
     }
 
+    /// <summary>
+    /// Gets the URL path prefix for the specified collection.
+    /// Returns the explicit <see cref="ContentCollection.Prefix"/> if set via
+    /// <see cref="ContentCollection.WithPrefix"/>, otherwise falls back to <c>"/{collectionName}"</c>.
+    /// </summary>
+    /// <param name="collectionName">The collection name.</param>
+    /// <returns>The URL prefix for building entry hrefs.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collectionName"/> is <c>null</c>.</exception>
+    /// <exception cref="KeyNotFoundException">The collection is not registered.</exception>
+    public string GetCollectionPrefix(string collectionName)
+    {
+        return _config.GetCollectionPrefix(collectionName);
+    }
+
     private static ContentEntry<TData> LoadEntry<TData>(string collectionName, ContentFile file)
         where TData : class, new()
     {

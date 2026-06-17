@@ -86,6 +86,21 @@ public sealed class CollectionQuery
     }
 
     /// <summary>
+    /// Gets the URL path prefix for the specified collection.
+    /// Returns the explicit prefix set via <see cref="ContentCollection.WithPrefix"/> if configured,
+    /// otherwise falls back to <c>"/{collectionName}"</c>.
+    /// Use this to build correct hrefs for collection entries: <c>$"{prefix}/{entry.Slug}"</c>.
+    /// </summary>
+    /// <param name="collectionName">The collection name.</param>
+    /// <returns>The URL prefix (e.g., <c>"/docs"</c>) for building entry hrefs.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collectionName"/> is <c>null</c>.</exception>
+    /// <exception cref="KeyNotFoundException">The collection is not registered.</exception>
+    public string GetCollectionPrefix(string collectionName)
+    {
+        return _loader.GetCollectionPrefix(collectionName);
+    }
+
+    /// <summary>
     /// Renders the body of a content entry to HTML.
     /// </summary>
     /// <typeparam name="TData">The schema type for frontmatter data.</typeparam>
