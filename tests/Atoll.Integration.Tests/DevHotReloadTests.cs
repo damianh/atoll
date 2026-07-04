@@ -219,6 +219,29 @@ public sealed class DevHotReloadTests : IDisposable
     }
 
     [Fact]
+    public async Task DevFileWatcherShouldClassifyMdaChangesAsContentOnly()
+    {
+        var dir = CreateTempDir();
+        FileChangeKind? observed = null;
+        var tcs = new TaskCompletionSource<FileChangeKind>();
+
+        using var watcher = new DevFileWatcher(dir, [], 50);
+        watcher.OnChange += kind =>
+        {
+            observed = kind;
+            tcs.TrySetResult(kind);
+            return Task.CompletedTask;
+        };
+        watcher.Start();
+
+        await File.WriteAllTextAsync(Path.Combine(dir, "test.mda"), "hello");
+
+        var result = await Task.WhenAny(tcs.Task, Task.Delay(3000));
+        result.ShouldBe(tcs.Task, "Watcher should have fired within 3s");
+        observed.ShouldBe(FileChangeKind.ContentOnly);
+    }
+
+    [Fact]
     public async Task DevFileWatcherShouldClassifyCsChangesAsCodeChange()
     {
         var dir = CreateTempDir();

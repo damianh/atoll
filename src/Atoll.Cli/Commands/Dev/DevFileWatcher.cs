@@ -6,7 +6,7 @@ namespace Atoll.Cli.Commands.Dev;
 internal enum FileChangeKind
 {
     /// <summary>
-    /// Only content files (<c>.md</c>) changed. The project assembly can be reused;
+    /// Only content files (<c>.md</c> / <c>.mda</c>) changed. The project assembly can be reused;
     /// only the <c>CollectionQuery</c> needs to be rebuilt.
     /// </summary>
     ContentOnly,
@@ -19,20 +19,21 @@ internal enum FileChangeKind
 }
 
 /// <summary>
-/// Watches a project directory for <c>.cs</c>, <c>.md</c>, and <c>atoll.json</c>
+/// Watches a project directory for <c>.cs</c>, <c>.md</c>, <c>.mda</c>, and <c>atoll.json</c>
 /// changes. Debounces rapid-fire filesystem events and classifies each batch into
 /// a <see cref="FileChangeKind"/> before raising <see cref="OnChange"/>.
 /// </summary>
 /// <remarks>
 /// Additional directories outside the project root can be passed via
 /// <see cref="DevFileWatcher(string, IReadOnlyList{string}, int)"/>. Each extra directory
-/// that exists on disk is watched for <c>*.md</c> changes, raising <see cref="FileChangeKind.ContentOnly"/>.
+/// that exists on disk is watched for <c>*.md</c> and <c>*.mda</c> changes, raising <see cref="FileChangeKind.ContentOnly"/>.
 /// This supports monorepo scenarios where content collections live outside the project root.
 /// </remarks>
 internal sealed class DevFileWatcher : IDisposable
 {
     private readonly FileSystemWatcher _csWatcher;
     private readonly FileSystemWatcher _mdWatcher;
+    private readonly FileSystemWatcher _mdaWatcher;
     private readonly FileSystemWatcher _configWatcher;
     private readonly IReadOnlyList<FileSystemWatcher> _extraMdWatchers;
     private readonly System.Threading.Timer _debounceTimer;
@@ -64,7 +65,7 @@ internal sealed class DevFileWatcher : IDisposable
     /// </summary>
     /// <param name="projectRoot">The root directory to watch.</param>
     /// <param name="extraContentDirectories">
-    /// Additional directories to watch for <c>*.md</c> changes. Each entry is resolved
+    /// Additional directories to watch for <c>*.md</c> and <c>*.mda</c> changes. Each entry is resolved
     /// relative to <paramref name="projectRoot"/>. Directories that do not exist on disk
     /// are silently skipped.
     /// </param>
@@ -78,7 +79,7 @@ internal sealed class DevFileWatcher : IDisposable
     /// </summary>
     /// <param name="projectRoot">The root directory to watch.</param>
     /// <param name="extraContentDirectories">
-    /// Additional directories to watch for <c>*.md</c> changes. Each entry is resolved
+    /// Additional directories to watch for <c>*.md</c> and <c>*.mda</c> changes. Each entry is resolved
     /// relative to <paramref name="projectRoot"/>. Directories that do not exist on disk
     /// are silently skipped.
     /// </param>
@@ -96,6 +97,7 @@ internal sealed class DevFileWatcher : IDisposable
 
         _csWatcher = CreateWatcher(projectRoot, "*.cs");
         _mdWatcher = CreateWatcher(projectRoot, "*.md");
+        _mdaWatcher = CreateWatcher(projectRoot, "*.mda");
         _configWatcher = CreateWatcher(projectRoot, "atoll.json");
         _extraMdWatchers = CreateExtraMdWatchers(projectRoot, extraContentDirectories);
     }
@@ -107,6 +109,7 @@ internal sealed class DevFileWatcher : IDisposable
     {
         _csWatcher.EnableRaisingEvents = true;
         _mdWatcher.EnableRaisingEvents = true;
+        _mdaWatcher.EnableRaisingEvents = true;
         _configWatcher.EnableRaisingEvents = true;
         foreach (var w in _extraMdWatchers)
         {
@@ -122,6 +125,7 @@ internal sealed class DevFileWatcher : IDisposable
     {
         _csWatcher.EnableRaisingEvents = false;
         _mdWatcher.EnableRaisingEvents = false;
+        _mdaWatcher.EnableRaisingEvents = false;
         _configWatcher.EnableRaisingEvents = false;
         foreach (var w in _extraMdWatchers)
         {
@@ -135,6 +139,7 @@ internal sealed class DevFileWatcher : IDisposable
         _debounceTimer.Dispose();
         _csWatcher.Dispose();
         _mdWatcher.Dispose();
+        _mdaWatcher.Dispose();
         _configWatcher.Dispose();
         foreach (var w in _extraMdWatchers)
         {
@@ -181,6 +186,7 @@ internal sealed class DevFileWatcher : IDisposable
             }
 
             watchers.Add(CreateWatcher(resolved, "*.md"));
+            watchers.Add(CreateWatcher(resolved, "*.mda"));
         }
         return watchers;
     }
