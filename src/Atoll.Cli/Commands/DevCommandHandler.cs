@@ -191,7 +191,7 @@ public sealed class DevCommandHandler
 
             buildingGate.MarkReady();
 
-            Console.WriteLine("  Site ready — watching for file changes (.cs, .md, atoll.json)");
+            Console.WriteLine("  Site ready — watching for file changes (.cs, .md, .mda, atoll.json)");
 
             // ── Wire file-watching + hot-reload ───────────────────────────────
 
