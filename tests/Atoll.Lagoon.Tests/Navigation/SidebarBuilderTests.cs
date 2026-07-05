@@ -1014,4 +1014,142 @@ public sealed class SidebarBuilderTests
 
         result[0].Items.Count.ShouldBe(2);
     }
+
+    // --- AutoGenerate filter ---
+
+    private static SidebarEntry TagEntry(string label, string href, string slug, int order = 0, params (string Key, string Value)[] tags)
+        => new SidebarEntry(label, href, slug, order, null) { Tags = tags.ToDictionary(t => t.Key, t => t.Value) };
+
+    private static SidebarItem AutoFilterItem(string label, string dir, Func<IReadOnlyDictionary<string, string>, bool> filter)
+        => new SidebarItem { Label = label, AutoGenerate = dir, Filter = filter };
+
+    [Fact]
+    public void AutoGenerate_filter_includes_only_matching_entries()
+    {
+        var entries = new[]
+        {
+            TagEntry("Active PRD", "/prds/active", "prds/active", tags: ("status", "active")),
+            TagEntry("Archived PRD", "/prds/archived", "prds/archived", tags: ("status", "archived")),
+            TagEntry("Another Active", "/prds/active2", "prds/active2", tags: ("status", "active")),
+        };
+        var builder = new SidebarBuilder(
+            [AutoFilterItem("Active", "prds", tags => tags.TryGetValue("status", out var s) && s == "active")],
+            entries);
+
+        var result = builder.Build("/");
+
+        result[0].Items.Count.ShouldBe(2);
+        result[0].Items.ShouldAllBe(i => i.Label == "Active PRD" || i.Label == "Another Active");
+    }
+
+    [Fact]
+    public void AutoGenerate_filter_excludes_all_non_matching_entries()
+    {
+        var entries = new[]
+        {
+            TagEntry("PRD One", "/prds/one", "prds/one", tags: ("status", "archived")),
+            TagEntry("PRD Two", "/prds/two", "prds/two", tags: ("status", "archived")),
+        };
+        var builder = new SidebarBuilder(
+            [AutoFilterItem("Active", "prds", tags => tags.TryGetValue("status", out var s) && s == "active")],
+            entries);
+
+        var result = builder.Build("/");
+
+        result[0].Items.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void AutoGenerate_null_filter_includes_all_non_draft_entries()
+    {
+        var entries = new[]
+        {
+            TagEntry("PRD One", "/prds/one", "prds/one", tags: ("status", "active")),
+            TagEntry("PRD Two", "/prds/two", "prds/two", tags: ("status", "archived")),
+            TagEntry("PRD Three", "/prds/three", "prds/three"),
+        };
+        var builder = new SidebarBuilder([AutoItem("All PRDs", "prds")], entries);
+
+        var result = builder.Build("/");
+
+        result[0].Items.Count.ShouldBe(3);
+    }
+
+    [Fact]
+    public void AutoGenerate_multiple_groups_with_different_filters_on_same_directory()
+    {
+        var entries = new[]
+        {
+            TagEntry("Active PRD", "/prds/active", "prds/active", order: 1, tags: ("status", "active")),
+            TagEntry("Archived PRD", "/prds/archived", "prds/archived", order: 2, tags: ("status", "archived")),
+        };
+        var config = new SidebarItem[]
+        {
+            AutoFilterItem("Active", "prds", tags => tags.TryGetValue("status", out var s) && s == "active"),
+            AutoFilterItem("Archived", "prds", tags => tags.TryGetValue("status", out var s) && s == "archived"),
+        };
+        var builder = new SidebarBuilder(config, entries);
+
+        var result = builder.Build("/");
+
+        result[0].Items.Count.ShouldBe(1);
+        result[0].Items[0].Label.ShouldBe("Active PRD");
+        result[1].Items.Count.ShouldBe(1);
+        result[1].Items[0].Label.ShouldBe("Archived PRD");
+    }
+
+    [Fact]
+    public void AutoGenerate_filter_receives_empty_tags_dict_for_untagged_entries()
+    {
+        var entries = new[]
+        {
+            TagEntry("Untagged", "/prds/untagged", "prds/untagged"),
+        };
+        var builder = new SidebarBuilder(
+            [AutoFilterItem("Active", "prds", tags => tags.TryGetValue("status", out var s) && s == "active")],
+            entries);
+
+        var result = builder.Build("/");
+
+        result[0].Items.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void AutoGenerate_filter_that_allows_empty_tags_includes_untagged_entries()
+    {
+        var entries = new[]
+        {
+            TagEntry("Untagged", "/prds/untagged", "prds/untagged"),
+            TagEntry("Tagged", "/prds/tagged", "prds/tagged", tags: ("status", "active")),
+        };
+        var builder = new SidebarBuilder(
+            [AutoFilterItem("No Status", "prds", tags => !tags.ContainsKey("status"))],
+            entries);
+
+        var result = builder.Build("/");
+
+        result[0].Items.Count.ShouldBe(1);
+        result[0].Items[0].Label.ShouldBe("Untagged");
+    }
+
+    [Fact]
+    public void AutoGenerate_filter_does_not_include_draft_entries_even_when_tags_match()
+    {
+        var entries = new[]
+        {
+            new SidebarEntry("Draft Active", "/prds/draft", "prds/draft", 0, null, draft: true)
+            {
+                Tags = new Dictionary<string, string> { ["status"] = "active" }
+            },
+            TagEntry("Live Active", "/prds/live", "prds/live", tags: ("status", "active")),
+        };
+        var builder = new SidebarBuilder(
+            [AutoFilterItem("Active", "prds", tags => tags.TryGetValue("status", out var s) && s == "active")],
+            entries);
+
+        var result = builder.Build("/");
+
+        result[0].Items.Count.ShouldBe(1);
+        result[0].Items[0].Label.ShouldBe("Live Active");
+    }
 }
