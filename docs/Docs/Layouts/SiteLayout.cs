@@ -52,10 +52,17 @@ public sealed class SiteLayout : AtollComponent
             ? Query.Render(currentEntry).Headings
             : (IReadOnlyList<MarkdownHeading>)[];
 
-        // Build sidebar entries from the docs collection, excluding the reserved 404 page
+        // Build sidebar entries from the docs collection, excluding the reserved 404 page.
+        // Tags are populated from frontmatter so that sites using AutoGenerate with Filter
+        // can partition entries by frontmatter values (e.g., Filter = tags => tags["section"] == "Basics").
         var entries = Query.GetCollection<DocSchema>("docs")
             .Where(e => e.Slug != DocsPage.NotFoundSlug)
-            .Select(e => new SidebarEntry(e.Data.Title, $"{prefix}/{e.Slug}", e.Slug, e.Data.Order, null))
+            .Select(e => new SidebarEntry(e.Data.Title, $"{prefix}/{e.Slug}", e.Slug, e.Data.Order, null)
+            {
+                Tags = string.IsNullOrEmpty(e.Data.Section)
+                    ? new Dictionary<string, string>()
+                    : new Dictionary<string, string> { ["section"] = e.Data.Section },
+            })
             .ToList();
 
         // Resolve sidebar tree for current page

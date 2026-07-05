@@ -39,6 +39,25 @@ public sealed class SidebarItem
     public string? AutoGenerate { get; set; }
 
     /// <summary>
+    /// Gets or sets an optional filter predicate applied to auto-generated entries.
+    /// The predicate receives each entry's <see cref="Atoll.Lagoon.Navigation.SidebarEntry.Tags"/>
+    /// dictionary and should return <c>true</c> to include the entry in the group.
+    /// When <c>null</c> (the default), all non-draft entries matching the directory are included.
+    /// Only applies when <see cref="AutoGenerate"/> is set; ignored for manual <see cref="Items"/> groups.
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// new SidebarItem
+    /// {
+    ///     Label = "Active PRDs",
+    ///     AutoGenerate = "prds",
+    ///     Filter = tags => tags.TryGetValue("status", out var s) &amp;&amp; s == "active"
+    /// }
+    /// </code>
+    /// </example>
+    public Func<IReadOnlyDictionary<string, string>, bool>? Filter { get; set; }
+
+    /// <summary>
     /// Gets or sets the manually-defined child items for this group.
     /// Ignored when <see cref="AutoGenerate"/> is set.
     /// </summary>

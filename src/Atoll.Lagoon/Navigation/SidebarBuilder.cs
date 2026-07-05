@@ -225,6 +225,7 @@ public sealed class SidebarBuilder
         var matching = _entries
             .Where(e => !e.Draft)
             .Where(e => SlugMatchesDirectory(e.Slug, normalizedDir, localeKey, versionKey))
+            .Where(e => item.Filter is null || item.Filter(e.Tags))
             .ToList();
 
         // Build a tree of DirectoryNodes from the flat entry list.
