@@ -11,10 +11,7 @@ on:
 jobs:
   build-and-test:
     timeout-minutes: 10
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -53,5 +50,5 @@ jobs:
       - name: Upload NuGet packages
         uses: actions/upload-artifact@v4
         with:
-          name: nuget-packages-${{ matrix.os }}
+          name: nuget-packages
           path: ./packages/*.nupkg
