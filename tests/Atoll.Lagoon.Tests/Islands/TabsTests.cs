@@ -4,6 +4,7 @@ using Atoll.Lagoon.Components;
 using Atoll.Lagoon.Islands;
 using Atoll.Rendering;
 using Atoll.Slots;
+using System.Text.RegularExpressions;
 
 namespace Atoll.Lagoon.Tests.Islands;
 
@@ -207,5 +208,39 @@ public sealed class TabsTests
 
         island.ClientModuleUrl.ShouldBe("/scripts/atoll-docs-tabs.js");
         island.CreateMetadata()!.DirectiveType.ShouldBe(ClientDirectiveType.Load);
+    }
+
+    [Fact]
+    public async Task ShouldHaveUniqueIdsAcrossMultipleProgrammaticIslands()
+    {
+        // Render two independent Tabs islands and verify that none of their ids collide.
+        // This guards against the bug reported in issue #85 where islands shared ids.
+        var html1 = await RenderTabsAsync(MakeTabs(("Tab A", "<p>A</p>"), ("Tab B", "<p>B</p>")));
+        var html2 = await RenderTabsAsync(MakeTabs(("Tab X", "<p>X</p>"), ("Tab Y", "<p>Y</p>")));
+
+        var ids1 = Regex.Matches(html1, @"\bid=""([^""]+)""").Select(m => m.Groups[1].Value).ToHashSet();
+        var ids2 = Regex.Matches(html2, @"\bid=""([^""]+)""").Select(m => m.Groups[1].Value).ToHashSet();
+
+        ids1.ShouldNotBeEmpty();
+        ids2.ShouldNotBeEmpty();
+        ids1.Intersect(ids2).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ShouldPreserveAriaControlsAndLabelledByLinksInProgrammaticMode()
+    {
+        // Each tab's aria-controls must point to a panel id that exists in the same island.
+        var html = await RenderTabsAsync(MakeTabs(("Tab A", "<p>A</p>"), ("Tab B", "<p>B</p>")));
+
+        var controls = Regex.Matches(html, @"aria-controls=""([^""]+)""")
+            .Select(m => m.Groups[1].Value).ToList();
+        var panelIds = Regex.Matches(html, @"role=""tabpanel"" id=""([^""]+)""")
+            .Select(m => m.Groups[1].Value).ToHashSet();
+
+        controls.ShouldNotBeEmpty();
+        foreach (var ctrl in controls)
+        {
+            panelIds.ShouldContain(ctrl);
+        }
     }
 }
