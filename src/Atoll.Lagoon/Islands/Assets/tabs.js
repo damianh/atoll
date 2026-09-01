@@ -14,6 +14,8 @@
 const SYNC_EVENT = 'atoll-tab-sync';
 const STORAGE_PREFIX = 'atoll-tab-';
 
+let _islandCounter = 0;
+
 function readStorage(syncKey) {
     try {
         return localStorage.getItem(STORAGE_PREFIX + syncKey);
@@ -33,6 +35,10 @@ function writeStorage(syncKey, label) {
 export default function init(element) {
     // syncKey lives on the outer .tabs div (not on the tablist).
     const syncKey = element.dataset.syncKey || null;
+
+    // Use a stable per-island prefix. element.id may be empty when multiple
+    // slot-mode islands appear on the same page, so fall back to a counter.
+    const islandPrefix = element.id || ('tabs-' + (_islandCounter++));
 
     let tabs;
     let panels;
@@ -60,8 +66,8 @@ export default function init(element) {
         sections.forEach((section, i) => {
             const label = section.dataset.tabLabel || String(i);
             const icon = section.dataset.tabIcon || null;
-            const tabId = 'tab-' + element.id + '-' + i;
-            const panelId = 'panel-' + element.id + '-' + i;
+            const tabId = 'tab-' + islandPrefix + '-' + i;
+            const panelId = 'panel-' + islandPrefix + '-' + i;
 
             // Create tab button
             const btn = document.createElement('button');
@@ -108,7 +114,7 @@ export default function init(element) {
         tab.classList.add('tab-button-active');
 
         const panelId = tab.getAttribute('aria-controls');
-        const panel = panelId ? document.getElementById(panelId) : null;
+        const panel = panelId ? panels.find(p => p.id === panelId) : null;
         if (panel) panel.hidden = false;
     }
 
