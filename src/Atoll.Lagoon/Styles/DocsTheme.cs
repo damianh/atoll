@@ -1395,6 +1395,7 @@ public sealed class DocsTheme : AtollComponent
         .tabs-header {
             display: flex;
             overflow-x: auto;
+            overflow-y: hidden;
             border-bottom: 2px solid var(--docs-border);
             background: var(--docs-bg-subtle);
         }
