@@ -33,8 +33,10 @@ function writeStorage(syncKey, label) {
 }
 
 export default function init(element) {
-    // syncKey lives on the outer .tabs div (not on the tablist).
-    const syncKey = element.dataset.syncKey || null;
+    // The island runtime passes the <atoll-island> root, while SSR places the key on .tabs.
+    const syncKey = element.dataset.syncKey
+        || element.querySelector('.tabs')?.dataset.syncKey
+        || null;
 
     // Use a stable per-island prefix. element.id may be empty when multiple
     // slot-mode islands appear on the same page, so fall back to a counter.
