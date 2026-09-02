@@ -217,7 +217,9 @@
                     }
                     var best = headings[0];
                     for (var i = 0; i < headings.length; i++){
-                        if (headings[i].el.getBoundingClientRect().top <= offset){
+                        // +1px tolerance: anchor scrolling rounds scrollY while heading
+                        // geometry can stay fractional (e.g. 72.0625px vs a 72px offset)
+                        if (headings[i].el.getBoundingClientRect().top <= offset + 1){
                             best = headings[i];
                         } else {
                             break;
