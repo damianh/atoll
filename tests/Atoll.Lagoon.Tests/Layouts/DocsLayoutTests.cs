@@ -363,6 +363,24 @@ public sealed class DocsLayoutTests
         html.ShouldContain("Configuration");
     }
 
+    [Fact]
+    public async Task ShouldActivateScrollspyHeadingWithinOnePixelTolerance()
+    {
+        // Regression test for issue #89: anchor navigation rounds scrollY while heading
+        // geometry can stay fractional (e.g. a target at 72.0625px vs a 72px offset), so a
+        // strict `<= offset` comparison kept the previous TOC link active. The scrollspy
+        // must allow a one-CSS-pixel tolerance when comparing heading positions.
+        var headings = new[]
+        {
+            new MarkdownHeading(2, "Installation", "installation"),
+            new MarkdownHeading(2, "Configuration", "configuration"),
+        };
+        var html = await RenderLayoutAsync(MakeConfig(), headings: headings);
+
+        html.ShouldContain("getBoundingClientRect().top <= offset + 1");
+        html.ShouldNotContain("getBoundingClientRect().top <= offset)");
+    }
+
     // --- Slot content ---
 
     [Fact]
