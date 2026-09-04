@@ -28,6 +28,13 @@ public sealed class LinkButton : AtollComponent
     [Parameter]
     public IconPlacement IconPlacement { get; set; } = IconPlacement.Start;
 
+    /// <summary>
+    /// Gets or sets the anchor target (e.g. <c>_blank</c> to open in a new tab).
+    /// When set to <c>_blank</c>, <c>rel="noopener noreferrer"</c> is emitted automatically.
+    /// </summary>
+    [Parameter]
+    public string? Target { get; set; }
+
     /// <inheritdoc />
     protected override async Task RenderCoreAsync(RenderContext context)
     {
@@ -39,7 +46,17 @@ public sealed class LinkButton : AtollComponent
             _ => "link-button link-button-primary",
         };
 
-        WriteHtml($"<a href=\"{HtmlEncode(Href)}\" class=\"{variantClass}\">");
+        var targetAttributes = string.Empty;
+        if (!string.IsNullOrEmpty(Target))
+        {
+            targetAttributes = $" target=\"{HtmlEncode(Target)}\"";
+            if (Target == "_blank")
+            {
+                targetAttributes += " rel=\"noopener noreferrer\"";
+            }
+        }
+
+        WriteHtml($"<a href=\"{HtmlEncode(Href)}\" class=\"{variantClass}\"{targetAttributes}>");
 
         if (IconName.HasValue && IconPlacement == IconPlacement.Start)
         {

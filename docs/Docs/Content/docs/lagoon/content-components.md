@@ -478,6 +478,7 @@ A styled anchor element rendered as a call-to-action button. Three visual varian
 | `Variant` | `LinkButtonVariant` | `Primary` | Visual style: `Primary`, `Secondary`, or `Minimal` |
 | `IconName` | `IconName?` | `null` | Optional icon |
 | `IconPlacement` | `IconPlacement` | `Start` | Icon position: `Start` (before label) or `End` (after label) |
+| `Target` | `string?` | `null` | Anchor target (e.g. `_blank` to open in a new tab). When `_blank`, `rel="noopener noreferrer"` is added automatically |
 
 ### Usage
 
@@ -497,7 +498,15 @@ await RenderAsync<LinkButton>(new
     Variant = LinkButtonVariant.Secondary,
     IconName = IconName.ExternalLink,
     IconPlacement = IconPlacement.End,
+    Target = "_blank",
 });
+```
+
+When `Target` is `_blank`, the rendered anchor automatically includes
+`rel="noopener noreferrer"`:
+
+```html
+<a href="https://github.com/damianh/atoll" class="link-button link-button-secondary" target="_blank" rel="noopener noreferrer">...</a>
 ```
 
 ### Live example
@@ -505,7 +514,7 @@ await RenderAsync<LinkButton>(new
 :::link-button{href="/docs/getting-started" label="Get Started" variant="Primary" iconName="Rocket"}
 :::
 
-:::link-button{href="https://github.com/damianh/atoll" label="View on GitHub" variant="Secondary" iconName="ExternalLink" iconPlacement="End"}
+:::link-button{href="https://github.com/damianh/atoll" label="View on GitHub" variant="Secondary" iconName="ExternalLink" iconPlacement="End" target="_blank"}
 :::
 
 :::link-button{href="/docs/lagoon/content-components" label="Browse Components" variant="Minimal"}
