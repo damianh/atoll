@@ -11,7 +11,8 @@ public sealed class LinkButtonTests
         string label,
         LinkButtonVariant variant = LinkButtonVariant.Primary,
         IconName? iconName = null,
-        IconPlacement iconPlacement = IconPlacement.Start)
+        IconPlacement iconPlacement = IconPlacement.Start,
+        string? target = null)
     {
         var destination = new StringRenderDestination();
         var props = new Dictionary<string, object?>
@@ -21,6 +22,7 @@ public sealed class LinkButtonTests
             ["Variant"] = variant,
             ["IconName"] = iconName,
             ["IconPlacement"] = iconPlacement,
+            ["Target"] = target,
         };
         await ComponentRenderer.RenderComponentAsync<LinkButton>(destination, props);
         return destination.GetOutput();
@@ -68,5 +70,48 @@ public sealed class LinkButtonTests
         var html = await RenderLinkButtonAsync("/docs", "A <b>bold</b> label");
 
         html.ShouldContain("A &lt;b&gt;bold&lt;/b&gt; label");
+    }
+
+    [Fact]
+    public async Task ShouldOmitTargetAndRelByDefault()
+    {
+        var html = await RenderLinkButtonAsync("/docs", "Go");
+
+        html.ShouldNotContain("target=");
+        html.ShouldNotContain("rel=");
+    }
+
+    [Fact]
+    public async Task ShouldRenderTargetWhenProvided()
+    {
+        var html = await RenderLinkButtonAsync("https://example.com/", "Open", target: "_blank");
+
+        html.ShouldContain("target=\"_blank\"");
+    }
+
+    [Fact]
+    public async Task ShouldAddRelNoopenerNoreferrerForBlankTarget()
+    {
+        var html = await RenderLinkButtonAsync("https://example.com/", "Open", target: "_blank");
+
+        html.ShouldContain("rel=\"noopener noreferrer\"");
+    }
+
+    [Fact]
+    public async Task ShouldNotAddRelForNonBlankTarget()
+    {
+        var html = await RenderLinkButtonAsync("/docs", "Go", target: "myframe");
+
+        html.ShouldContain("target=\"myframe\"");
+        html.ShouldNotContain("rel=");
+    }
+
+    [Fact]
+    public async Task ShouldHtmlEncodeTarget()
+    {
+        var html = await RenderLinkButtonAsync("/docs", "Go", target: "\"><script>");
+
+        html.ShouldNotContain("<script>");
+        html.ShouldContain("target=\"&quot;&gt;&lt;script&gt;\"");
     }
 }
