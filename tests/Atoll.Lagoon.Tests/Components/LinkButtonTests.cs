@@ -56,6 +56,17 @@ public sealed class LinkButtonTests
         html.ShouldNotContain("<svg");
     }
 
+    [Theory]
+    [InlineData(LinkButtonVariant.Primary, "link-button-primary")]
+    [InlineData(LinkButtonVariant.Secondary, "link-button-secondary")]
+    [InlineData(LinkButtonVariant.Minimal, "link-button-minimal")]
+    public async Task ShouldRenderVariantClass(LinkButtonVariant variant, string variantClass)
+    {
+        var html = await RenderLinkButtonAsync("/docs", "Go", variant);
+
+        html.ShouldContain($"class=\"link-button {variantClass}\"");
+    }
+
     [Fact]
     public async Task ShouldHtmlEncodeHref()
     {
