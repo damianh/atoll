@@ -13,11 +13,11 @@ namespace Atoll.Lagoon.Styles;
 /// a scope wrapper — the docs theme must affect the full page, not just a subtree.
 /// Sections: reset, light tokens, dark tokens (via <c>[data-theme="dark"]</c>),
 /// layout (header / body / sidebar / TOC), typography, prose, code blocks,
-/// sidebar nav, TOC, pagination, breadcrumbs, hero, and search dialog.
+/// sidebar nav, TOC, pagination, breadcrumbs, hero, link buttons, and search dialog.
 /// </remarks>
 [GlobalStyle]
 [Styles(Reset + LightTokens + DarkTokens + Layout + ScrollbarStyles + Typography + Prose + CodeBlocks + SyntaxHighlightTokens + CodeCopyButtonStyles + ExpressiveCodeStyles +
-        SidebarNav + TocNav + PaginationStyles + BreadcrumbStyles + HeroStyles + SplashStyles + SearchStyles +
+        SidebarNav + TocNav + PaginationStyles + BreadcrumbStyles + HeroStyles + LinkButtonStyles + SplashStyles + SearchStyles +
         LanguagePickerStyles + UntranslatedNoticeStyles + AsideStyles + TabsStyles + ContentFooterStyles + FooterLinkStyles + BannerStyles)]
 public sealed class DocsTheme : AtollComponent
 {
@@ -938,6 +938,59 @@ public sealed class DocsTheme : AtollComponent
             text-decoration: none;
         }
         .hero-image { border-radius: 0.5rem; max-height: 24rem; object-fit: cover; }
+        """;
+
+    private const string LinkButtonStyles = """
+        /* ---- Link buttons ---- */
+        .link-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.6875rem 1.25rem;
+            border: 2px solid transparent;
+            border-radius: 0.375rem;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            line-height: 1.5;
+            text-decoration: none;
+            transition: background-color 0.1s, border-color 0.1s, color 0.1s;
+        }
+        .link-button:hover {
+            text-decoration: none;
+        }
+        .link-button:focus-visible {
+            outline: 2px solid var(--docs-primary);
+            outline-offset: 2px;
+        }
+        .link-button svg {
+            width: 1em;
+            height: 1em;
+            flex-shrink: 0;
+        }
+        .link-button-primary {
+            background: var(--docs-primary);
+            color: #fff;
+        }
+        .link-button-primary:hover {
+            background: var(--docs-accent);
+            color: #fff;
+        }
+        .link-button-secondary {
+            border-color: var(--docs-border);
+            color: var(--docs-text);
+        }
+        .link-button-secondary:hover {
+            border-color: var(--docs-primary);
+            color: var(--docs-primary);
+        }
+        .link-button-minimal {
+            background: transparent;
+            color: var(--docs-link);
+        }
+        .link-button-minimal:hover {
+            color: var(--docs-link-hover);
+        }
         """;
 
     private const string SplashStyles = """
