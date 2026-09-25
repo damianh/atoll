@@ -88,16 +88,11 @@ internal sealed class SyntaxHighlightCodeBlockRenderer : HtmlObjectRenderer<Code
     private static readonly object GrammarLoadLock = new();
 
     // Copy-to-clipboard button — now placed in the frame header.
-    // The JS walks up to '.ec-frame' or '.code-block-wrapper' (frameless fallback)
-    // to find the <code> element and copy its text content.
+    // atoll-docs-actions.js handles clicks on [data-atoll-copy] via a delegated listener
+    // (no inline handler, so strict CSP works). It walks up to '.ec-frame' or
+    // '.code-block-wrapper' (frameless fallback) to find the <code> element.
     private const string CopyButtonHtml = """
-        <button type="button" class="code-copy-btn" aria-label="Copy code" onclick="
-            let w=this.closest('.ec-frame')||this.closest('.code-block-wrapper');
-            let c=w&&w.querySelector('code');
-            if(c)navigator.clipboard.writeText(c.innerText).then(()=>{
-                this.classList.add('copied');
-                setTimeout(()=>this.classList.remove('copied'),2000);
-            })">
+        <button type="button" class="code-copy-btn" aria-label="Copy code" data-atoll-copy>
             <svg class="copy-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>

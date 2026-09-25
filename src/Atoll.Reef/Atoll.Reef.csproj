@@ -13,5 +13,7 @@
       LogicalName="Atoll.Reef.Islands.Assets.article-filter.js" />
     <EmbeddedResource Include="Islands\Assets\view-toggle.js"
       LogicalName="Atoll.Reef.Islands.Assets.view-toggle.js" />
+    <EmbeddedResource Include="Islands\Assets\theme-init.js"
+      LogicalName="Atoll.Reef.Islands.Assets.theme-init.js" />
   </ItemGroup>
 </Project>

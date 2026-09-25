@@ -75,7 +75,7 @@ public sealed class VersionPickerTests
     }
 
     [Fact]
-    public async Task ShouldRenderOnchangeHandler()
+    public async Task ShouldRenderNavigateAttributeWithoutInlineHandler()
     {
         var versions = new Dictionary<string, VersionConfig>
         {
@@ -85,7 +85,8 @@ public sealed class VersionPickerTests
 
         var html = await RenderPickerAsync(versions);
 
-        html.ShouldContain("onchange=\"window.location.href=this.value\"");
+        html.ShouldContain("data-atoll-navigate");
+        html.ShouldNotContain("onchange=");
     }
 
     // --- Selected option ---

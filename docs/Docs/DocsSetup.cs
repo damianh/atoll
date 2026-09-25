@@ -63,6 +63,7 @@ public static class DocsSetup
                     new SidebarItem { Label = "Islands Architecture",    Link = "/islands" },
                     new SidebarItem { Label = "Static Site Generation",  Link = "/static-site-generation" },
                     new SidebarItem { Label = "HTTP Caching",            Link = "/caching" },
+                    new SidebarItem { Label = "Content Security Policy", Link = "/content-security-policy" },
                 ],
             },
             new SidebarItem

@@ -31,6 +31,18 @@
       LogicalName="Atoll.Lagoon.Islands.Assets.sidebar-resize.js" />
     <EmbeddedResource Include="Islands\Assets\tabs.js"
       LogicalName="Atoll.Lagoon.Islands.Assets.tabs.js" />
+    <EmbeddedResource Include="Islands\Assets\theme-init.js"
+      LogicalName="Atoll.Lagoon.Islands.Assets.theme-init.js" />
+    <EmbeddedResource Include="Islands\Assets\sidebar-restore.js"
+      LogicalName="Atoll.Lagoon.Islands.Assets.sidebar-restore.js" />
+    <EmbeddedResource Include="Islands\Assets\sidebar-scroll-restore.js"
+      LogicalName="Atoll.Lagoon.Islands.Assets.sidebar-scroll-restore.js" />
+    <EmbeddedResource Include="Islands\Assets\banner.js"
+      LogicalName="Atoll.Lagoon.Islands.Assets.banner.js" />
+    <EmbeddedResource Include="Islands\Assets\toc.js"
+      LogicalName="Atoll.Lagoon.Islands.Assets.toc.js" />
+    <EmbeddedResource Include="Islands\Assets\docs-actions.js"
+      LogicalName="Atoll.Lagoon.Islands.Assets.docs-actions.js" />
     <EmbeddedResource Include="Assets\logo.png"
       LogicalName="Atoll.Lagoon.Assets.logo.png" />
   </ItemGroup>

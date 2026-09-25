@@ -96,9 +96,7 @@ html, body { height: 100%; background: #1a1a2e; color: #fff; font-family: system
     </aside>
 </div>
 
-<script>
-window.swellSlides = @{ WriteLiteral(BuildSlidesJson(Model.Slides)); };
-</script>
+<script type="application/json" id="swell-slides">@{ WriteLiteral(BuildSlidesJson(Model.Slides)); }</script>
 <script src="/scripts/atoll-swell-presenter.js" defer></script>
 </body>
 </html>

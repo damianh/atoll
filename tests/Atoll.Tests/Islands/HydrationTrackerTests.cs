@@ -207,42 +207,6 @@ public sealed class HydrationTrackerTests
             () => tracker.GetRequiredScripts(ClientDirectiveType.Load, "/scripts/atoll-island.js", null!));
     }
 
-    // ─── GetRequiredInlineScripts tests ─────────────────────────────────
-
-    [Fact]
-    public void GetRequiredInlineScriptsShouldReturnBothOnFirstCall()
-    {
-        var tracker = new HydrationTracker();
-
-        var scripts = tracker.GetRequiredInlineScripts(ClientDirectiveType.Load);
-
-        scripts.Count.ShouldBe(2);
-        scripts[0].IsInline.ShouldBeTrue();
-        scripts[1].IsInline.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void GetRequiredInlineScriptsShouldReturnOnlyDirectiveOnSecondCallWithDifferentDirective()
-    {
-        var tracker = new HydrationTracker();
-        tracker.GetRequiredInlineScripts(ClientDirectiveType.Load);
-
-        var scripts = tracker.GetRequiredInlineScripts(ClientDirectiveType.Idle);
-
-        scripts.Count.ShouldBe(1);
-    }
-
-    [Fact]
-    public void GetRequiredInlineScriptsShouldReturnEmptyForFullDuplicate()
-    {
-        var tracker = new HydrationTracker();
-        tracker.GetRequiredInlineScripts(ClientDirectiveType.Load);
-
-        var scripts = tracker.GetRequiredInlineScripts(ClientDirectiveType.Load);
-
-        scripts.Count.ShouldBe(0);
-    }
-
     // ─── AddToProcessor tests ─────────────────────────────────
 
     [Fact]

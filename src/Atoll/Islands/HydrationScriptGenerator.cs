@@ -29,22 +29,22 @@ public static class HydrationScriptGenerator
     public const string BootstrapScriptKey = "atoll:island:bootstrap";
 
     /// <summary>
-    /// Generates a <c>&lt;script&gt;</c> tag containing the island bootstrap code.
+    /// Generates an external <c>&lt;script type="module" src="..."&gt;</c> tag that loads the island bootstrap code.
     /// </summary>
-    /// <param name="islandScriptUrl">
-    /// The URL of the <c>atoll-island.js</c> script. If <c>null</c>, an inline
-    /// script with a minimal island definition is emitted.
-    /// </param>
+    /// <remarks>
+    /// Atoll never emits the bootstrap inline so that pages work under a strict
+    /// Content-Security-Policy (<c>script-src 'self'</c>).
+    /// </remarks>
+    /// <param name="islandScriptUrl">The URL of the <c>atoll-island.js</c> script (for example <c>/_atoll/island.js</c>).</param>
     /// <returns>The HTML script tag string.</returns>
-    public static string GenerateBootstrapScript(string? islandScriptUrl)
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="islandScriptUrl"/> is <c>null</c>.
+    /// </exception>
+    public static string GenerateBootstrapScript(string islandScriptUrl)
     {
-        if (islandScriptUrl is not null)
-        {
-            return $"<script type=\"module\" src=\"{EscapeAttribute(islandScriptUrl)}\"></script>";
-        }
+        ArgumentNullException.ThrowIfNull(islandScriptUrl);
 
-        // Inline minimal island definition when no external script URL is provided
-        return "<script type=\"module\">" + InlineBootstrapScript + "</script>";
+        return $"<script type=\"module\" src=\"{EscapeAttribute(islandScriptUrl)}\"></script>";
     }
 
     /// <summary>
@@ -71,12 +71,4 @@ public static class HydrationScriptGenerator
             .Replace("<", "&lt;")
             .Replace(">", "&gt;");
     }
-
-    // Minimal inline bootstrap that defines the atoll-island custom element.
-    // In production, this would be the full atoll-island.js content.
-    // For now, this is a placeholder that registers the custom element
-    // and handles basic hydration coordination.
-    private const string InlineBootstrapScript = """
-(()=>{if(customElements.get('atoll-island'))return;class A extends HTMLElement{connectedCallback(){this.hasAttribute('ssr')&&this.dispatchEvent(new CustomEvent('atoll:hydrate',{bubbles:!0}))}}customElements.define('atoll-island',A)})()
-""";
 }

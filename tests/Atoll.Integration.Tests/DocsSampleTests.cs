@@ -11,6 +11,7 @@ using Atoll.Lagoon.Search;
 using Atoll.Lagoon.Styles;
 using Atoll.Rendering;
 using Atoll.Routing;
+using Atoll.Tests.Shared;
 
 namespace Atoll.Integration.Tests;
 
@@ -699,7 +700,7 @@ public sealed class DocsSampleTests : IDisposable
         var writer = new IslandAssetWriter(_outputDir);
         var result = await writer.WriteAsync(assets, _ct);
 
-        result.FileCount.ShouldBe(6);
+        result.FileCount.ShouldBe(12);
 
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-search-dialog.js")).ShouldBeTrue();
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-theme-toggle.js")).ShouldBeTrue();
@@ -707,6 +708,12 @@ public sealed class DocsSampleTests : IDisposable
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-sidebar-state.js")).ShouldBeTrue();
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-sidebar-resize.js")).ShouldBeTrue();
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-tabs.js")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-theme-init.js")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-sidebar-restore.js")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-sidebar-scroll-restore.js")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-banner.js")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-toc.js")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-actions.js")).ShouldBeTrue();
 
         // Verify one file has expected content
         var searchDialogContent = await File.ReadAllTextAsync(
@@ -818,17 +825,29 @@ public sealed class DocsSampleTests : IDisposable
         assetResult.Css.Css.ShouldContain("--docs-bg");
 
         // Assert island JS
-        islandResult.FileCount.ShouldBe(6);
+        islandResult.FileCount.ShouldBe(12);
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-search-dialog.js")).ShouldBeTrue();
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-theme-toggle.js")).ShouldBeTrue();
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-mobile-nav.js")).ShouldBeTrue();
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-sidebar-state.js")).ShouldBeTrue();
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-sidebar-resize.js")).ShouldBeTrue();
         File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-tabs.js")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-theme-init.js")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-sidebar-restore.js")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-sidebar-scroll-restore.js")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-banner.js")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-toc.js")).ShouldBeTrue();
+        File.Exists(Path.Combine(_outputDir, "scripts", "atoll-docs-actions.js")).ShouldBeTrue();
 
         // Assert HTML pages (no regression)
         File.Exists(Path.Combine(_outputDir, "index.html")).ShouldBeTrue();
         File.Exists(Path.Combine(_outputDir, "getting-started", "index.html")).ShouldBeTrue();
+
+        // Every generated page must work under a strict CSP (script-src 'self')
+        foreach (var htmlFile in Directory.EnumerateFiles(_outputDir, "*.html", SearchOption.AllDirectories))
+        {
+            (await File.ReadAllTextAsync(htmlFile, _ct)).ShouldBeStrictCspCompatible();
+        }
     }
 }
 

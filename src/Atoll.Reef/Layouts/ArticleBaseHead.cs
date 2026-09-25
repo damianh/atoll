@@ -5,7 +5,7 @@ namespace Atoll.Reef.Layouts;
 
 /// <summary>
 /// Renders the <c>&lt;head&gt;</c> section for article/blog pages, including meta tags,
-/// viewport settings, title template, custom CSS, and the theme FOUC-prevention inline script.
+/// viewport settings, title template, custom CSS, and the render-blocking theme script that prevents a flash of the wrong theme.
 /// </summary>
 /// <remarks>
 /// Rendering is delegated to <c>ArticleBaseHeadTemplate.cshtml</c>.

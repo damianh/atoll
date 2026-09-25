@@ -43,5 +43,35 @@ public sealed class LagoonIslandAssetProvider : IIslandAssetProvider
             "scripts/atoll-docs-tabs.js",
             "Atoll.Lagoon.Islands.Assets.tabs.js",
             ResourceAssembly);
+
+        yield return new IslandAssetDescriptor(
+            "scripts/atoll-theme-init.js",
+            "Atoll.Lagoon.Islands.Assets.theme-init.js",
+            ResourceAssembly);
+
+        yield return new IslandAssetDescriptor(
+            "scripts/atoll-sidebar-restore.js",
+            "Atoll.Lagoon.Islands.Assets.sidebar-restore.js",
+            ResourceAssembly);
+
+        yield return new IslandAssetDescriptor(
+            "scripts/atoll-sidebar-scroll-restore.js",
+            "Atoll.Lagoon.Islands.Assets.sidebar-scroll-restore.js",
+            ResourceAssembly);
+
+        yield return new IslandAssetDescriptor(
+            "scripts/atoll-docs-banner.js",
+            "Atoll.Lagoon.Islands.Assets.banner.js",
+            ResourceAssembly);
+
+        yield return new IslandAssetDescriptor(
+            "scripts/atoll-docs-toc.js",
+            "Atoll.Lagoon.Islands.Assets.toc.js",
+            ResourceAssembly);
+
+        yield return new IslandAssetDescriptor(
+            "scripts/atoll-docs-actions.js",
+            "Atoll.Lagoon.Islands.Assets.docs-actions.js",
+            ResourceAssembly);
     }
 }

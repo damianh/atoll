@@ -10,4 +10,7 @@
     <PackageReference Include="xunit.v3.core.mtp-v2" />
     <PackageReference Include="Shouldly" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Shared\CspAssertions.cs" Link="Shared\CspAssertions.cs" />
+  </ItemGroup>
 </Project>

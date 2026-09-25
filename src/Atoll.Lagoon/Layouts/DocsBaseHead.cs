@@ -6,7 +6,7 @@ namespace Atoll.Lagoon.Layouts;
 
 /// <summary>
 /// Renders the <c>&lt;head&gt;</c> section for documentation pages, including meta tags,
-/// viewport settings, title template, custom CSS, and the theme FOUC-prevention inline script.
+/// viewport settings, title template, custom CSS, and the render-blocking theme script that prevents a flash of the wrong theme.
 /// When <see cref="DocsConfig.OpenGraph"/> is configured, also renders OG and Twitter Card meta tags.
 /// </summary>
 /// <remarks>

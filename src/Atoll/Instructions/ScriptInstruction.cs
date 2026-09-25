@@ -65,6 +65,11 @@ public sealed class ScriptInstruction : RenderInstruction
     /// <summary>
     /// Creates a <see cref="ScriptInstruction"/> for inline JavaScript content.
     /// </summary>
+    /// <remarks>
+    /// Inline scripts are blocked by a strict Content-Security-Policy (<c>script-src 'self'</c>).
+    /// Atoll itself never emits inline scripts; sites that want to enforce a strict CSP should
+    /// use <see cref="External"/> or <see cref="Module"/> with a static asset instead.
+    /// </remarks>
     /// <param name="scopeId">A unique scope identifier for deduplication.</param>
     /// <param name="javascript">The inline JavaScript content.</param>
     /// <returns>A new <see cref="ScriptInstruction"/>.</returns>

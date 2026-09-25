@@ -16,4 +16,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Shared\CspAssertions.cs" Link="Shared\CspAssertions.cs" />
+  </ItemGroup>
 </Project>

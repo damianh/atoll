@@ -73,7 +73,8 @@ public sealed class PresenterLayoutTests
 
         var html = await RenderAsync(slides: slides);
 
-        html.ShouldContain("window.swellSlides");
+        html.ShouldContain("<script type=\"application/json\" id=\"swell-slides\">");
+        html.ShouldNotContain("window.swellSlides");
         html.ShouldContain("First slide note");
         html.ShouldContain("Second slide note");
     }
