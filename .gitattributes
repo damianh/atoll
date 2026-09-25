@@ -15,3 +15,7 @@
 * text=auto eol=lf
 
 
+
+# Bundled third-party files are verified byte-for-byte against manifest hashes
+src/Atoll.Mermaid/Islands/Assets/vendor/** -text linguist-vendored=true
+
