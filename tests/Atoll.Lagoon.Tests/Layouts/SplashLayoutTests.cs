@@ -304,6 +304,26 @@ public sealed class SplashLayoutTests
         html.ShouldNotContain("atoll-docs-mermaid-init.js");
     }
 
+    [Fact]
+    public async Task ShouldUseBundledMermaidWhenNoModuleUrlConfigured()
+    {
+        var html = await RenderLayoutAsync(MakeConfig(enableMermaid: true));
+
+        html.ShouldContain("<script src=\"/scripts/atoll-docs-mermaid-init.js\" type=\"module\" data-atoll-mermaid></script>");
+        html.ShouldNotContain("data-module-src");
+    }
+
+    [Fact]
+    public async Task ShouldEmitMermaidModuleUrlOverrideWhenConfigured()
+    {
+        var config = MakeConfig(enableMermaid: true);
+        config.MermaidModuleUrl = "https://example.com/mermaid.esm.min.mjs?a=1&b=2";
+
+        var html = await RenderLayoutAsync(config);
+
+        html.ShouldContain("data-atoll-mermaid data-module-src=\"https://example.com/mermaid.esm.min.mjs?a=1&amp;b=2\"");
+    }
+
     // --- Theme FOUC prevention ---
 
     [Fact]

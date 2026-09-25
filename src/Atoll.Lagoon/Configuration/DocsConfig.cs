@@ -62,11 +62,50 @@ public sealed class DocsConfig
 
     /// <summary>
     /// Gets or sets a value indicating whether Mermaid diagram rendering is enabled.
-    /// When <c>true</c>, the Mermaid JS library is loaded and fenced <c>mermaid</c> code
-    /// blocks are rendered as diagrams.
+    /// When <c>true</c>, fenced <c>mermaid</c> code blocks are rendered as diagrams using the
+    /// Mermaid build bundled with <c>Atoll.Mermaid</c>, which is only downloaded on pages
+    /// that contain a diagram.
     /// Default: <c>false</c>.
     /// </summary>
     public bool EnableMermaid { get; set; }
+
+    /// <summary>
+    /// Gets or sets an optional URL of a Mermaid ES module (<c>mermaid.esm.min.mjs</c>) to load
+    /// instead of the bundled, pinned Mermaid build. Must be an absolute <c>http</c>/<c>https</c>
+    /// URL or a root-relative path (e.g. <c>/vendor/mermaid/mermaid.esm.min.mjs</c>).
+    /// When set, the integrity checks of the bundled build no longer apply and the site's
+    /// Content Security Policy must allow the chosen origin.
+    /// Default: <c>null</c> (use the bundled build).
+    /// </summary>
+    /// <exception cref="ArgumentException">The value is not an absolute http(s) URL or a root-relative path.</exception>
+    public string? MermaidModuleUrl
+    {
+        get => _mermaidModuleUrl;
+        set
+        {
+            if (value is not null && !IsValidModuleUrl(value))
+            {
+                throw new ArgumentException(
+                    "MermaidModuleUrl must be an absolute http(s) URL or a root-relative path starting with '/'.",
+                    nameof(value));
+            }
+
+            _mermaidModuleUrl = value;
+        }
+    }
+
+    private string? _mermaidModuleUrl;
+
+    private static bool IsValidModuleUrl(string value)
+    {
+        if (value.StartsWith('/'))
+        {
+            return !value.StartsWith("//", StringComparison.Ordinal) && !value.Contains('\\');
+        }
+
+        return Uri.TryCreate(value, UriKind.Absolute, out var uri) &&
+               (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp);
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether server-side syntax highlighting is enabled.

@@ -21,7 +21,8 @@ All Lagoon options live in a single `DocsConfig` instance. Create one in a stati
 | `TableOfContents` | `TableOfContentsConfig` | see below | Controls which headings appear in the TOC |
 | `Social` | `IReadOnlyList<SocialLink>` | `[]` | Social/external links shown in the header |
 | `CustomCss` | `IReadOnlyList<string>` | `[]` | Paths or URLs of additional CSS files to load on every page |
-| `EnableMermaid` | `bool` | `false` | Load the Mermaid JS library and render ` ```mermaid ` blocks |
+| `EnableMermaid` | `bool` | `false` | Render ` ```mermaid ` blocks with the bundled Mermaid JS library, which is only loaded on pages with diagrams |
+| `MermaidModuleUrl` | `string?` | `null` | Load Mermaid from this URL instead of the bundled build (absolute http(s) URL or root-relative path) |
 | `EditUrl` | `string?` | `null` | Base URL for "Edit this page" links (e.g. `"https://github.com/org/repo/edit/main/docs/"`). The page slug is appended at render time |
 | `Footer` | `FooterConfig?` | `null` | Custom footer content. When `null`, the default "Built with Atoll" footer is rendered |
 | `FaviconHref` | `string?` | `null` | URL or path to the site favicon. When `null`, the built-in Atoll logo is used |

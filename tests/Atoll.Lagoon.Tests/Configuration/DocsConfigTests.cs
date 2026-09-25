@@ -34,6 +34,35 @@ public sealed class DocsConfigTests
     }
 
     [Fact]
+    public void MermaidModuleUrlShouldDefaultToNull()
+    {
+        new DocsConfig().MermaidModuleUrl.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData("https://example.com/mermaid.esm.min.mjs")]
+    [InlineData("http://localhost:5000/mermaid.esm.min.mjs")]
+    [InlineData("/vendor/mermaid/mermaid.esm.min.mjs")]
+    public void MermaidModuleUrlShouldAcceptHttpUrlsAndRootRelativePaths(string url)
+    {
+        var config = new DocsConfig { MermaidModuleUrl = url };
+
+        config.MermaidModuleUrl.ShouldBe(url);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("mermaid.esm.min.mjs")]
+    [InlineData("//cdn.example.com/mermaid.esm.min.mjs")]
+    [InlineData("javascript:alert(1)")]
+    [InlineData("data:text/javascript,alert(1)")]
+    [InlineData("ftp://example.com/mermaid.mjs")]
+    public void MermaidModuleUrlShouldRejectInvalidValues(string url)
+    {
+        Should.Throw<ArgumentException>(() => new DocsConfig { MermaidModuleUrl = url });
+    }
+
+    [Fact]
     public void SocialLinkShouldThrowOnNullLabel()
     {
         Should.Throw<ArgumentException>(() => new SocialLink(null!, "https://github.com", SocialIcon.GitHub));

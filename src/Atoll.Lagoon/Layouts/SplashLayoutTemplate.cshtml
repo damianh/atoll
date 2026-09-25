@@ -93,7 +93,14 @@
     </footer>
     @if (Model.EnableMermaid)
     {
-        <script src="/scripts/atoll-docs-mermaid-init.js" type="module"></script>
+        if (Model.Config.MermaidModuleUrl is { } mermaidModuleUrl)
+        {
+            <script src="/scripts/atoll-docs-mermaid-init.js" type="module" data-atoll-mermaid data-module-src="@mermaidModuleUrl"></script>
+        }
+        else
+        {
+            <script src="/scripts/atoll-docs-mermaid-init.js" type="module" data-atoll-mermaid></script>
+        }
     }
 </body>
 </html>

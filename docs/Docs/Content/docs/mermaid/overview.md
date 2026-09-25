@@ -7,11 +7,12 @@ section: Mermaid Plugin
 
 # Mermaid Overview
 
-The `Atoll.Mermaid` plugin renders [Mermaid](https://mermaid.js.org/) diagrams from fenced code blocks in markdown. At build time, `` ```mermaid `` blocks are converted to `<pre class="mermaid">` elements. At page load, the Mermaid JS library (loaded from CDN) renders them as SVG diagrams.
+The `Atoll.Mermaid` plugin renders [Mermaid](https://mermaid.js.org/) diagrams from fenced code blocks in markdown. At build time, `` ```mermaid `` blocks are converted to `<pre class="mermaid">` elements. At page load, a pinned copy of the Mermaid JS library bundled with the package renders them as SVG diagrams. Nothing is loaded from a CDN.
 
 | Feature | Description |
 |---|---|
-| **Zero JS by default** | No Mermaid JavaScript is loaded unless `EnableMermaid` is `true` |
+| **Zero JS by default** | No Mermaid JavaScript is loaded unless `EnableMermaid` is `true`, and pages without diagrams never download Mermaid |
+| **Bundled and pinned** | A specific Mermaid release ships inside the package and is served from your site. Its files are checked against recorded hashes at build time |
 | **Build-time transform** | Fenced code blocks become `<pre class="mermaid">` — no nested `<code>` element |
 | **Theme sync** | Diagrams automatically re-render when the user toggles dark/light mode |
 | **XSS safe** | Diagram content is HTML-encoded at build time; Mermaid reads `textContent` so encoding is transparent |
@@ -38,7 +39,7 @@ using Atoll.Mermaid.Islands;
 builder.Services.AddIslandAssetProvider<MermaidIslandAssetProvider>();
 ```
 
-No additional NuGet packages are required. The JavaScript asset (`atoll-docs-mermaid-init.js`) is embedded in the assembly and served automatically via the `IIslandAssetProvider` pipeline.
+No additional NuGet packages are required. The initialisation script (`atoll-docs-mermaid-init.js`) and the bundled Mermaid build (`scripts/atoll-mermaid/<version>/`) are embedded in the assembly and served automatically via the `IIslandAssetProvider` pipeline.
 
 ## Enabling Mermaid
 
@@ -52,7 +53,7 @@ new DocsConfig
 }
 ```
 
-When enabled, `DocsLayout` injects a module script tag that loads Mermaid from the jsDelivr CDN, initialises it with the current theme, and observes `data-theme` changes to re-render diagrams when the theme toggles.
+When enabled, `DocsLayout` injects a small module script. On pages that contain a diagram, it loads the bundled Mermaid build from your site, initialises it with the current theme, and observes `data-theme` changes to re-render diagrams when the theme toggles. On pages without diagrams it does nothing.
 
 When `EnableMermaid` is `false` (the default), no Mermaid-related JavaScript is loaded and fenced `mermaid` blocks render as plain code.
 
@@ -191,10 +192,50 @@ The plugin is a Markdig pipeline extension with two parts:
 
 The client-side initialisation script (`mermaid-init.js`) does the following:
 
-1. Imports Mermaid from `https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.esm.min.mjs`
-2. Reads the current `data-theme` attribute to choose `dark` or `default` theme
-3. Calls `mermaid.initialize({ startOnLoad: true, theme })`
-4. Installs a `MutationObserver` on `<html>` to re-initialise and re-render when the theme changes
+1. Looks for `<pre class="mermaid">` elements. If there are none, it stops, so Mermaid is never downloaded.
+2. Loads Mermaid with a dynamic `import()`. By default it loads the bundled build from `/scripts/atoll-mermaid/<version>/mermaid.esm.min.mjs`. This is Mermaid's chunked ES module build, so a page only downloads the chunks its diagram types need.
+3. Reads the current `data-theme` attribute to choose `dark` or `default` theme
+4. Calls `mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme })` and then `mermaid.run()`. Render errors are caught and logged to the console.
+5. Installs a `MutationObserver` on `<html>` to re-render when the theme changes. Renders are queued so they never overlap, and a render is skipped if the theme hasn't actually changed.
+
+## Using a different Mermaid build
+
+To load Mermaid from somewhere else, for example a newer version you host yourself, set `MermaidModuleUrl` to the URL of a `mermaid.esm.min.mjs` file:
+
+```csharp
+new DocsConfig
+{
+    EnableMermaid = true,
+    MermaidModuleUrl = "/vendor/mermaid/12.1.0/mermaid.esm.min.mjs",
+}
+```
+
+The value must be an absolute `http`/`https` URL or a root-relative path. Lagoon emits it as a `data-module-src` attribute on the init script tag. Outside Lagoon, add `data-atoll-mermaid data-module-src="..."` to your own `<script type="module">` tag.
+
+When you override the module URL, the bundled build's integrity checks no longer apply, and your Content Security Policy must allow the origin you load from.
+
+## Content Security Policy
+
+With the bundled build, Mermaid is served from your own origin, so `script-src 'self'` is enough and no third-party origin such as `cdn.jsdelivr.net` needs to be allowed. Mermaid injects inline `<style>` elements into the SVGs it renders, so `style-src` must still include `'unsafe-inline'`. Mermaid does not need `'unsafe-eval'`.
+
+The bundled files use the `.mjs` extension. Your host must serve `.mjs` files with a JavaScript MIME type such as `text/javascript`, or browsers will refuse to load them as modules. GitHub Pages, Netlify, Cloudflare Pages and the Atoll dev server already do this.
+
+## Upgrading the bundled Mermaid
+
+The bundled files live in `src/Atoll.Mermaid/Islands/Assets/vendor/mermaid/`, next to `manifest.json`. The manifest records the npm tarball URL, the tarball's `sha512` integrity hash from the npm registry, and a SHA-256 hash for every bundled file. To upgrade, run the update script from the repository root (PowerShell 7+):
+
+```powershell
+./eng/update-mermaid.ps1 -Version 12.0.1
+```
+
+The script:
+
+1. Downloads the `mermaid` tarball and checks it against the integrity hash the registry publishes.
+2. Replaces the vendored files with `dist/mermaid.esm.min.mjs`, `dist/chunks/mermaid.esm.min/*.mjs` and `LICENSE`.
+3. Regenerates `manifest.json`.
+4. Updates `BUNDLED_VERSION` in `mermaid-init.js`.
+
+Then run the `Atoll.Mermaid.Tests` tests. They fail if any bundled file doesn't match its recorded hash, if an unlisted file is embedded, if a chunk imports a file that isn't bundled, or if the init script's version doesn't match the manifest. Check the diagrams on this page in both themes before committing. Don't edit the vendored files by hand.
 
 ## Standalone usage
 
@@ -211,7 +252,7 @@ var pipeline = new MarkdownPipelineBuilder()
 var html = Markdown.ToHtml(markdown, pipeline);
 ```
 
-This converts `` ```mermaid `` blocks to `<pre class="mermaid">` in the HTML output. You are responsible for loading the Mermaid JS library on the page.
+This converts `` ```mermaid `` blocks to `<pre class="mermaid">` in the HTML output. You are responsible for loading the Mermaid JS library on the page. To use the bundled build, register `MermaidIslandAssetProvider` and add `<script src="/scripts/atoll-docs-mermaid-init.js" type="module" data-atoll-mermaid></script>` to your pages.
 
 ## Security
 

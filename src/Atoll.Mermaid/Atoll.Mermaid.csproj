@@ -11,4 +11,10 @@
     <EmbeddedResource Include="Islands\Assets\mermaid-init.js"
       LogicalName="Atoll.Mermaid.Islands.Assets.mermaid-init.js" />
   </ItemGroup>
+  <!-- Bundled Mermaid build. Update with eng/update-mermaid.ps1; see docs/mermaid/overview.md. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Islands\Assets\vendor\mermaid\**\*.mjs;Islands\Assets\vendor\mermaid\manifest.json;Islands\Assets\vendor\mermaid\LICENSE">
+      <LogicalName>Atoll.Mermaid.Vendor.mermaid/$([System.String]::Copy('%(RecursiveDir)').Replace('\', '/'))%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
 </Project>
