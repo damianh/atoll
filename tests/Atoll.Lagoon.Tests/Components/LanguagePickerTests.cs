@@ -72,7 +72,7 @@ public sealed class LanguagePickerTests
     }
 
     [Fact]
-    public async Task ShouldRenderOnchangeHandler()
+    public async Task ShouldRenderNavigateAttributeWithoutInlineHandler()
     {
         var locales = new Dictionary<string, LocaleConfig>
         {
@@ -82,7 +82,8 @@ public sealed class LanguagePickerTests
 
         var html = await RenderPickerAsync(locales);
 
-        html.ShouldContain("onchange=\"window.location.href=this.value\"");
+        html.ShouldContain("data-atoll-navigate");
+        html.ShouldNotContain("onchange=");
     }
 
     // --- Selected option ---

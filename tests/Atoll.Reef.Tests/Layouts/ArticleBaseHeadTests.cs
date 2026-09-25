@@ -160,8 +160,8 @@ public sealed class ArticleBaseHeadTests
     {
         var html = await RenderAsync(MakeConfig());
 
-        html.ShouldContain("<script>");
-        html.ShouldContain("atoll-theme");
+        html.ShouldContain("<script src=\"/scripts/atoll-reef-theme-init.js\"></script>");
+        html.ShouldNotContain("<script>");
     }
 
     [Fact]

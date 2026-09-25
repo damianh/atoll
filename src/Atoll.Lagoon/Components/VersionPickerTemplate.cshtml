@@ -1,7 +1,7 @@
 @inherits Atoll.Components.AtollSlice<Atoll.Lagoon.Components.VersionPickerModel>
 @using Atoll.Lagoon.Versioning
 <nav class="version-picker" aria-label="@Model.Translations.VersionSelectLabel">
-    <select aria-label="@Model.Translations.VersionSelectLabel" onchange="window.location.href=this.value">
+    <select aria-label="@Model.Translations.VersionSelectLabel" data-atoll-navigate>
         @foreach (var (key, config) in Model.Versions)
         {
             var versionPrefix = string.Equals(key, "current", StringComparison.OrdinalIgnoreCase)

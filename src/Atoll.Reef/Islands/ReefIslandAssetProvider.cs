@@ -23,5 +23,10 @@ public sealed class ReefIslandAssetProvider : IIslandAssetProvider
             "scripts/atoll-reef-view-toggle.js",
             "Atoll.Reef.Islands.Assets.view-toggle.js",
             ResourceAssembly);
+
+        yield return new IslandAssetDescriptor(
+            "scripts/atoll-reef-theme-init.js",
+            "Atoll.Reef.Islands.Assets.theme-init.js",
+            ResourceAssembly);
     }
 }

@@ -110,46 +110,6 @@ public sealed class HydrationTracker
     }
 
     /// <summary>
-    /// Gets the <see cref="ScriptInstruction"/> instances required for the specified
-    /// directive type using inline scripts, skipping any that have already been emitted.
-    /// </summary>
-    /// <param name="directiveType">The directive type for the island.</param>
-    /// <returns>A list of script instructions that should be emitted (may be empty if all were already emitted).</returns>
-    public IReadOnlyList<ScriptInstruction> GetRequiredInlineScripts(ClientDirectiveType directiveType)
-    {
-        var scripts = new List<ScriptInstruction>();
-
-        if (TryEmitBootstrap())
-        {
-            var bootstrapHtml = HydrationScriptGenerator.GenerateBootstrapScript(null);
-            scripts.Add(new ScriptInstruction(
-                HydrationScriptGenerator.BootstrapScriptKey,
-                Rendering.RenderFragment.FromHtml(bootstrapHtml))
-            {
-                IsInline = true,
-            });
-        }
-
-        if (TryEmitDirective(directiveType))
-        {
-            // For inline mode, the directives script is included in the bootstrap
-            // so we don't need a separate script instruction. However, if the
-            // directive needs to be loaded separately, add it here.
-            var directiveKey = GetDirectiveKey(directiveType);
-            var directiveName = GetDirectiveName(directiveType);
-            scripts.Add(new ScriptInstruction(
-                directiveKey,
-                Rendering.RenderFragment.FromHtml(
-                    $"<script type=\"module\">/* atoll:{directiveName} directive loaded */</script>"))
-            {
-                IsInline = true,
-            });
-        }
-
-        return scripts;
-    }
-
-    /// <summary>
     /// Adds all required scripts for the specified directive type to the
     /// <see cref="InstructionProcessor"/>. Scripts already added to the processor
     /// (or previously emitted via this tracker) are skipped.

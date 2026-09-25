@@ -7,7 +7,7 @@ namespace Atoll.Lagoon.Components;
 /// <summary>
 /// Renders a version switcher dropdown listing all configured versions.
 /// Navigates to the equivalent page in the selected version via a native
-/// <c>&lt;select&gt;</c> element with an <c>onchange</c> handler.
+/// <c>&lt;select&gt;</c> element marked with <c>data-atoll-navigate</c> (handled by <c>atoll-docs-actions.js</c>).
 /// Renders nothing when there are fewer than two versions configured.
 /// </summary>
 /// <remarks>

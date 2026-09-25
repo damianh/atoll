@@ -88,7 +88,7 @@ Key points:
 - Island components (e.g. `SearchDialog`, `ThemeToggle`) can be rendered from Razor templates via `RenderComponentAsync<T>(props)` — island wrapping is automatic
 - See [Components — Razor templates](/docs/components/#razor-templates) for project setup and the full list of template helpers
 
-> Lagoon's `DocsLayout` — a 435-line layout composing islands, sidebar, TOC, breadcrumbs, pagination, inline scripts, and locale/version resolution — uses this pattern. The C# component handles pre-processing; the Razor template owns the markup.
+> Lagoon's `DocsLayout` — a 435-line layout composing islands, sidebar, TOC, breadcrumbs, pagination, theme scripts, and locale/version resolution — uses this pattern. The C# component handles pre-processing; the Razor template owns the markup.
 
 ## Applying a layout to a page
 

@@ -16,8 +16,19 @@
   if (!currentSlideEl) return; // Not on the presenter page layout.
 
   // ── Slide data injected server-side ────────────────────────────────────────
-  // Expected global: window.swellSlides = [{ notes: "..." }, ...]
-  var slideNotes = (window.swellSlides || []).map(function (s) { return s.notes || ''; });
+  // Expected: <script type="application/json" id="swell-slides">[{ "notes": "..." }, ...]</script>
+  // A JSON data block is not executed, so it is allowed under a strict CSP.
+  function readSlides() {
+    var el = document.getElementById('swell-slides');
+    if (!el) return [];
+    try {
+      var data = JSON.parse(el.textContent || '[]');
+      return Array.isArray(data) ? data : [];
+    } catch (e) {
+      return [];
+    }
+  }
+  var slideNotes = readSlides().map(function (s) { return (s && s.notes) || ''; });
   var total = slideNotes.length;
 
   // ── BroadcastChannel ───────────────────────────────────────────────────────

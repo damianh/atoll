@@ -12,6 +12,17 @@ namespace Atoll.Lagoon.Tests.Layouts;
 
 public sealed class DocsLayoutTests
 {
+    private static string ReadLagoonAsset(string outputPath)
+    {
+        var asset = new Atoll.Lagoon.Islands.LagoonIslandAssetProvider()
+            .GetAssets()
+            .Single(a => a.OutputPath == outputPath);
+        using var stream = asset.ResourceAssembly.GetManifestResourceStream(asset.ResourceName);
+        stream.ShouldNotBeNull();
+        using var reader = new StreamReader(stream);
+        return reader.ReadToEnd();
+    }
+
     private static DocsConfig MakeConfig(
         string title = "My Docs",
         string description = "",
@@ -376,9 +387,11 @@ public sealed class DocsLayoutTests
             new MarkdownHeading(2, "Configuration", "configuration"),
         };
         var html = await RenderLayoutAsync(MakeConfig(), headings: headings);
+        html.ShouldContain("<script src=\"/scripts/atoll-docs-toc.js\" defer></script>");
 
-        html.ShouldContain("getBoundingClientRect().top <= offset + 1");
-        html.ShouldNotContain("getBoundingClientRect().top <= offset)");
+        var script = ReadLagoonAsset("scripts/atoll-docs-toc.js");
+        script.ShouldContain("getBoundingClientRect().top <= offset + 1");
+        script.ShouldNotContain("getBoundingClientRect().top <= offset)");
     }
 
     // --- Slot content ---
@@ -1271,7 +1284,8 @@ public sealed class DocsLayoutTests
         var html = await RenderLayoutAsync(config);
 
         html.ShouldContain("docs-banner-dismiss");
-        html.ShouldContain("localStorage");
+        html.ShouldContain("<script src=\"/scripts/atoll-docs-banner.js\"></script>");
+        ReadLagoonAsset("scripts/atoll-docs-banner.js").ShouldContain("localStorage");
     }
 
     [Fact]

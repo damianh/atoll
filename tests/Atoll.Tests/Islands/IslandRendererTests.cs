@@ -388,14 +388,9 @@ public sealed class IslandRendererTests
     }
 
     [Fact]
-    public void GenerateBootstrapScriptShouldReturnInlineScriptWhenUrlIsNull()
+    public void GenerateBootstrapScriptShouldThrowWhenUrlIsNull()
     {
-        var html = HydrationScriptGenerator.GenerateBootstrapScript(null);
-
-        html.ShouldContain("<script type=\"module\">");
-        html.ShouldContain("atoll-island");
-        html.ShouldContain("</script>");
-        html.ShouldNotContain("src=");
+        Should.Throw<ArgumentNullException>(() => HydrationScriptGenerator.GenerateBootstrapScript(null!));
     }
 
     [Fact]
