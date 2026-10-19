@@ -63,6 +63,8 @@ new SidebarItem
 
 Auto-generated and manually-defined items cannot be mixed in the same group. If `AutoGenerate` is set, `Items` is ignored.
 
+If the auto-generated directory contains an `index.md`, it appears as the group's first child link, using the entry's title, URL, and badge. This landing-page link always comes before the sorted siblings, regardless of its `Order`. The configured group label remains a non-clickable header. Draft indexes and indexes rejected by the group's `Filter` are excluded as usual.
+
 ### Nested directory groups
 
 When content files are organised in subdirectories under the `AutoGenerate` path, `SidebarBuilder` builds a nested group tree automatically. Subdirectories become collapsible group items; files become leaf links. The nesting can be arbitrarily deep.
@@ -72,7 +74,7 @@ Given this content structure:
 ```
 docs/
   guides/
-    index.md          ← optional: makes the group header a clickable link
+    index.md          ← optional: appears as the first child link
     01-installation.md
     02-configuration.md
     advanced/
@@ -95,6 +97,7 @@ The resolved sidebar becomes:
 
 ```
 Guides
+├── Guides landing page
 ├── Installation
 ├── Configuration
 └── Advanced
@@ -105,6 +108,8 @@ Guides
 ### Index pages as group headers
 
 An `index.md` file inside a subdirectory makes the group header a clickable link. The entry's `Title` is used as the group label, and its `Order` controls the group's sort position among siblings.
+
+This differs from an index directly inside the configured `AutoGenerate` directory, which becomes a first child link rather than replacing the configured header. In the example above, "Guides landing page" represents that root index entry's title, while the `advanced/index.md` entry supplies the clickable "Advanced" header.
 
 When no `index.md` is present, the directory name is humanised automatically (see [Automatic label generation](#automatic-label-generation)).
 
