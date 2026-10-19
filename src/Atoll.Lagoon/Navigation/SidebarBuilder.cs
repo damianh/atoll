@@ -277,6 +277,12 @@ public sealed class SidebarBuilder
 
         // Resolve root node children (the outermost group label/badge comes from the SidebarItem config).
         var children = ResolveNodeChildren(root, currentPath, localePrefix, basePath, versionPrefix, item.Collapsed);
+        if (root.IndexEntry is { } indexEntry)
+        {
+            var href = PrefixHref(indexEntry.Href, localePrefix, basePath, versionPrefix);
+            children = [new ResolvedSidebarItem(indexEntry.Label, href, IsCurrent(href, currentPath), indexEntry.Badge), .. children];
+        }
+
         var isActive = children.Any(c => c.IsActive);
         return new ResolvedSidebarItem(item.Label, isActive, item.Badge, item.Collapsed, children);
     }
@@ -421,7 +427,8 @@ public sealed class SidebarBuilder
 
         /// <summary>
         /// Gets or sets the entry for an <c>index.md</c> file in this directory, if present.
-        /// When set, this entry's label and href become the group label and clickable link.
+        /// At the root, this becomes the first child link; in subdirectories, it becomes
+        /// the group label and clickable header link.
         /// </summary>
         public SidebarEntry? IndexEntry { get; set; }
 
