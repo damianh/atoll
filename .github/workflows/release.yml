@@ -15,6 +15,7 @@ jobs:
     environment: nuget.org
     permissions:
       contents: write
+      id-token: write
 
     steps:
     - uses: actions/checkout@v4
@@ -71,9 +72,15 @@ jobs:
         dotnet pack src/Atoll.Hosting.Aspire/Atoll.Hosting.Aspire.csproj -c Release --no-build --output ./packages
         dotnet pack templates/Atoll.Templates.csproj -c Release --output ./packages
 
+    - name: Authenticate to NuGet.org
+      id: nuget-login
+      uses: NuGet/login@v1
+      with:
+        user: ${{ vars.NUGET_USER }}
+
     - name: Push to NuGet.org
       run: |
-        dotnet nuget push "./packages/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_ORG_APIKEY }} --skip-duplicate
+        dotnet nuget push "./packages/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" --skip-duplicate
 
     - name: Upload packages as artifacts
       uses: actions/upload-artifact@v4
