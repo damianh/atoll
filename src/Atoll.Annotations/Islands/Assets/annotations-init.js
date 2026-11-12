@@ -1,11 +1,7 @@
 /**
  * Atoll Annotations — Island Init
  *
- * Enables contextual text-selection feedback on any Atoll-powered page.
- * When a user selects text within the configured content area, a floating
- * button appears. Clicking it opens a small comment form. On submit, a new
- * browser tab opens with a pre-populated GitHub Issue or Discussion URL
- * containing the quoted text, user comment, and a text-fragment link.
+ * Enables text-selection links and optional contextual GitHub feedback.
  */
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -14,6 +10,8 @@ const MAX_QUOTE_BODY_CHARS = 2000;
 const MAX_FRAGMENT_CHARS = 200;
 const MAX_TOTAL_URL_CHARS = 8000;
 const QUOTE_DISPLAY_CHARS = 200;
+const registrations = new Map();
+let selectionControls;
 
 // ── Styles ───────────────────────────────────────────────────────────────────
 
@@ -23,27 +21,42 @@ function injectStyles() {
     const style = document.createElement('style');
     style.id = 'atoll-annotations-styles';
     style.textContent = `
-        .atoll-ann-btn {
+        .atoll-ann-toolbar {
             position: absolute;
             z-index: 9999;
             display: flex;
             align-items: center;
             gap: 4px;
-            padding: 4px 10px;
             border: 1px solid var(--atoll-ann-border, #d0d7de);
             border-radius: 6px;
             background: var(--atoll-ann-bg, #ffffff);
             color: var(--atoll-ann-text, #24292f);
             font-size: 13px;
             font-family: inherit;
-            cursor: pointer;
             box-shadow: 0 2px 8px rgba(0,0,0,0.12);
             white-space: nowrap;
             transition: box-shadow 0.15s ease;
             user-select: none;
         }
+        .atoll-ann-btn {
+            padding: 4px 10px;
+            border: 0;
+            border-radius: 6px;
+            background: transparent;
+            color: inherit;
+            font: inherit;
+            cursor: pointer;
+        }
         .atoll-ann-btn:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+            background: var(--atoll-ann-input-bg, #f6f8fa);
+        }
+        .atoll-ann-btn:focus-visible {
+            outline: 2px solid var(--atoll-ann-accent, #0969da);
+            outline-offset: -2px;
+        }
+        .atoll-ann-status {
+            padding-right: 8px;
+            font-size: 12px;
         }
         .atoll-ann-popover {
             position: absolute;
@@ -70,10 +83,9 @@ function injectStyles() {
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
         }
-        .atoll-ann-popover textarea {
+        .atoll-ann-popover textarea, .atoll-ann-popover input {
             display: block;
             width: 100%;
-            min-height: 72px;
             padding: 6px 8px;
             border: 1px solid var(--atoll-ann-border, #d0d7de);
             border-radius: 6px;
@@ -85,7 +97,10 @@ function injectStyles() {
             box-sizing: border-box;
             outline: none;
         }
-        .atoll-ann-popover textarea:focus {
+        .atoll-ann-popover textarea {
+            min-height: 72px;
+        }
+        .atoll-ann-popover textarea:focus, .atoll-ann-popover input:focus {
             border-color: var(--atoll-ann-accent, #0969da);
             box-shadow: 0 0 0 3px rgba(9,105,218,0.12);
         }
@@ -181,11 +196,51 @@ function truncate(text, maxLen) {
     return text.slice(0, maxLen) + '\u2026';
 }
 
+function encodeFragmentText(text) {
+    return encodeURIComponent(text).replace(/[!'()*-]/g, c =>
+        `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
+}
+
+function fragmentEdge(text, fromEnd, limit) {
+    const characters = Array.from(text);
+    if (characters.length <= limit) return text;
+    if (fromEnd) {
+        const suffix = characters.slice(-limit).join('');
+        const boundary = suffix.search(/\s/);
+        if (/\s/.test(characters[characters.length - limit - 1])) return suffix;
+        if (boundary >= 0) return suffix.slice(boundary).trim();
+        return text.slice(text.lastIndexOf(' ') + 1);
+    }
+    const prefix = characters.slice(0, limit).join('');
+    if (/\s/.test(characters[limit])) return prefix;
+    const boundary = prefix.lastIndexOf(' ');
+    if (boundary >= 0) return prefix.slice(0, boundary);
+    const next = text.indexOf(' ');
+    return next < 0 ? text : text.slice(0, next);
+}
+
+function buildPassageUrl(selectedText) {
+    const text = selectedText.trim().replace(/\s+/g, ' ');
+    const characters = Array.from(text);
+    const lines = selectedText.trim().split(/[\r\n]+/).map(line => line.trim().replace(/\s+/g, ' ')).filter(Boolean);
+    let fragment;
+    if ((characters.length <= MAX_FRAGMENT_CHARS && lines.length <= 1) ||
+        (lines.length <= 1 && !text.includes(' '))) {
+        fragment = encodeFragmentText(text);
+    } else {
+        const half = Math.floor(MAX_FRAGMENT_CHARS / 2);
+        const start = fragmentEdge(lines.length > 1 ? lines[0] : text, false, half);
+        const end = fragmentEdge(lines.length > 1 ? lines[lines.length - 1] : text, true, half);
+        fragment = `${encodeFragmentText(start)},${encodeFragmentText(end)}`;
+    }
+    const url = new URL(location.href);
+    url.hash = '';
+    return `${url.href}#:~:text=${fragment}`;
+}
+
 function buildGitHubUrl(config, selectedText, userComment) {
     const pageTitle = document.title;
-    const pageUrl = location.href.split('#')[0];
-    const fragment = encodeURIComponent(truncate(selectedText.trim(), MAX_FRAGMENT_CHARS));
-    const sourceLink = `[${pageTitle}](${pageUrl}#:~:text=${fragment})`;
+    const sourceLink = `[${pageTitle}](${buildPassageUrl(selectedText)})`;
 
     const quotedText = truncate(selectedText.trim(), MAX_QUOTE_BODY_CHARS);
     const commentPart = userComment.trim();
@@ -290,14 +345,13 @@ function positionButtonInGutter(el, selRect, contentArea) {
     el.style.left = `${gutterLeft}px`;
 }
 
-function createButton(config, getSelectionRect, onActivate) {
+function createButton(text, label, onActivate) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'atoll-ann-btn';
-    btn.textContent = config.buttonText;
-    btn.setAttribute('aria-label', 'Add annotation');
-    btn.style.display = 'none';
-    document.body.appendChild(btn);
+    btn.textContent = text;
+    btn.setAttribute('aria-label', label);
+    btn.title = label;
 
     btn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -308,7 +362,35 @@ function createButton(config, getSelectionRect, onActivate) {
     return btn;
 }
 
-function createPopover(config, selectedText, onSubmit, onClose) {
+function createCopyFallback(url, onClose) {
+    const popover = document.createElement('div');
+    popover.className = 'atoll-ann-popover';
+    popover.setAttribute('role', 'dialog');
+    popover.setAttribute('aria-label', 'Copy passage link');
+
+    const label = document.createElement('label');
+    label.textContent = 'Clipboard access was unavailable. Copy this link manually:';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.readOnly = true;
+    input.value = url;
+    input.setAttribute('aria-label', 'Passage link');
+    const actions = document.createElement('div');
+    actions.className = 'atoll-ann-actions';
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'atoll-ann-cancel';
+    close.textContent = 'Close';
+    close.addEventListener('click', onClose);
+    label.appendChild(input);
+    actions.appendChild(close);
+    popover.appendChild(label);
+    popover.appendChild(actions);
+    document.body.appendChild(popover);
+    return { popover, input };
+}
+
+function createPopover(selectedText, onSubmit, onClose) {
     const popover = document.createElement('div');
     popover.className = 'atoll-ann-popover';
     popover.setAttribute('role', 'dialog');
@@ -363,63 +445,94 @@ function createPopover(config, selectedText, onSubmit, onClose) {
 // ── Main Init ────────────────────────────────────────────────────────────────
 
 export default function init(element) {
-    const placeholder = element.querySelector('.atoll-annotations');
+    const placeholder = element.querySelector('.atoll-annotations, .atoll-passage-link');
     if (!placeholder) return;
 
-    const config = {
+    const isAnnotation = placeholder.classList.contains('atoll-annotations');
+    const config = isAnnotation ? {
         repo: placeholder.dataset.repo || '',
         target: placeholder.dataset.target || 'issue',
         category: placeholder.dataset.category || '',
         labels: placeholder.dataset.labels || '',
         titlePrefix: placeholder.dataset.titlePrefix || 'Feedback:',
-        contentSelector: placeholder.dataset.contentSelector || 'article',
         buttonText: placeholder.dataset.buttonText || '\uD83D\uDCAC',
-    };
-
-    if (!config.repo) return;
-
-    const contentArea = document.querySelector(config.contentSelector);
+    } : null;
+    if (isAnnotation && !config.repo) return;
+    const contentSelector = placeholder.dataset.contentSelector || 'article';
+    const contentArea = document.querySelector(contentSelector);
     if (!contentArea) return;
 
+    // Both islands may target the same content, in either hydration order.
+    const registration = registrations.get(contentArea) || { contentArea, config: null };
+    if (config && config.repo) registration.config = config;
+    registrations.set(contentArea, registration);
+
+    if (!selectionControls) {
+        selectionControls = createSelectionControls();
+    } else {
+        selectionControls.handleSelectionChange();
+    }
+}
+
+function createSelectionControls() {
     injectStyles();
     setupTheme();
 
-    // State
     let selectedText = '';
     let selectionRect = null;
+    let activeRegistration = null;
     let popoverEl = null;
-    let textareaEl = null;
     let isPopoverOpen = false;
+    let copyRequest = 0;
 
-    const floatingBtn = createButton(config, () => selectionRect, openPopover);
+    const toolbar = document.createElement('div');
+    toolbar.className = 'atoll-ann-toolbar';
+    toolbar.setAttribute('role', 'group');
+    toolbar.setAttribute('aria-label', 'Selected text actions');
+    toolbar.style.display = 'none';
+    const commentBtn = createButton('', 'Add annotation', openPopover);
+    const linkBtn = createButton('\uD83D\uDD17', 'Copy link to selected text', copyLink);
+    const status = document.createElement('span');
+    status.className = 'atoll-ann-status';
+    status.setAttribute('role', 'status');
+    status.setAttribute('aria-live', 'polite');
+    toolbar.appendChild(commentBtn);
+    toolbar.appendChild(linkBtn);
+    toolbar.appendChild(status);
+    document.body.appendChild(toolbar);
+
+    toolbar.addEventListener('pointerdown', e => e.preventDefault());
+    toolbar.addEventListener('mousedown', e => e.preventDefault());
 
     function showButton() {
         if (isPopoverOpen) return;
-        floatingBtn.style.display = '';
-        // Position after display so offsetHeight is valid
+        const config = activeRegistration.config;
+        commentBtn.style.display = config ? '' : 'none';
+        if (config) commentBtn.textContent = config.buttonText;
+        toolbar.style.display = '';
         requestAnimationFrame(() => {
-            if (selectionRect) {
-                positionButtonInGutter(floatingBtn, selectionRect, contentArea);
+            if (selectionRect && activeRegistration && toolbar.style.display !== 'none') {
+                positionButtonInGutter(toolbar, selectionRect, activeRegistration.contentArea);
             }
         });
     }
 
     function hideButton() {
-        floatingBtn.style.display = 'none';
+        toolbar.style.display = 'none';
+        status.textContent = '';
     }
 
     function openPopover() {
+        if (!activeRegistration || !activeRegistration.config || !selectedText) return;
         hideButton();
         isPopoverOpen = true;
 
         const { popover, textarea } = createPopover(
-            config,
             selectedText,
             submitFeedback,
             closePopover
         );
         popoverEl = popover;
-        textareaEl = textarea;
         popover.style.display = '';
 
         requestAnimationFrame(() => {
@@ -431,64 +544,100 @@ export default function init(element) {
     }
 
     function closePopover() {
+        copyRequest++;
         if (popoverEl) {
             popoverEl.remove();
             popoverEl = null;
-            textareaEl = null;
         }
         isPopoverOpen = false;
         selectedText = '';
         selectionRect = null;
+        activeRegistration = null;
     }
 
     function submitFeedback(userComment) {
-        const url = buildGitHubUrl(config, selectedText, userComment);
+        const url = buildGitHubUrl(activeRegistration.config, selectedText, userComment);
         window.open(url, '_blank', 'noopener,noreferrer');
         closePopover();
+    }
+
+    async function copyLink() {
+        if (!selectedText) return;
+        const url = buildPassageUrl(selectedText);
+        const request = ++copyRequest;
+        try {
+            if (!navigator.clipboard || !navigator.clipboard.writeText) {
+                throw new Error('Clipboard API unavailable');
+            }
+            await navigator.clipboard.writeText(url);
+            if (request === copyRequest && toolbar.style.display !== 'none') {
+                status.textContent = 'Link copied';
+                requestAnimationFrame(() => {
+                    if (selectionRect && activeRegistration) {
+                        positionButtonInGutter(toolbar, selectionRect, activeRegistration.contentArea);
+                    }
+                });
+            }
+        } catch {
+            if (request !== copyRequest) return;
+            hideButton();
+            isPopoverOpen = true;
+            const { popover, input } = createCopyFallback(url, closePopover);
+            popoverEl = popover;
+            requestAnimationFrame(() => {
+                if (selectionRect) positionElement(popover, selectionRect);
+                input.focus();
+                input.select();
+            });
+        }
     }
 
     // ── Selection Handling ───────────────────────────────────────────────────
 
     function handleSelectionChange() {
+        if (isPopoverOpen) return;
         const selection = window.getSelection();
         const text = selection ? selection.toString().trim() : '';
 
         if (!text) {
-            if (!isPopoverOpen) {
-                hideButton();
-                selectedText = '';
-                selectionRect = null;
-            }
+            if (selectedText) copyRequest++;
+            hideButton();
+            selectedText = '';
+            selectionRect = null;
+            activeRegistration = null;
             return;
         }
 
-        // Check selection is within the content area
         if (!selection || selection.rangeCount === 0) return;
         const range = selection.getRangeAt(0);
-        if (!contentArea.contains(range.commonAncestorContainer)) {
-            if (!isPopoverOpen) {
-                hideButton();
-                selectedText = '';
-                selectionRect = null;
+        let registration = null;
+        for (const candidate of registrations.values()) {
+            if (candidate.contentArea.contains(range.commonAncestorContainer) &&
+                (!registration || registration.contentArea.contains(candidate.contentArea))) {
+                registration = candidate;
             }
+        }
+        if (!registration) {
+            if (selectedText) copyRequest++;
+            hideButton();
+            selectedText = '';
+            selectionRect = null;
+            activeRegistration = null;
             return;
         }
 
-        // Ignore selection of the annotations UI itself
-        if (
-            (floatingBtn && floatingBtn.contains(range.commonAncestorContainer)) ||
-            (popoverEl && popoverEl.contains(range.commonAncestorContainer))
-        ) {
-            return;
+        if (selectedText !== text || activeRegistration !== registration) {
+            copyRequest++;
+            status.textContent = '';
         }
-
         selectedText = text;
+        activeRegistration = registration;
         selectionRect = range.getBoundingClientRect();
         showButton();
     }
 
-    contentArea.addEventListener('mouseup', handleSelectionChange);
-    contentArea.addEventListener('touchend', handleSelectionChange);
+    document.addEventListener('mouseup', handleSelectionChange);
+    document.addEventListener('touchend', handleSelectionChange);
     let selectionDebounce;
     document.addEventListener('selectionchange', () => {
         // Debounce slightly — selectionchange fires repeatedly during drag
@@ -499,9 +648,9 @@ export default function init(element) {
     // ── Dismissal ────────────────────────────────────────────────────────────
 
     document.addEventListener('mousedown', (e) => {
-        if (!isPopoverOpen && floatingBtn.style.display === 'none') return;
+        if (!isPopoverOpen && toolbar.style.display === 'none') return;
 
-        const clickedBtn = floatingBtn.contains(e.target);
+        const clickedBtn = toolbar.contains(e.target);
         const clickedPopover = popoverEl && popoverEl.contains(e.target);
 
         if (!clickedBtn && !clickedPopover) {
@@ -515,8 +664,11 @@ export default function init(element) {
             if (isPopoverOpen) {
                 closePopover();
             } else {
+                closePopover();
                 hideButton();
             }
         }
     });
+
+    return { handleSelectionChange };
 }

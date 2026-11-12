@@ -1,13 +1,13 @@
 ---
 title: Annotations Overview
-description: Enable contextual text-selection feedback that opens pre-populated GitHub Issues or Discussions — no backend required.
+description: Enable shareable text-selection links and contextual GitHub feedback — no backend required.
 order: 60
 section: Annotations Plugin
 ---
 
 # Annotations Overview
 
-The `Atoll.Annotations` plugin lets readers select text on any page, write a comment, and submit it as a GitHub Issue or Discussion in a new browser tab. The quoted text, user comment, and a text-fragment link back to the exact selection are all pre-populated automatically.
+The `Atoll.Annotations` plugin lets readers copy a link to selected text. It can also let them write a comment and submit it as a GitHub Issue or Discussion in a new browser tab, with the selected text and a link pre-populated automatically.
 
 | Feature | Description |
 |---|---|
@@ -15,7 +15,7 @@ The `Atoll.Annotations` plugin lets readers select text on any page, write a com
 | **Idle hydration** | `client:idle` defers loading until the browser is idle, keeping the critical path fast |
 | **No backend** | All feedback goes directly to GitHub — no database, no auth, no server-side API |
 | **Theme sync** | Watches `<html data-theme>` and adapts the popover UI for light and dark modes |
-| **Text fragment link** | The submitted issue body includes a `#:~:text=` link that scrolls readers to the exact selection |
+| **Text fragment link** | Copy a `#:~:text=` link to selected text, or include one in submitted feedback |
 
 ## Installation
 
@@ -63,12 +63,40 @@ The component renders a `<div class="atoll-annotations">` placeholder with all c
 ## How it works
 
 1. The user selects text inside the content area (matched by `ContentSelector`, default `article`).
-2. A floating button appears near the selection.
-3. Clicking the button opens a small popover with the quoted text and a comment textarea.
-4. On submit, a new browser tab opens with a pre-populated GitHub Issue or Discussion URL containing:
+2. A floating link button and, when feedback is configured, a comment button appear near the selection.
+3. The link button copies a passage URL. If clipboard access is unavailable, a selectable URL appears for manual copying.
+4. The comment button opens a popover with the quoted text and a comment textarea.
+5. On submit, a new browser tab opens with a pre-populated GitHub Issue or Discussion URL containing:
    - The selected text in a blockquote
    - The user's comment
-   - A text-fragment link (`#:~:text=...`) back to the exact selection on the page
+   - A text-fragment link (`#:~:text=...`) back to the selection on the page
+
+### Passage links without GitHub feedback
+
+For link-only sites, register the same `AnnotationsIslandAssetProvider` and render
+`TextPassageLink` instead of `TextAnnotation`:
+
+```csharp
+var props = new Dictionary<string, object?>
+{
+    [nameof(TextPassageLink.ContentSelector)] = "article",
+};
+await RenderAsync(ComponentRenderer.ToFragment<TextPassageLink>(props));
+```
+
+`ContentSelector` defaults to `article`. No GitHub repository is required.
+Existing `TextAnnotation` installations already include the link button; they
+do not need a separate `TextPassageLink` island. If both islands target the same
+content, they share one set of controls.
+
+The link action uses native browser text fragments. Supported browsers may
+scroll to and highlight the matching text; browsers without support still open
+the page but may not highlight it. Repeated text can match a different passage,
+and edits to page content can break a link. Long and multi-paragraph selections
+use start and end text to form a range rather than encoding the entire selection.
+Clipboard access generally requires a secure context; the manual-copy field is
+available when access is denied or unavailable. The selected text is included
+in the URL, so avoid sharing links to sensitive passages.
 
 ## Parameters
 
@@ -97,7 +125,7 @@ When the Atoll theme toggle is present (setting `data-theme` on `<html>`), the i
 
 ## URL length safety
 
-GitHub URLs have a practical limit of around 8,000 characters. The island automatically truncates the quoted text at 2,000 characters and enforces a total URL cap of 8,000 characters. Selections longer than 200 characters are truncated when constructing the text-fragment link, since very long fragments are unreliable across browsers.
+GitHub URLs have a practical limit of around 8,000 characters. The island automatically truncates the quoted text at 2,000 characters and attempts to limit the total URL length. Long selections use text-fragment start and end ranges to avoid placing the entire passage in the URL.
 
 ## Full example — Issues
 

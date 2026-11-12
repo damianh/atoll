@@ -4,7 +4,8 @@ using Atoll.Islands;
 namespace Atoll.Annotations;
 
 /// <summary>
-/// Registers the client-side JavaScript assets for the <see cref="TextAnnotation"/> island.
+/// Registers the client-side JavaScript assets for the <see cref="TextAnnotation"/> and
+/// <see cref="TextPassageLink"/> islands.
 /// </summary>
 public sealed class AnnotationsIslandAssetProvider : IIslandAssetProvider
 {
