@@ -5,8 +5,8 @@ namespace Atoll.Annotations;
 
 /// <summary>
 /// An island component that enables contextual text-selection feedback on any Atoll-powered page.
-/// When a user selects text within the configured content area, a floating button appears.
-/// Clicking the button opens a small form where the user can type a comment.
+/// When a user selects text within the configured content area, floating comment and
+/// copy-link buttons appear. The comment button opens a form where the user can type a comment.
 /// On submit, a new browser tab opens with a pre-populated GitHub Issue or Discussion URL
 /// containing the quoted text, user comment, and a text-fragment link back to the selection.
 /// </summary>
