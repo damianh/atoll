@@ -42,7 +42,7 @@ internal sealed class ChartCodeBlockRenderer : HtmlObjectRenderer<CodeBlock>
         var rawJson = ExtractContent(block);
 
         // Validate that the content is parseable JSON before embedding.
-        if (!IsValidJson(rawJson))
+        if (!ChartConfig.TryParse(rawJson, out var chartType))
         {
             renderer.Write("<div class=\"atoll-chart atoll-chart-error\">");
             renderer.WriteEscape("Invalid chart configuration: JSON could not be parsed.");
@@ -52,6 +52,9 @@ internal sealed class ChartCodeBlockRenderer : HtmlObjectRenderer<CodeBlock>
 
         // HTML-attribute-encode the JSON for safe embedding in a data attribute.
         var encodedJson = System.Web.HttpUtility.HtmlAttributeEncode(rawJson);
+        var typeAttr = chartType is null
+            ? string.Empty
+            : $" data-chart-type=\"{System.Web.HttpUtility.HtmlAttributeEncode(chartType)}\"";
 
         // Wrap in an <atoll-island> element so the island runtime discovers
         // this element, loads chart-init.js, and initialises Chart.js.
@@ -65,7 +68,7 @@ internal sealed class ChartCodeBlockRenderer : HtmlObjectRenderer<CodeBlock>
             " props=\"{}\"" +
             $" opts=\"{optsJson}\"" +
             " ssr>");
-        renderer.Write("<div class=\"atoll-chart\">");
+        renderer.Write($"<div class=\"atoll-chart\"{typeAttr}>");
         renderer.Write($"<canvas data-chart-config=\"{encodedJson}\"></canvas>");
         renderer.Write("<noscript>Chart requires JavaScript to display.</noscript>");
         renderer.Write("</div>");
@@ -90,23 +93,5 @@ internal sealed class ChartCodeBlockRenderer : HtmlObjectRenderer<CodeBlock>
             }
         }
         return builder.ToString();
-    }
-
-    private static bool IsValidJson(string json)
-    {
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return false;
-        }
-
-        try
-        {
-            using var doc = JsonDocument.Parse(json);
-            return true;
-        }
-        catch (JsonException)
-        {
-            return false;
-        }
     }
 }

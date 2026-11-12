@@ -57,6 +57,9 @@ public sealed class ChartIsland : VanillaJsIsland
         }
 
         var encodedConfig = System.Web.HttpUtility.HtmlAttributeEncode(ConfigJson);
+        var typeAttr = ChartConfig.TryParse(ConfigJson, out var chartType) && chartType is not null
+            ? $" data-chart-type=\"{System.Web.HttpUtility.HtmlAttributeEncode(chartType)}\""
+            : string.Empty;
 
         var ariaLabel = string.IsNullOrEmpty(Alt)
             ? string.Empty
@@ -69,7 +72,7 @@ public sealed class ChartIsland : VanillaJsIsland
         var containerStyle = BuildContainerStyle();
         var styleAttr = containerStyle.Length > 0 ? $" style=\"{containerStyle}\"" : string.Empty;
 
-        WriteHtml($"<div class=\"atoll-chart\"{role}{ariaLabel}{styleAttr}>");
+        WriteHtml($"<div class=\"atoll-chart\"{typeAttr}{role}{ariaLabel}{styleAttr}>");
         WriteHtml($"<canvas data-chart-config=\"{encodedConfig}\"{widthAttr}{heightAttr}></canvas>");
         WriteHtml("<noscript>Chart requires JavaScript to display.</noscript>");
         WriteHtml("</div>");
