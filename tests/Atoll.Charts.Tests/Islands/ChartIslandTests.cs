@@ -31,6 +31,18 @@ public sealed class ChartIslandTests
     }
 
     [Fact]
+    public async Task RenderShouldExposeRootChartTypeOnContainer()
+    {
+        var config = """{"type":"bar","data":{"labels":["pie"],"datasets":[{"type":"pie"}]}}""";
+        var html = await RenderAsync(new Dictionary<string, object?>
+        {
+            ["ConfigJson"] = config,
+        });
+
+        html.ShouldContain("<div class=\"atoll-chart\" data-chart-type=\"bar\"");
+    }
+
+    [Fact]
     public async Task RenderShouldContainCanvasElement()
     {
         var html = await RenderAsync(new Dictionary<string, object?>

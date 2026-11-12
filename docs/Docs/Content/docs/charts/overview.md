@@ -22,8 +22,18 @@ Two integration modes are provided:
 | **Lazy hydration** | Uses `[ClientVisible]` — the vendor script is fetched on first intersection, not page load |
 | **Native config format** | No custom schema — pass Chart.js JSON directly |
 | **XSS safe** | JSON config is HTML-attribute-encoded at build time |
+| **CSS-selectable type** | The chart container exposes the root config type as `data-chart-type` |
 
 > **Note:** JavaScript is required to display charts. A `<noscript>` fallback message is shown when JavaScript is disabled.
+
+Style charts by their root Chart.js type without inspecting the JSON config:
+
+```css
+.atoll-chart[data-chart-type="pie"],
+.atoll-chart[data-chart-type="doughnut"] {
+  max-width: 24rem;
+}
+```
 
 ## Installation
 
@@ -455,9 +465,9 @@ When `Alt` is set, the wrapper `<div>` receives `role="img"` and `aria-label` fo
 
 The plugin has three parts:
 
-1. **`ChartExtension`** — a Markdig `IMarkdownExtension` that registers `ChartCodeBlockRenderer`. When a fenced code block has language `chart`, the renderer validates the JSON, HTML-attribute-encodes it, and emits `<div class="atoll-chart"><canvas data-chart-config="..."></canvas><noscript>...</noscript></div>`.
+1. **`ChartExtension`** — a Markdig `IMarkdownExtension` that registers `ChartCodeBlockRenderer`. When a fenced code block has language `chart`, the renderer validates the JSON, HTML-attribute-encodes it, and emits `<div class="atoll-chart" data-chart-type="bar"><canvas data-chart-config="..."></canvas><noscript>...</noscript></div>`. The `data-chart-type` value comes only from the root `type` property.
 
-2. **`ChartIsland`** — a `VanillaJsIsland` component decorated with `[ClientVisible]`. It renders the same HTML structure as the code block renderer but can be used in Razor pages with typed parameters.
+2. **`ChartIsland`** — a `VanillaJsIsland` component decorated with `[ClientVisible]`. It renders the same HTML structure, including the root chart type on the `.atoll-chart` container, but can be used in Razor pages with typed parameters.
 
 3. **`chart-init.js`** — the client-side init module. When the Atoll island runtime detects a chart island entering the viewport:
    - It lazily loads `atoll-charts-vendor.min.js` (Chart.js UMD build, ~200 KB) via a dynamic `<script>` tag
@@ -479,7 +489,7 @@ var pipeline = new MarkdownPipelineBuilder()
 var html = Markdown.ToHtml(markdown, pipeline);
 ```
 
-This converts `` ```chart `` blocks to `<div class="atoll-chart"><canvas data-chart-config="...">` in the HTML output. You are responsible for loading Chart.js on the page and initialising charts from the `data-chart-config` attributes.
+This converts `` ```chart `` blocks to `<div class="atoll-chart" data-chart-type="..."><canvas data-chart-config="...">` in the HTML output. You are responsible for loading Chart.js on the page and initialising charts from the `data-chart-config` attributes.
 
 ## Security
 

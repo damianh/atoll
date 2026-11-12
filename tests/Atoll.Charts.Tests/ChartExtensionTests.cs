@@ -27,6 +27,16 @@ public sealed class ChartExtensionTests
         var html = RenderDirect(md);
 
         html.ShouldContain("<canvas data-chart-config=");
+        html.ShouldContain("<div class=\"atoll-chart\" data-chart-type=\"bar\">");
+    }
+
+    [Fact]
+    public void ShouldExposeOnlyTheRootChartTypeOnContainer()
+    {
+        var md = "```chart\n{\"type\":\"bar\",\"data\":{\"labels\":[\"pie\"],\"datasets\":[{\"type\":\"pie\"}]}}\n```";
+        var html = RenderDirect(md);
+
+        html.ShouldContain("<div class=\"atoll-chart\" data-chart-type=\"bar\">");
     }
 
     [Fact]
@@ -179,6 +189,23 @@ public sealed class ChartExtensionTests
         // Should not throw; should render an error indicator instead of crashing
         html.ShouldNotContain("data-chart-config=");
         html.ShouldContain("atoll-chart-error");
+    }
+
+    [Fact]
+    public void ShouldOmitChartTypeWhenRootTypeIsNotAString()
+    {
+        var html = RenderDirect("```chart\n{\"type\":null,\"data\":{}}\n```");
+
+        html.ShouldContain("<div class=\"atoll-chart\">");
+        html.ShouldNotContain("data-chart-type=");
+    }
+
+    [Fact]
+    public void ShouldHtmlEncodeChartTypeAttribute()
+    {
+        var html = RenderDirect("```chart\n{\"type\":\"bar\\\" onmouseover=\\\"alert(1)\",\"data\":{}}\n```");
+
+        html.ShouldContain("data-chart-type=\"bar&quot; onmouseover=&quot;alert(1)\"");
     }
 
     // --- Atoll extensions pass-through ---
