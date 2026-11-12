@@ -260,6 +260,44 @@ public sealed class DevHotReloadTests : IDisposable
     }
 
     [Fact]
+    public async Task DevFileWatcherShouldClassifyAtollConfigChangesAsCodeChange()
+    {
+        var dir = CreateTempDir();
+        var tcs = new TaskCompletionSource<FileChangeKind>();
+
+        using var watcher = new DevFileWatcher(dir, [], 50);
+        watcher.OnChange += kind => { tcs.TrySetResult(kind); return Task.CompletedTask; };
+        watcher.Start();
+
+        await File.WriteAllTextAsync(Path.Combine(dir, "atoll.json"), "{}");
+
+        var result = await Task.WhenAny(tcs.Task, Task.Delay(3000));
+        result.ShouldBe(tcs.Task, "Watcher should have fired within 3s");
+        (await tcs.Task).ShouldBe(FileChangeKind.CodeChange);
+    }
+
+    [Fact]
+    public async Task DevFileWatcherShouldDetectAtomicReplacementOfCsFile()
+    {
+        var dir = CreateTempDir();
+        var sourcePath = Path.Combine(dir, "DocsConfig.cs");
+        var replacementPath = Path.Combine(dir, "DocsConfig.tmp");
+        await File.WriteAllTextAsync(sourcePath, "old config");
+
+        var tcs = new TaskCompletionSource<FileChangeKind>();
+        using var watcher = new DevFileWatcher(dir, [], 50);
+        watcher.OnChange += kind => { tcs.TrySetResult(kind); return Task.CompletedTask; };
+        watcher.Start();
+
+        await File.WriteAllTextAsync(replacementPath, "new config");
+        File.Move(replacementPath, sourcePath, overwrite: true);
+
+        var result = await Task.WhenAny(tcs.Task, Task.Delay(3000));
+        result.ShouldBe(tcs.Task, "Watcher should detect a replaced .cs file within 3s");
+        (await tcs.Task).ShouldBe(FileChangeKind.CodeChange);
+    }
+
+    [Fact]
     public async Task DevFileWatcherShouldDebounceRapidChanges()
     {
         var dir = CreateTempDir();
