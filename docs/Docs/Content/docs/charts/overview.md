@@ -25,6 +25,8 @@ Two integration modes are provided:
 
 > **Note:** JavaScript is required to display charts. A `<noscript>` fallback message is shown when JavaScript is disabled.
 
+Charts use a default 2:1 aspect ratio, including pie, doughnut, radar, and polar area charts, so radial charts do not grow excessively tall on wide content columns. Set `options.aspectRatio` in the Chart.js configuration to choose a different ratio.
+
 ## Installation
 
 Add the `Atoll.Charts` NuGet package:
