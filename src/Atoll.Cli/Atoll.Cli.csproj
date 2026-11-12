@@ -3,6 +3,7 @@
     <OutputType>Exe</OutputType>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>atoll</ToolCommandName>
+    <RollForward>LatestMajor</RollForward>
     <!-- Suppress NU5111: Playwright ships .ps1 scripts in tools/ that NuGet warns about -->
     <NoWarn>$(NoWarn);NU5111</NoWarn>
   </PropertyGroup>
