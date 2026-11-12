@@ -215,6 +215,35 @@ public sealed class CliCommandTests
     }
 
     [Fact]
+    public void ShouldParseNewCommandFrameworkOption()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        var result = rootCommand.Parse("new my-site --framework net11.0");
+
+        result.Errors.Count.ShouldBe(0);
+        result.GetValue<string>("--framework").ShouldBe("net11.0");
+    }
+
+    [Fact]
+    public void ShouldRejectUnsupportedNewCommandFramework()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        var result = rootCommand.Parse("new my-site --framework net9.0");
+
+        result.Errors.Count.ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
+    public void ShouldDefaultNewCommandFrameworkToNet10()
+    {
+        var rootCommand = CommandFactory.CreateRootCommand();
+        var result = rootCommand.Parse("new my-site");
+
+        result.Errors.Count.ShouldBe(0);
+        result.GetValue<string>("--framework").ShouldBe("net10.0");
+    }
+
+    [Fact]
     public void ShouldParseDevWithRootAndPort()
     {
         var rootCommand = CommandFactory.CreateRootCommand();

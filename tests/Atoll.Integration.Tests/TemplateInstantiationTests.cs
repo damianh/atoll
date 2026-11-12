@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Atoll.Cli.Commands;
 
 namespace Atoll.Integration.Tests;
 
@@ -17,6 +18,8 @@ public sealed class TemplateFixture : IAsyncLifetime
 
     public bool TemplatesInstalled { get; private set; }
 
+    public string RootDir => _tempDir;
+
     /// <summary>Root directory for the atoll-empty template output.</summary>
     public string EmptyDir => Path.Combine(_tempDir, "MyApp");
 
@@ -28,6 +31,9 @@ public sealed class TemplateFixture : IAsyncLifetime
 
     /// <summary>Root directory for the atoll-portfolio template output.</summary>
     public string PortfolioDir => Path.Combine(_tempDir, "MyPortfolio");
+
+    /// <summary>Root directory for the atoll-swell template output.</summary>
+    public string SwellDir => Path.Combine(_tempDir, "MySlides");
 
     public async ValueTask InitializeAsync()
     {
@@ -49,6 +55,7 @@ public sealed class TemplateFixture : IAsyncLifetime
         await RunDotnetAsync($"new atoll-starter -n MySite -o \"{StarterDir}\"", _tempDir);
         await RunDotnetAsync($"new atoll-blog -n MyBlog -o \"{BlogDir}\"", _tempDir);
         await RunDotnetAsync($"new atoll-portfolio -n MyPortfolio -o \"{PortfolioDir}\"", _tempDir);
+        await RunDotnetAsync($"new atoll-swell -n MySlides -o \"{SwellDir}\"", _tempDir);
     }
 
     public async ValueTask DisposeAsync()
@@ -100,6 +107,18 @@ public sealed class TemplateFixture : IAsyncLifetime
 
         return process.ExitCode;
     }
+
+    public async Task<(int ExitCode, string ProjectPath)> InstantiateAsync(
+        string template,
+        string projectName,
+        string framework)
+    {
+        var outputDir = Path.Combine(_tempDir, $"{projectName}-{framework}");
+        var exitCode = await RunDotnetAsync(
+            $"new {template} -n {projectName} -o \"{outputDir}\" --framework {framework}",
+            _tempDir);
+        return (exitCode, Path.Combine(outputDir, projectName + ".csproj"));
+    }
 }
 
 /// <summary>
@@ -112,11 +131,75 @@ public sealed class TemplateFixture : IAsyncLifetime
 [Collection("TemplateTests")]
 public sealed class TemplateInstantiationTests
 {
+    private static readonly (string Template, string ProjectName, string ProjectPath)[] DefaultTemplates =
+    [
+        ("atoll-empty", "MyApp", "MyApp"),
+        ("atoll-starter", "MySite", "MySite"),
+        ("atoll-blog", "MyBlog", "MyBlog"),
+        ("atoll-portfolio", "MyPortfolio", "MyPortfolio"),
+        ("atoll-swell", "MySlides", "MySlides"),
+    ];
+
     private readonly TemplateFixture _fixture;
 
     public TemplateInstantiationTests(TemplateFixture fixture)
     {
         _fixture = fixture;
+    }
+
+    [Fact]
+    public async Task AllTemplatesShouldDefaultToNet10()
+    {
+        if (!_fixture.TemplatesInstalled) return;
+
+        foreach (var template in DefaultTemplates)
+        {
+            var projectFile = Path.Combine(
+                template.Template switch
+                {
+                    "atoll-empty" => _fixture.EmptyDir,
+                    "atoll-starter" => _fixture.StarterDir,
+                    "atoll-blog" => _fixture.BlogDir,
+                    "atoll-portfolio" => _fixture.PortfolioDir,
+                    "atoll-swell" => _fixture.SwellDir,
+                    _ => throw new InvalidOperationException($"Unexpected template: {template.Template}"),
+                },
+                template.ProjectPath + ".csproj");
+            var content = await File.ReadAllTextAsync(projectFile);
+
+            content.ShouldContain("<TargetFramework>net10.0</TargetFramework>");
+        }
+    }
+
+    [Fact]
+    public async Task AllTemplatesShouldSupportNet11()
+    {
+        if (!_fixture.TemplatesInstalled) return;
+
+        foreach (var template in DefaultTemplates)
+        {
+            var (exitCode, projectPath) = await _fixture.InstantiateAsync(
+                template.Template,
+                "Net11" + template.ProjectName,
+                "net11.0");
+
+            exitCode.ShouldBe(0);
+            var content = await File.ReadAllTextAsync(projectPath);
+            content.ShouldContain("<TargetFramework>net11.0</TargetFramework>");
+        }
+    }
+
+    [Fact]
+    public async Task NewCommandShouldPassFrameworkToInstalledTemplate()
+    {
+        if (!_fixture.TemplatesInstalled) return;
+
+        const string projectName = "CliNet11";
+        await new NewCommandHandler().ExecuteAsync(projectName, _fixture.RootDir, "starter", "net11.0");
+
+        var projectPath = Path.Combine(_fixture.RootDir, projectName, projectName + ".csproj");
+        var content = await File.ReadAllTextAsync(projectPath);
+        content.ShouldContain("<TargetFramework>net11.0</TargetFramework>");
     }
 
     // ── atoll-empty ──

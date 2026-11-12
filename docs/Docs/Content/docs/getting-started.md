@@ -10,7 +10,7 @@ section: Basics
 Atoll is a .NET-native static site framework inspired by [Astro](https://astro.build). It brings server-first HTML rendering, islands architecture, content collections, and static site generation to the .NET ecosystem.
 
 :::aside{type="tip" title="Prerequisites"}
-You need the [.NET 10 SDK](https://dotnet.microsoft.com/download) or later installed before continuing.
+You need the [.NET 10 SDK](https://dotnet.microsoft.com/download) or later installed before continuing. Atoll supports projects targeting .NET 10 and .NET 11.
 :::
 
 ## Setup

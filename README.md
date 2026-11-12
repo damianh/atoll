@@ -134,6 +134,9 @@ dotnet tool install -g Atoll.Cli
 
 # Project templates
 dotnet new install Atoll.Templates
+
+# Generate a .NET 11 project (templates default to .NET 10)
+dotnet new atoll-starter --framework net11.0
 ```
 
 Or add package references directly to your `.csproj`:

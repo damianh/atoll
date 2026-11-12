@@ -46,7 +46,8 @@ The `/__health` endpoint is a lightweight `GET` route built into `atoll dev` —
 
 ## Requirements
 
-- .NET Aspire 9.x or later
+- .NET Aspire 13.6 or later
+- .NET 10 or .NET 11 SDK
 - `atoll` CLI tool installed globally: `dotnet tool install -g Atoll.Cli`
 
 ## More Information
