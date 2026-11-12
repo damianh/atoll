@@ -74,10 +74,28 @@ public sealed class NewCommandHandlerTests : IDisposable
         await NewCommandHandler.ScaffoldStarterAsync("my-site", _tempDir);
 
         var content = await File.ReadAllTextAsync(Path.Combine(_tempDir, "my-site", "my-site.csproj"));
-        content.ShouldContain("net10.0");
+        content.ShouldContain("<TargetFramework>net10.0</TargetFramework>");
         content.ShouldContain("Atoll.Middleware");
         content.ShouldContain("Microsoft.NET.Sdk.Web");
         content.ShouldContain("my-site");
+    }
+
+    [Fact]
+    public async Task ShouldCreateNet11CsprojWhenFrameworkIsSelected()
+    {
+        await NewCommandHandler.ScaffoldStarterAsync("my-site", _tempDir, "net11.0");
+
+        var content = await File.ReadAllTextAsync(Path.Combine(_tempDir, "my-site", "my-site.csproj"));
+        content.ShouldContain("<TargetFramework>net11.0</TargetFramework>");
+    }
+
+    [Fact]
+    public async Task ShouldRejectUnsupportedFramework()
+    {
+        var handler = new NewCommandHandler();
+
+        await Should.ThrowAsync<ArgumentOutOfRangeException>(
+            () => handler.ExecuteAsync("my-site", _tempDir, "starter", "net9.0"));
     }
 
     [Fact]

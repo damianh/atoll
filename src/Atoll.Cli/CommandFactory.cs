@@ -123,17 +123,26 @@ public static class CommandFactory
         templateOption.Aliases.Add("-t");
         templateOption.AcceptOnlyFromAmong("empty", "starter", "blog", "portfolio");
 
+        var frameworkOption = new Option<string>("--framework")
+        {
+            Description = "The target framework for the new project",
+            DefaultValueFactory = _ => "net10.0",
+        };
+        frameworkOption.AcceptOnlyFromAmong("net10.0", "net11.0");
+
         var command = new Command("new", "Create a new Atoll project from a template");
         command.Add(nameArgument);
         command.Add(templateOption);
+        command.Add(frameworkOption);
 
         command.SetAction(async (parseResult, cancellationToken) =>
         {
             var root = parseResult.GetValue<string>("--root")!;
             var name = parseResult.GetRequiredValue(nameArgument);
             var template = parseResult.GetValue(templateOption)!;
+            var framework = parseResult.GetValue(frameworkOption)!;
             var handler = new Commands.NewCommandHandler();
-            await handler.ExecuteAsync(name, root, template);
+            await handler.ExecuteAsync(name, root, template, framework);
         });
 
         return command;

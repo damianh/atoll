@@ -17,7 +17,7 @@ public sealed class NewCommandHandler
     /// <param name="name">The project name (also used as the directory name).</param>
     /// <param name="parentDirectory">The parent directory to create the project in.</param>
     public Task ExecuteAsync(string name, string parentDirectory)
-        => ExecuteAsync(name, parentDirectory, "starter");
+        => ExecuteAsync(name, parentDirectory, "starter", "net10.0");
 
     /// <summary>
     /// Executes the new command with the specified template.
@@ -25,12 +25,30 @@ public sealed class NewCommandHandler
     /// <param name="name">The project name (also used as the directory name).</param>
     /// <param name="parentDirectory">The parent directory to create the project in.</param>
     /// <param name="template">The template name: empty, starter, blog, or portfolio.</param>
-    public async Task ExecuteAsync(string name, string parentDirectory, string template)
+    public Task ExecuteAsync(string name, string parentDirectory, string template)
+        => ExecuteAsync(name, parentDirectory, template, "net10.0");
+
+    /// <summary>
+    /// Executes the new command with the specified template and target framework.
+    /// </summary>
+    /// <param name="name">The project name (also used as the directory name).</param>
+    /// <param name="parentDirectory">The parent directory to create the project in.</param>
+    /// <param name="template">The template name: empty, starter, blog, or portfolio.</param>
+    /// <param name="framework">The target framework, net10.0 or net11.0.</param>
+    public async Task ExecuteAsync(string name, string parentDirectory, string template, string framework)
     {
+        if (framework is not ("net10.0" or "net11.0"))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(framework),
+                framework,
+                "The target framework must be net10.0 or net11.0.");
+        }
+
         // For non-starter templates, attempt to delegate to dotnet new
         if (!string.Equals(template, "starter", StringComparison.OrdinalIgnoreCase))
         {
-            var delegated = await TryDelegateToDotnetNewAsync(name, parentDirectory, template);
+            var delegated = await TryDelegateToDotnetNewAsync(name, parentDirectory, template, framework);
             if (delegated)
             {
                 return;
@@ -44,14 +62,14 @@ public sealed class NewCommandHandler
         }
 
         // Starter (default): also try dotnet new first, fall back to built-in
-        var delegatedStarter = await TryDelegateToDotnetNewAsync(name, parentDirectory, "starter");
+        var delegatedStarter = await TryDelegateToDotnetNewAsync(name, parentDirectory, "starter", framework);
         if (delegatedStarter)
         {
             return;
         }
 
         // Built-in procedural scaffolding (fallback for starter)
-        await ScaffoldStarterAsync(name, parentDirectory);
+        await ScaffoldStarterAsync(name, parentDirectory, framework);
     }
 
     /// <summary>
@@ -61,7 +79,8 @@ public sealed class NewCommandHandler
     private static async Task<bool> TryDelegateToDotnetNewAsync(
         string name,
         string parentDirectory,
-        string template)
+        string template,
+        string framework)
     {
         var shortName = $"atoll-{template}";
 
@@ -108,6 +127,8 @@ public sealed class NewCommandHandler
         newPsi.ArgumentList.Add(name);
         newPsi.ArgumentList.Add("-o");
         newPsi.ArgumentList.Add(outputDir);
+        newPsi.ArgumentList.Add("--framework");
+        newPsi.ArgumentList.Add(framework);
 
         using var newProcess = Process.Start(newPsi);
         if (newProcess is null)
@@ -134,7 +155,7 @@ public sealed class NewCommandHandler
     /// <summary>
     /// Scaffolds a new Atoll starter project procedurally (built-in fallback).
     /// </summary>
-    internal static async Task ScaffoldStarterAsync(string name, string parentDirectory)
+    internal static async Task ScaffoldStarterAsync(string name, string parentDirectory, string framework = "net10.0")
     {
         var projectDir = Path.Combine(parentDirectory, name);
 
@@ -153,7 +174,7 @@ public sealed class NewCommandHandler
         Directory.CreateDirectory(Path.Combine(projectDir, "public"));
 
         // Write project files
-        await WriteProjectFileAsync(projectDir, name);
+        await WriteProjectFileAsync(projectDir, name, framework);
         await WriteConfigFileAsync(projectDir);
         await WriteProgramFileAsync(projectDir, name);
         await WriteHomePageAsync(projectDir, name);
@@ -169,13 +190,13 @@ public sealed class NewCommandHandler
         Console.WriteLine();
     }
 
-    private static async Task WriteProjectFileAsync(string projectDir, string name)
+    private static async Task WriteProjectFileAsync(string projectDir, string name, string framework)
     {
         var escapedName = EscapeXml(name);
         var content = $$"""
             <Project Sdk="Microsoft.NET.Sdk.Web">
               <PropertyGroup>
-                <TargetFramework>net10.0</TargetFramework>
+                <TargetFramework>{{framework}}</TargetFramework>
                 <RootNamespace>{{escapedName}}</RootNamespace>
                 <Nullable>enable</Nullable>
                 <ImplicitUsings>enable</ImplicitUsings>

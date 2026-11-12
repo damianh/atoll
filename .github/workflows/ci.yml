@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-and-test:
-    timeout-minutes: 10
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,7 +20,9 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          global-json-file: global.json
+          dotnet-version: |
+            10.x
+            11.x
 
       - name: Restore
         run: dotnet restore
