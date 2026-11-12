@@ -31,10 +31,7 @@ internal enum FileChangeKind
 /// </remarks>
 internal sealed class DevFileWatcher : IDisposable
 {
-    private readonly FileSystemWatcher _csWatcher;
-    private readonly FileSystemWatcher _mdWatcher;
-    private readonly FileSystemWatcher _mdaWatcher;
-    private readonly FileSystemWatcher _configWatcher;
+    private readonly FileSystemWatcher _projectWatcher;
     private readonly IReadOnlyList<FileSystemWatcher> _extraMdWatchers;
     private readonly System.Threading.Timer _debounceTimer;
     private readonly int _debounceMs;
@@ -95,10 +92,7 @@ internal sealed class DevFileWatcher : IDisposable
         _debounceTimer = new System.Threading.Timer(OnDebounceElapsed, null,
             Timeout.Infinite, Timeout.Infinite);
 
-        _csWatcher = CreateWatcher(projectRoot, "*.cs");
-        _mdWatcher = CreateWatcher(projectRoot, "*.md");
-        _mdaWatcher = CreateWatcher(projectRoot, "*.mda");
-        _configWatcher = CreateWatcher(projectRoot, "atoll.json");
+        _projectWatcher = CreateProjectWatcher(projectRoot);
         _extraMdWatchers = CreateExtraMdWatchers(projectRoot, extraContentDirectories);
     }
 
@@ -107,10 +101,7 @@ internal sealed class DevFileWatcher : IDisposable
     /// </summary>
     public void Start()
     {
-        _csWatcher.EnableRaisingEvents = true;
-        _mdWatcher.EnableRaisingEvents = true;
-        _mdaWatcher.EnableRaisingEvents = true;
-        _configWatcher.EnableRaisingEvents = true;
+        _projectWatcher.EnableRaisingEvents = true;
         foreach (var w in _extraMdWatchers)
         {
             w.EnableRaisingEvents = true;
@@ -123,10 +114,7 @@ internal sealed class DevFileWatcher : IDisposable
     /// </summary>
     public void Stop()
     {
-        _csWatcher.EnableRaisingEvents = false;
-        _mdWatcher.EnableRaisingEvents = false;
-        _mdaWatcher.EnableRaisingEvents = false;
-        _configWatcher.EnableRaisingEvents = false;
+        _projectWatcher.EnableRaisingEvents = false;
         foreach (var w in _extraMdWatchers)
         {
             w.EnableRaisingEvents = false;
@@ -137,10 +125,7 @@ internal sealed class DevFileWatcher : IDisposable
     public void Dispose()
     {
         _debounceTimer.Dispose();
-        _csWatcher.Dispose();
-        _mdWatcher.Dispose();
-        _mdaWatcher.Dispose();
-        _configWatcher.Dispose();
+        _projectWatcher.Dispose();
         foreach (var w in _extraMdWatchers)
         {
             w.Dispose();
@@ -148,6 +133,27 @@ internal sealed class DevFileWatcher : IDisposable
     }
 
     // ── Private helpers ────────────────────────────────────────────────────────
+
+    private FileSystemWatcher CreateProjectWatcher(string root)
+    {
+        var watcher = new FileSystemWatcher(root)
+        {
+            Filter = "*",
+            IncludeSubdirectories = true,
+            NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName,
+        };
+
+        watcher.Changed += (_, e) => HandleProjectEvent(e.FullPath);
+        watcher.Created += (_, e) => HandleProjectEvent(e.FullPath);
+        watcher.Deleted += (_, e) => HandleProjectEvent(e.FullPath);
+        watcher.Renamed += (_, e) =>
+        {
+            HandleProjectEvent(e.OldFullPath);
+            HandleProjectEvent(e.FullPath);
+        };
+
+        return watcher;
+    }
 
     private FileSystemWatcher CreateWatcher(string root, string filter)
     {
@@ -165,9 +171,31 @@ internal sealed class DevFileWatcher : IDisposable
         watcher.Changed += (_, e) => HandleEvent(e.FullPath, kind);
         watcher.Created += (_, e) => HandleEvent(e.FullPath, kind);
         watcher.Deleted += (_, e) => HandleEvent(e.FullPath, kind);
-        watcher.Renamed += (_, e) => HandleEvent(e.FullPath, kind);
+        watcher.Renamed += (_, e) =>
+        {
+            HandleEvent(e.OldFullPath, kind);
+            HandleEvent(e.FullPath, kind);
+        };
 
         return watcher;
+    }
+
+    private void HandleProjectEvent(string fullPath)
+    {
+        var fileName = Path.GetFileName(fullPath);
+        FileChangeKind? kind = fileName.Equals("atoll.json", StringComparison.OrdinalIgnoreCase)
+            ? FileChangeKind.CodeChange
+            : Path.GetExtension(fullPath).ToLowerInvariant() switch
+            {
+                ".cs" => FileChangeKind.CodeChange,
+                ".md" or ".mda" => FileChangeKind.ContentOnly,
+                _ => null,
+            };
+
+        if (kind is { } changeKind)
+        {
+            HandleEvent(fullPath, changeKind);
+        }
     }
 
     private IReadOnlyList<FileSystemWatcher> CreateExtraMdWatchers(
