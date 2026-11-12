@@ -112,9 +112,10 @@ export default function init(element) {
           config.options.responsive = false;
         }
 
-        // Read the user's desired aspect ratio (default 2 for cartesian, 1 for radial).
+        // Use the same landscape default for radial charts to keep them from
+        // becoming taller than the viewport at typical content widths.
         const aspectRatio = config.options.aspectRatio
-          || (['pie', 'doughnut', 'radar', 'polarArea'].includes(config.type) ? 1 : 2);
+          || 2;
 
         const container = canvas.closest('.atoll-chart');
 
