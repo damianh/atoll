@@ -39,7 +39,7 @@ jobs:
         run: dotnet build -c Release --no-restore
 
       - name: Build docs site
-        run: dotnet run --project src/Atoll.Cli/Atoll.Cli.csproj --no-build -c Release -- build --root docs/Docs
+        run: dotnet run --project src/Atoll.Cli/Atoll.Cli.csproj --no-build -c Release --framework net10.0 -- build --root docs/Docs
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
