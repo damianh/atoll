@@ -3,6 +3,9 @@
   <PropertyGroup>
     <MinVerMinimumMajorMinor>0.1</MinVerMinimumMajorMinor>
     <MinVerTagPrefix>v</MinVerTagPrefix>
+    <PackageProjectUrl>https://github.com/damianh/atoll</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/damianh/atoll</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
   </PropertyGroup>
