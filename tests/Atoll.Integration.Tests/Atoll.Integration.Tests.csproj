@@ -11,6 +11,11 @@
     <ProjectReference Include="..\..\docs\Docs\Docs.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\src\Atoll.Cli\bin\$(Configuration)\$(TargetFramework)\Atoll.Cli.runtimeconfig.json"
+          Link="Atoll.Cli.runtimeconfig.json"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="xunit.v3.core.mtp-v2" />
     <PackageReference Include="Shouldly" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
